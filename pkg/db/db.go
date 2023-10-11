@@ -20,7 +20,7 @@ import (
 	_ "github.com/mattn/go-sqlite3" // SQLite3 driver
 )
 
-// Config defines the environment for the database
+// Config defines the environment for the database.
 type Config struct {
 	Filename string
 }

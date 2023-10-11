@@ -41,6 +41,6 @@ func Test_run(t *testing.T) {
 	run(ctx, nil, tasks)
 	<-ctx.Done()
 	if count != 1 {
-		t.Error("overlaping protection is not working. count:", count)
+		t.Error("overlapping protection is not working. count:", count)
 	}
 }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main // import "cirello.io/alreadyread/cmd/bookmarkd"
+package main // import "cirello.io/alreadyread/cmd/alreadyread"
 
 import (
 	"log"
@@ -27,7 +27,7 @@ func main() {
 	log.SetFlags(0)
 
 	fn := "bookmarks.db"
-	if envFn := os.Getenv("BOOKMARK_DB"); envFn != "" {
+	if envFn := os.Getenv("ALREADYREAD_DB"); envFn != "" {
 		fn = envFn
 	}
 	db, err := db.Connect(db.Config{Filename: fn})

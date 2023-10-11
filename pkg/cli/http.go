@@ -34,7 +34,7 @@ func (c *commands) httpMode() cli.Command {
 			cli.StringFlag{
 				Name:   "bind",
 				Value:  ":8080",
-				EnvVar: "BOOKMARKD_LISTEN",
+				EnvVar: "ALREADYREAD_LISTEN",
 			},
 		},
 		Action: func(ctx *cli.Context) error {

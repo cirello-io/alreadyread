@@ -49,17 +49,17 @@ type BookmarkDAO interface {
 	Update(*Bookmark) error
 }
 
-type bookmarkDAO struct {
+type Bookmarks struct {
 	db *sqlx.DB
 }
 
-// NewBookmarkDAO instanties a BookmarkDAO
-func NewBookmarkDAO(db *sqlx.DB) BookmarkDAO {
-	return &bookmarkDAO{db: db}
+// NewBookmarkDAO instanties a BookmarkDAO.
+func NewBookmarkDAO(db *sqlx.DB) *Bookmarks {
+	return &Bookmarks{db: db}
 }
 
 // Bootstrap creates table if missing.
-func (b *bookmarkDAO) Bootstrap() error {
+func (b *Bookmarks) Bootstrap() error {
 	cmds := []string{
 		`create table if not exists bookmarks (
 			id integer primary key autoincrement,
@@ -89,7 +89,7 @@ func (b *bookmarkDAO) Bootstrap() error {
 }
 
 // All returns all known bookmarks.
-func (b *bookmarkDAO) All() ([]*Bookmark, error) {
+func (b *Bookmarks) All() ([]*Bookmark, error) {
 	var bookmarks []*Bookmark
 	err := b.db.Select(&bookmarks, `
 		SELECT
@@ -117,7 +117,7 @@ func (b *bookmarkDAO) All() ([]*Bookmark, error) {
 }
 
 // Expired return all valid but expired bookmarks.
-func (b *bookmarkDAO) Expired() ([]*Bookmark, error) {
+func (b *Bookmarks) Expired() ([]*Bookmark, error) {
 	var bookmarks []*Bookmark
 	const week = 7 * 24 * time.Hour
 	deadline := time.Now().Add(-week).Unix()
@@ -140,7 +140,7 @@ func (b *bookmarkDAO) Expired() ([]*Bookmark, error) {
 }
 
 // Invalid return all invalid  bookmarks.
-func (b *bookmarkDAO) Invalid() ([]*Bookmark, error) {
+func (b *Bookmarks) Invalid() ([]*Bookmark, error) {
 	var bookmarks []*Bookmark
 	err := b.db.Select(&bookmarks, `
 		SELECT
@@ -163,7 +163,7 @@ func (b *bookmarkDAO) Invalid() ([]*Bookmark, error) {
 }
 
 // Insert one bookmark.
-func (b *bookmarkDAO) Insert(bookmark *Bookmark) (*Bookmark, error) {
+func (b *Bookmarks) Insert(bookmark *Bookmark) (*Bookmark, error) {
 	bookmark.CreatedAt = time.Now()
 	bookmark.Inbox = 1
 	result, err := b.db.NamedExec(`
@@ -199,7 +199,7 @@ func (b *bookmarkDAO) Insert(bookmark *Bookmark) (*Bookmark, error) {
 }
 
 // GetByID loads one bookmark.
-func (b *bookmarkDAO) GetByID(id int64) (*Bookmark, error) {
+func (b *Bookmarks) GetByID(id int64) (*Bookmark, error) {
 	bookmark := &Bookmark{}
 	err := b.db.Get(bookmark, `
 	SELECT
@@ -221,7 +221,7 @@ func (b *bookmarkDAO) GetByID(id int64) (*Bookmark, error) {
 }
 
 // Update one bookmark.
-func (b *bookmarkDAO) Update(bookmark *Bookmark) error {
+func (b *Bookmarks) Update(bookmark *Bookmark) error {
 	_, err := b.db.NamedExec(`
 		UPDATE bookmarks
 		SET
@@ -238,7 +238,7 @@ func (b *bookmarkDAO) Update(bookmark *Bookmark) error {
 }
 
 // Delete one bookmark.
-func (b *bookmarkDAO) Delete(bookmark *Bookmark) error {
+func (b *Bookmarks) Delete(bookmark *Bookmark) error {
 	_, err := b.db.NamedExec(`DELETE FROM bookmarks WHERE id = :id`, bookmark)
 	return errors.E(err)
 }

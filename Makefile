@@ -10,3 +10,30 @@ linux:
 
 test:
 	go test -v ./...
+
+linters:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
+	golangci-lint -j 1 run --disable-all \
+		-E "errcheck" \
+		-E "errname" \
+		-E "errorlint" \
+		-E "exhaustive" \
+		-E "exportloopref" \
+		-E "gci" \
+		-E "gocritic" \
+		-E "godot" \
+		-E "gofmt" \
+		-E "goimports" \
+		-E "govet" \
+		-E "grouper" \
+		-E "ineffassign" \
+		-E "ireturn" \
+		-E "misspell" \
+		-E "prealloc" \
+		-E "predeclared" \
+		-E "revive" \
+		-E "staticcheck" \
+		-E "thelper" \
+		-E "unparam" \
+		-E "unused" \
+		./...

@@ -29,21 +29,16 @@ type commands struct {
 	db *sqlx.DB
 }
 
-func (c *commands) bootstrap(ctx *cli.Context) error {
+func (c *commands) bootstrap(*cli.Context) error {
 	bookmarkDAO := models.NewBookmarkDAO(c.db)
-
-	if err := bookmarkDAO.Bootstrap(); err != nil {
-		return cliError(err)
-	}
-
-	return nil
+	return bookmarkDAO.Bootstrap()
 }
 
-// Run executes the application in CLI mode
+// Run executes the application in CLI mode.
 func Run(db *sqlx.DB) {
 	app := cli.NewApp()
-	app.Name = "bookmarkd"
-	app.Usage = "bookmark manager"
+	app.Name = "alreadyread"
+	app.Usage = "bookmarks manager"
 	app.Version = "0.0.1"
 
 	cmds := &commands{
