@@ -15,10 +15,10 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 
 	"cirello.io/alreadyread/pkg/actions"
-	"cirello.io/alreadyread/pkg/errors"
 	"github.com/urfave/cli"
 )
 
@@ -35,11 +35,11 @@ func (c *commands) importBookmarks() cli.Command {
 		Action: func(ctx *cli.Context) error {
 			fd, err := os.Open(ctx.String("filename"))
 			if err != nil {
-				return cliError(errors.Errorf(err, "cannot open file"))
+				return cliError(fmt.Errorf("cannot open file: %w", err))
 			}
 
 			if err := actions.ImportBookmarks(c.db, fd); err != nil {
-				return cliError(errors.Errorf(err, "cannot import bookmarks"))
+				return cliError(fmt.Errorf("cannot import bookmarks: %w", err))
 			}
 
 			return nil

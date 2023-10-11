@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"net/url"
 
-	"cirello.io/alreadyread/pkg/errors"
 	"cirello.io/alreadyread/pkg/models"
 	"cirello.io/alreadyread/pkg/net"
 	"github.com/jmoiron/sqlx"
@@ -33,7 +32,7 @@ func AddBookmarkByURL(db *sqlx.DB, u string) error {
 		URL: u,
 	})
 	_, err := models.NewBookmarkDAO(db).Insert(b)
-	return errors.Internal(err)
+	return err
 }
 
 // AddBookmark stores one bookmark into the database.

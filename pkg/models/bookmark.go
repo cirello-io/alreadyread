@@ -19,7 +19,6 @@ import (
 	"net/url"
 	"time"
 
-	"cirello.io/alreadyread/pkg/errors"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -81,7 +80,7 @@ func (b *Bookmarks) Bootstrap() error {
 	for _, cmd := range cmds {
 		_, err := b.db.Exec(cmd)
 		if err != nil {
-			return errors.E(err)
+			return err
 		}
 	}
 
@@ -113,7 +112,10 @@ func (b *Bookmarks) All() ([]*Bookmark, error) {
 			b.Host = u.Host
 		}
 	}
-	return bookmarks, errors.E(err)
+	if err != nil {
+		return nil, err
+	}
+	return bookmarks, nil
 }
 
 // Expired return all valid but expired bookmarks.
@@ -136,7 +138,10 @@ func (b *Bookmarks) Expired() ([]*Bookmark, error) {
 			b.Host = u.Host
 		}
 	}
-	return bookmarks, errors.E(err)
+	if err != nil {
+		return nil, err
+	}
+	return bookmarks, nil
 }
 
 // Invalid return all invalid  bookmarks.
@@ -151,7 +156,7 @@ func (b *Bookmarks) Invalid() ([]*Bookmark, error) {
 			last_status_code != 200
 	`)
 	if err != nil {
-		return nil, errors.E(err)
+		return nil, err
 	}
 	for _, b := range bookmarks {
 		u, err := url.Parse(b.URL)
@@ -234,13 +239,13 @@ func (b *Bookmarks) Update(bookmark *Bookmark) error {
 		WHERE
 			id = :id
 	`, bookmark)
-	return errors.E(err)
+	return err
 }
 
 // Delete one bookmark.
 func (b *Bookmarks) Delete(bookmark *Bookmark) error {
 	_, err := b.db.NamedExec(`DELETE FROM bookmarks WHERE id = :id`, bookmark)
-	return errors.E(err)
+	return err
 }
 
 type Inbox int64

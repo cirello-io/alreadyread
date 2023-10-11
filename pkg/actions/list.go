@@ -15,7 +15,8 @@
 package actions // import "cirello.io/alreadyread/pkg/actions"
 
 import (
-	"cirello.io/alreadyread/pkg/errors"
+	"fmt"
+
 	"cirello.io/alreadyread/pkg/models"
 	"github.com/jmoiron/sqlx"
 )
@@ -25,7 +26,7 @@ func ListBookmarks(db *sqlx.DB) ([]*models.Bookmark, error) {
 	bookmarkDAO := models.NewBookmarkDAO(db)
 	bookmarks, err := bookmarkDAO.All()
 	if err != nil {
-		return nil, errors.Internalf(err, "cannot load all bookmarks")
+		return nil, fmt.Errorf("cannot load all bookmarks: %w", err)
 	}
 	return bookmarks, nil
 }

@@ -15,7 +15,6 @@
 package db // import "cirello.io/alreadyread/pkg/db"
 
 import (
-	"cirello.io/alreadyread/pkg/errors"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // SQLite3 driver
 )
@@ -29,7 +28,7 @@ type Config struct {
 func Connect(config Config) (*sqlx.DB, error) {
 	db, err := sqlx.Open("sqlite3", config.Filename)
 	if err != nil {
-		return nil, errors.E(err)
+		return nil, err
 	}
 	return db, nil
 }

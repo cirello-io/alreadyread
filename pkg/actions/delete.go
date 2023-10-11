@@ -15,7 +15,6 @@
 package actions
 
 import (
-	"cirello.io/alreadyread/pkg/errors"
 	"cirello.io/alreadyread/pkg/models"
 	"github.com/jmoiron/sqlx"
 )
@@ -23,17 +22,14 @@ import (
 // DeleteBookmark deletes one bookmark from the database.
 func DeleteBookmark(db *sqlx.DB, b *models.Bookmark) error {
 	err := models.NewBookmarkDAO(db).Delete(b)
-	if err != nil {
-		return errors.Internal(err)
-	}
-	return nil
+	return err
 }
 
 // DeleteBookmarkByID deletes one bookmar, by ID, from the database.
 func DeleteBookmarkByID(db *sqlx.DB, id int64) error {
 	bookmark, err := models.NewBookmarkDAO(db).GetByID(id)
 	if err != nil {
-		return errors.Internal(err)
+		return err
 	}
 	return DeleteBookmark(db, bookmark)
 }

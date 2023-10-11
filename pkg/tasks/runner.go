@@ -21,7 +21,6 @@ import (
 	"sync"
 	"time"
 
-	"cirello.io/alreadyread/pkg/errors"
 	"cirello.io/alreadyread/pkg/models"
 	"cirello.io/alreadyread/pkg/net"
 	"github.com/jmoiron/sqlx"
@@ -80,7 +79,7 @@ func LinkHealth(db *sqlx.DB) (err error) {
 	bookmarkDAO := models.NewBookmarkDAO(db)
 	bookmarks, err := bookmarkDAO.Expired()
 	if err != nil {
-		return errors.Internalf(err, "cannot load expired bookmarks")
+		return fmt.Errorf("cannot load expired bookmarks: %w", err)
 	}
 
 	bookmarkCh := make(chan *models.Bookmark)
@@ -110,17 +109,21 @@ func LinkHealth(db *sqlx.DB) (err error) {
 // Vacuum executes a SQLite3 vacuum clean up.
 func Vacuum(db *sqlx.DB) (err error) {
 	defer recoverPanic(&err)
-
 	_, err = db.Exec("VACUUM")
-	return errors.Errorf(err, "cannot run vacuum")
+	if err != nil {
+		return fmt.Errorf("cannot run vacuum: %w", err)
+	}
+	return nil
 }
 
 // RestorePostponedLinks revamp rescheduled links in the inbox.
 func RestorePostponedLinks(db *sqlx.DB) (err error) {
 	defer recoverPanic(&err)
-
 	_, err = db.Exec("UPDATE bookmarks SET inbox = 1 WHERE inbox = 2")
-	return errors.Errorf(err, "cannot run restore rescheduled links")
+	if err != nil {
+		return fmt.Errorf("cannot run restore rescheduled links: %w", err)
+	}
+	return nil
 }
 
 func recoverPanic(outErr *error) {
