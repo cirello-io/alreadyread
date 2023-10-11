@@ -15,6 +15,7 @@
 package models // import "cirello.io/alreadyread/pkg/models"
 
 import (
+	"fmt"
 	"net/url"
 	"time"
 
@@ -31,7 +32,7 @@ type Bookmark struct {
 	LastStatusReason string    `db:"last_status_reason" json:"last_status_reason"`
 	Title            string    `db:"title" json:"title"`
 	CreatedAt        time.Time `db:"created_at" json:"created_at"`
-	Inbox            int64     `db:"inbox" json:"inbox"`
+	Inbox            Inbox     `db:"inbox" json:"inbox"`
 
 	Host string `db:"-" json:"host"`
 }
@@ -172,11 +173,11 @@ func (b *bookmarkDAO) Insert(bookmark *Bookmark) (*Bookmark, error) {
 		(:url, :last_status_code, :last_status_check, :last_status_reason, :title, :created_at, :inbox)
 	`, bookmark)
 	if err != nil {
-		return nil, errors.Errorf(err, "cannot insert row")
+		return nil, fmt.Errorf("cannot insert row: %w", err)
 	}
 	id, err := result.LastInsertId()
 	if err != nil {
-		return nil, errors.Errorf(err, "cannot load last inserted ID")
+		return nil, fmt.Errorf("cannot load last inserted ID: %w", err)
 	}
 	err = b.db.Get(bookmark, `
 		SELECT
@@ -187,13 +188,13 @@ func (b *bookmarkDAO) Insert(bookmark *Bookmark) (*Bookmark, error) {
 			id = $1
 	`, id)
 	if err != nil {
-		return nil, errors.Errorf(err, "cannot reload inserted row")
+		return nil, fmt.Errorf("cannot reload inserted row: %w", err)
 	}
 	u, err := url.Parse(bookmark.URL)
 	if err == nil {
 		bookmark.Host = u.Host
 	}
-	return bookmark, errors.Errorf(err, "cannot parse URL")
+	return bookmark, fmt.Errorf("cannot parse URL: %w", err)
 }
 
 // GetByID loads one bookmark.
@@ -208,13 +209,14 @@ func (b *bookmarkDAO) GetByID(id int64) (*Bookmark, error) {
 		id = $1
 	`, id)
 	if err != nil {
-		return nil, errors.Errorf(err, "cannot find row")
+		return nil, fmt.Errorf("cannot find row: %w", err)
 	}
 	u, err := url.Parse(bookmark.URL)
-	if err == nil {
-		bookmark.Host = u.Host
+	if err != nil {
+		return bookmark, fmt.Errorf("cannot parse URL: %w", err)
 	}
-	return bookmark, errors.Errorf(err, "cannot parse URL")
+	bookmark.Host = u.Host
+	return bookmark, nil
 }
 
 // Update one bookmark.
@@ -238,4 +240,29 @@ func (b *bookmarkDAO) Update(bookmark *Bookmark) error {
 func (b *bookmarkDAO) Delete(bookmark *Bookmark) error {
 	_, err := b.db.NamedExec(`DELETE FROM bookmarks WHERE id = :id`, bookmark)
 	return errors.E(err)
+}
+
+type Inbox int64
+
+const (
+	Read Inbox = iota
+	New
+	Postponed
+)
+
+func (i Inbox) IsValid() bool {
+	return i == Read || i == New || i == Postponed
+}
+
+func ParseInbox(v string) (Inbox, error) {
+	switch v {
+	case "read":
+		return Read, nil
+	case "new":
+		return New, nil
+	case "postponed":
+		return Postponed, nil
+	default:
+		return 0, fmt.Errorf("invalid inbox status: %s", v)
+	}
 }

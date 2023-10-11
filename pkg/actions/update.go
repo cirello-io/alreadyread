@@ -15,21 +15,26 @@
 package actions
 
 import (
-	"cirello.io/alreadyread/pkg/errors"
+	"fmt"
+
 	"cirello.io/alreadyread/pkg/models"
 	"github.com/jmoiron/sqlx"
 )
 
-// MarkBookmarkAsPostpone moves a bookmark to a delayed position in the inbox.
-func MarkBookmarkAsPostpone(db *sqlx.DB, id int64) error {
+// UpdateInbox sets the inbox status of a bookmark.
+func UpdateInbox(db *sqlx.DB, id int64, inbox string) error {
+	parsedInbox, err := models.ParseInbox(inbox)
+	if err != nil {
+		return fmt.Errorf("cannot parse inbox: %w", err)
+	}
 	dao := models.NewBookmarkDAO(db)
 	b, err := dao.GetByID(id)
 	if err != nil {
-		return errors.Internalf(err, "cannot find bookmark")
+		return fmt.Errorf("cannot find bookmark: %w", err)
 	}
-	b.Inbox = 2
+	b.Inbox = parsedInbox
 	if err := dao.Update(b); err != nil {
-		return errors.Internalf(err, "cannot update bookmarkd")
+		return fmt.Errorf("cannot store bookmark: %w", err)
 	}
 	return nil
 }

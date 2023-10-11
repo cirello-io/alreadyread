@@ -9,10 +9,12 @@
 		{{ range . }}
 		<tr id="bookmark-{{.ID}}">
 			<td>
-				<button class="btn btn-link">📤</button>
-				<button class="btn btn-link">💤</button>
-				<button class="btn btn-link" data-hx-confirm="Are you sure you want to delete '{{.Title}}'?" data-hx-delete="/bookmarks/{{.ID}}" data-hx-target="#bookmark-{{.ID}}">🗑</button>
+				<form data-hx-target="#bookmark-{{.ID}}">
+				<button class="btn btn-link" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="read">📤</button>
+				<button class="btn btn-link" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="postponed">💤</button>
+				<button class="btn btn-link" data-hx-confirm="Are you sure you want to delete '{{.Title}}'?" data-hx-delete="/bookmarks/{{.ID}}">🗑</button>
 				<a href="{{.URL}}" target="_blank">{{ .Title }}</a>
+				</form>
 			</td>
 			<td>
 				<a href="{{.URL}}" target="_blank">{{ .URL }}</a>

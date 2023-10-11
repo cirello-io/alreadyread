@@ -53,8 +53,6 @@ func (s *Server) registerRoutes() {
 	router.HandleFunc("/state", s.state)
 	router.HandleFunc("/loadBookmark", s.loadBookmark)
 	router.HandleFunc("/newBookmark", s.newBookmark)
-	router.HandleFunc("/markBookmarkAsRead", s.markBookmarkAsRead)
-	router.HandleFunc("/markBookmarkAsPostpone", s.markBookmarkAsPostpone)
 
 	// new
 	router.HandleFunc("/bookmarks", s.bookmarks)
@@ -129,60 +127,9 @@ func (s *Server) newBookmark(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("{}"))
 }
 
-func (s *Server) markBookmarkAsRead(w http.ResponseWriter, r *http.Request) {
-	// TODO: handle Access-Control-Allow-Origin correctly
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	bookmark := &models.Bookmark{}
-	if err := json.NewDecoder(r.Body).Decode(bookmark); err != nil {
-		log.Println("cannot unmarshal bookmark request:", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError),
-			http.StatusInternalServerError)
-		return
-	}
-	if err := actions.MarkBookmarkAsRead(s.db, bookmark.ID); err != nil {
-		log.Println("cannot mark bookmark as read:", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError),
-			http.StatusInternalServerError)
-		return
-	}
-	w.Write([]byte("{}"))
-}
-
-func (s *Server) markBookmarkAsPostpone(w http.ResponseWriter, r *http.Request) {
-	// TODO: handle Access-Control-Allow-Origin correctly
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	bookmark := &models.Bookmark{}
-	if err := json.NewDecoder(r.Body).Decode(bookmark); err != nil {
-		log.Println("cannot unmarshal bookmark request:", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError),
-			http.StatusInternalServerError)
-		return
-	}
-	if err := actions.MarkBookmarkAsPostpone(s.db, bookmark.ID); err != nil {
-		log.Println("cannot mark bookmark as postpone:", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError),
-			http.StatusInternalServerError)
-		return
-	}
-	w.Write([]byte("{}"))
-}
-
 func (s *Server) bookmarks(w http.ResponseWriter, r *http.Request) {
 	// TODO: handle Access-Control-Allow-Origin correctly
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	switch r.Method {
-	case http.MethodDelete:
-		paramID := r.URL.Query().Get("id")
-		id, err := strconv.ParseInt(paramID, 10, 64)
-		if err != nil {
-			log.Println("cannot parse bookmark ID:", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-		actions.DeleteBookmarkByID(s.db, id)
-		return
-	}
 
 	bookmarks, err := actions.ListBookmarks(s.db)
 	if err != nil {
@@ -194,7 +141,7 @@ func (s *Server) bookmarks(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Query().Get("filter") {
 	case "new":
 		bookmarks = slices.DeleteFunc(bookmarks, func(bookmark *models.Bookmark) bool {
-			return bookmark.Inbox == 0
+			return bookmark.Inbox != models.New
 		})
 	case "duplicated":
 		duplicates := map[string][]*models.Bookmark{}
@@ -221,16 +168,34 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 	// TODO: handle Access-Control-Allow-Origin correctly
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
+	id, err := extractID("/bookmarks", r.URL.String())
+	if err != nil {
+		log.Println("cannot parse bookmark ID:", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
 	switch r.Method {
 	case http.MethodDelete:
-		id, err := extractID("/bookmarks", r.URL.String())
+		err := actions.DeleteBookmarkByID(s.db, id)
 		if err != nil {
-			log.Println("cannot parse bookmark ID:", err)
+			log.Println("cannot delete bookmark:", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
-		actions.DeleteBookmarkByID(s.db, id)
 		return
+	case http.MethodPatch:
+		if inbox := r.FormValue("inbox"); inbox != "" {
+			err := actions.UpdateInbox(s.db, id, inbox)
+			if err != nil {
+				log.Println("cannot update bookmark:", err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+		}
+		return
+	default:
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 	}
 
 }
