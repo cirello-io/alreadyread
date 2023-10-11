@@ -19,6 +19,7 @@ import (
 	"log"
 	"net/http"
 	"slices"
+	"strconv"
 
 	"cirello.io/alreadyread/frontend"
 	"cirello.io/alreadyread/pkg/actions"
@@ -234,6 +235,20 @@ func (s *Server) websocket(w http.ResponseWriter, r *http.Request) {
 func (s *Server) bookmarks(w http.ResponseWriter, r *http.Request) {
 	// TODO: handle Access-Control-Allow-Origin correctly
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	switch r.Method {
+	case http.MethodDelete:
+		paramID := r.URL.Query().Get("id")
+		id, err := strconv.ParseInt(paramID, 10, 64)
+		if err != nil {
+			log.Println("cannot parse bookmark ID:", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		actions.DeleteBookmarkByID(s.db, id, s.pubsub.Broadcast)
+		return
+	}
+
 	bookmarks, err := actions.ListBookmarks(s.db)
 	if err != nil {
 		log.Println("cannot load all bookmarks:", err)

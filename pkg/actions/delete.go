@@ -35,3 +35,12 @@ func DeleteBookmark(db *sqlx.DB, b *models.Bookmark, broadcast func(interface{})
 	})
 	return nil
 }
+
+// DeleteBookmarkByID deletes one bookmar, by ID, from the database.
+func DeleteBookmarkByID(db *sqlx.DB, id int64, broadcast func(interface{})) error {
+	bookmark, err := models.NewBookmarkDAO(db).GetByID(id)
+	if err != nil {
+		return errors.Internal(err)
+	}
+	return DeleteBookmark(db, bookmark, broadcast)
+}
