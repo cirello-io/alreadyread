@@ -1,5 +1,6 @@
 package bookmarks
 
+//go:generate moq -out repository_mocks_test.go . Repository
 type Repository interface {
 	// All returns all known bookmarks.
 	All() ([]*Bookmark, error)

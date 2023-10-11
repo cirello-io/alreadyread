@@ -34,9 +34,12 @@ func Create(repository Repository, b *Bookmark) (*Bookmark, error) {
 func DeleteByID(repository Repository, id int64) error {
 	bookmark, err := repository.GetByID(id)
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot load bookmark for deletion: %w", err)
 	}
-	return repository.Delete(bookmark)
+	if err := repository.Delete(bookmark); err != nil {
+		return fmt.Errorf("cannot delete bookmark: %w", err)
+	}
+	return nil
 }
 
 func UpdateInbox(repository Repository, id int64, inbox string) error {

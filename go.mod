@@ -5,7 +5,7 @@ require (
 	github.com/jmoiron/sqlx v0.0.0-20180614180643-0dae4fefe7c0
 	github.com/mattn/go-sqlite3 v1.14.7
 	github.com/urfave/cli v1.22.5
-	golang.org/x/sync v0.0.0-20190423024810-112230192c58
+	golang.org/x/sync v0.1.0
 )
 
 require (
@@ -15,7 +15,7 @@ require (
 	github.com/lib/pq v1.2.0 // indirect
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
-	golang.org/x/net v0.0.0-20200202094626-16171245cfb2 // indirect
+	golang.org/x/net v0.2.0 // indirect
 	google.golang.org/appengine v1.6.1 // indirect
 )
 
