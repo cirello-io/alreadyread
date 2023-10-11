@@ -15,72 +15,40 @@
 package web // import "cirello.io/alreadyread/pkg/web"
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
-	"time"
 
-	"cirello.io/alreadyread/generated"
+	"cirello.io/alreadyread/frontend"
 	"cirello.io/alreadyread/pkg/actions"
-	"cirello.io/alreadyread/pkg/errors"
 	"cirello.io/alreadyread/pkg/models"
 	"cirello.io/alreadyread/pkg/net"
 	"cirello.io/alreadyread/pkg/pubsub"
-	svcjwt "cirello.io/svc/pkg/jwt"
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 )
 
 // Server implements the web interface.
 type Server struct {
-	db               *sqlx.DB
-	handler          http.Handler
-	pubsub           *pubsub.Broker
-	jwtSecret        []byte
-	acceptableEmails map[string]struct{}
-	authMiddleware   *jwtmiddleware.JWTMiddleware
+	db             *sqlx.DB
+	handler        http.Handler
+	pubsub         *pubsub.Broker
+	authMiddleware *jwtmiddleware.JWTMiddleware
 }
 
 // New creates a web interface handler.
-func New(db *sqlx.DB, jwtSecret []byte, acceptableEmails []string, broker *pubsub.Broker) (*Server, error) {
+func New(db *sqlx.DB, broker *pubsub.Broker) (*Server, error) {
 	s := &Server{
-		db:        db,
-		pubsub:    broker,
-		jwtSecret: jwtSecret,
+		db:     db,
+		pubsub: broker,
 	}
-	s.acceptableEmails = make(map[string]struct{})
-	for _, e := range acceptableEmails {
-		s.acceptableEmails[e] = struct{}{}
-	}
-
-	if len(jwtSecret) > 0 {
-		s.authMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
-			UserProperty: "user",
-			ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-				return s.jwtSecret, nil
-			},
-			SigningMethod: jwt.SigningMethodHS512,
-			ErrorHandler:  s.unauthorized,
-		})
-	}
-
 	err := s.registerRoutes()
 	return s, err
 }
 
 func (s *Server) registerRoutes() error {
-	rootFS := generated.AssetFS()
-	rootFS.Prefix = "frontend/build/"
-	index, err := rootFS.Open("index.html")
-	if err != nil {
-		return err
-	}
-	rootHandler := http.FileServer(rootFS)
-
+	rootHandler := http.FileServer(http.FS(frontend.Content))
 	router := http.NewServeMux()
 	router.HandleFunc("/state", s.state)
 	router.HandleFunc("/loadBookmark", s.loadBookmark)
@@ -89,61 +57,12 @@ func (s *Server) registerRoutes() error {
 	router.HandleFunc("/markBookmarkAsRead", s.markBookmarkAsRead)
 	router.HandleFunc("/markBookmarkAsPostpone", s.markBookmarkAsPostpone)
 	router.HandleFunc("/ws", s.websocket)
-	router.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-		rootHandler.ServeHTTP(&recoverableResponseWriter{
-			responseWriter: w,
-			request:        req,
-			fallback: func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set("Content-Type", "text/html; charset=utf-8")
-				http.ServeContent(w, r, "index.html", time.Now(), index)
-			},
-		}, req)
-	})
-
+	router.HandleFunc("/", rootHandler.ServeHTTP)
 	s.handler = router
 	return nil
 }
 
-func (s *Server) unauthorized(w http.ResponseWriter, r *http.Request, err string) {
-	log.Println("access denied", err)
-	w.WriteHeader(http.StatusUnauthorized)
-}
-
-type authClaims string
-
-var trustLevel = authClaims("trust-level")
-
-func (s *Server) authentication(w http.ResponseWriter, r *http.Request) error {
-	if s.authMiddleware == nil {
-		return nil
-	}
-	if err := s.authMiddleware.CheckJWT(w, r); err != nil {
-		return fmt.Errorf("cannot find JWT in the request")
-	}
-	token, ok := r.Context().Value("user").(*jwt.Token)
-	if !ok {
-		return fmt.Errorf("cannot find token in context")
-	}
-	claims, err := svcjwt.Claims(token)
-	if err != nil {
-		return errors.Errorf(err, "unexpected token set")
-	}
-	if claims.Target != "bookmarkd.cirello.io" {
-		return fmt.Errorf("invalid target in token")
-	}
-	if _, ok := s.acceptableEmails[claims.Email]; !ok {
-		return fmt.Errorf("access for this account")
-	}
-	*r = *r.WithContext(context.WithValue(r.Context(),
-		trustLevel, claims.Trust))
-	return nil
-}
-
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if err := s.authentication(w, r); err != nil {
-		s.unauthorized(w, r, err.Error())
-		return
-	}
 	s.handler.ServeHTTP(w, r)
 }
 
@@ -209,12 +128,6 @@ func (s *Server) newBookmark(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) deleteBookmark(w http.ResponseWriter, r *http.Request) {
-	if v, ok := r.Context().Value(trustLevel).(string); !ok || v != "high" {
-		http.Error(w, http.StatusText(http.StatusUnauthorized),
-			http.StatusUnauthorized)
-		return
-	}
-
 	// TODO: handle Access-Control-Allow-Origin correctly
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
@@ -237,11 +150,6 @@ func (s *Server) deleteBookmark(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) markBookmarkAsRead(w http.ResponseWriter, r *http.Request) {
-	if v, ok := r.Context().Value(trustLevel).(string); !ok || v != "high" {
-		http.Error(w, http.StatusText(http.StatusUnauthorized),
-			http.StatusUnauthorized)
-		return
-	}
 	// TODO: handle Access-Control-Allow-Origin correctly
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	bookmark := &models.Bookmark{}
@@ -261,11 +169,6 @@ func (s *Server) markBookmarkAsRead(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) markBookmarkAsPostpone(w http.ResponseWriter, r *http.Request) {
-	if v, ok := r.Context().Value(trustLevel).(string); !ok || v != "high" {
-		http.Error(w, http.StatusText(http.StatusUnauthorized),
-			http.StatusUnauthorized)
-		return
-	}
 	// TODO: handle Access-Control-Allow-Origin correctly
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	bookmark := &models.Bookmark{}

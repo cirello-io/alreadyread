@@ -15,15 +15,10 @@
 package cli
 
 import (
-	"bufio"
-	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
-	"os"
 
 	"cirello.io/alreadyread/pkg/errors"
-	"cirello.io/alreadyread/pkg/mail"
 	"cirello.io/alreadyread/pkg/pubsub"
 	"cirello.io/alreadyread/pkg/tasks"
 	"cirello.io/alreadyread/pkg/web"
@@ -35,42 +30,12 @@ func (c *commands) httpMode() cli.Command {
 		Name:        "http",
 		Aliases:     []string{"serve"},
 		Usage:       "http mode",
-		Description: "starts bookmarkd web server",
+		Description: "starts alreadyread web server",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:   "bind",
 				Value:  ":8080",
 				EnvVar: "BOOKMARKD_LISTEN",
-			},
-			cli.StringFlag{
-				Name:   "mx-bind",
-				Value:  ":25",
-				EnvVar: "BOOKMARKD_MX_LISTEN",
-			},
-			cli.StringFlag{
-				Name:   "mx-domain",
-				Value:  "localhost",
-				EnvVar: "BOOKMARKD_MX_DOMAIN",
-			},
-			cli.StringFlag{
-				Name:   "mx-sender",
-				Value:  "",
-				EnvVar: "BOOKMARKD_MX_SENDER",
-			},
-			cli.StringFlag{
-				Name:   "mx-recipient",
-				Value:  "",
-				EnvVar: "BOOKMARKD_MX_RECIPIENT",
-			},
-			cli.StringFlag{
-				Name:   "ca-cert",
-				EnvVar: "BOOKMARKD_CA_CERT",
-				Value:  "ca.pem",
-			},
-			cli.StringFlag{
-				Name:   "acceptable-users-file",
-				EnvVar: "BOOKMARKD_ACCEPTABLE_USERS_FILE",
-				Value:  "bookmarkd.users",
 			},
 		},
 		Action: func(ctx *cli.Context) error {
@@ -78,22 +43,9 @@ func (c *commands) httpMode() cli.Command {
 			if err != nil {
 				return errors.Errorf(err, "cannot bind port")
 			}
-			lMX, err := net.Listen("tcp", ctx.String("mx-bind"))
-			if err != nil {
-				return errors.Errorf(err, "cannot bind port (MX)")
-			}
 			broker := pubsub.New()
 			tasks.Run(c.db)
-			mail.Run(lMX, c.db, broker, ctx.String("mx-domain"), ctx.String("mx-sender"), ctx.String("mx-recipient"))
-			caCert, err := ioutil.ReadFile(ctx.String("ca-cert"))
-			if err != nil {
-				log.Println("skipping CA file:", err)
-			}
-			users, err := readUsersListFile(ctx.String("acceptable-users-file"))
-			if err != nil {
-				log.Println("skipping users list file:", err)
-			}
-			srv, err := web.New(c.db, caCert, users, broker)
+			srv, err := web.New(c.db, broker)
 			if err != nil {
 				return errors.E(err)
 			}
@@ -101,20 +53,4 @@ func (c *commands) httpMode() cli.Command {
 			return errors.E(err)
 		},
 	}
-}
-
-func readUsersListFile(fn string) ([]string, error) {
-	var users []string
-	fd, err := os.Open(fn)
-	if err != nil {
-		return users, errors.Errorf(err, "cannot open users list file")
-	}
-	scanner := bufio.NewScanner(fd)
-	for scanner.Scan() {
-		users = append(users, scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		return users, errors.Errorf(err, "cannot read users list")
-	}
-	return users, nil
 }
