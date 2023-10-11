@@ -16,9 +16,9 @@
             <div class="container"><a class="navbar-brand d-flex align-items-center" href="#"><span>alreadyread</span></a><button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-1"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
                 <div class="collapse navbar-collapse" id="navcol-1">
                     <ul class="navbar-nav me-auto">
-                        <li class="nav-item"><a class="nav-link" data-hx-get="/bookmarks?filter=new"        data-hx-target="#links-table">New</a></li>
-                        <li class="nav-item"><a class="nav-link" data-hx-get="/bookmarks?filter=duplicated" data-hx-target="#links-table">Duplicated</a></li>
-                        <li class="nav-item"><a class="nav-link" data-hx-get="/bookmarks"                   data-hx-target="#links-table">All</a></li>
+                        <li class="nav-item"><a class="nav-link active" data-hx-on::before-request="(function(_this) {document.querySelectorAll('.nav-link').forEach(function(n){ n.classList.remove('active') }); _this.classList.add('active');})(this)" data-hx-get="/bookmarks?filter=new"        data-hx-target="#links-table">New</a></li>
+                        <li class="nav-item"><a class="nav-link"        data-hx-on::before-request="(function(_this) {document.querySelectorAll('.nav-link').forEach(function(n){ n.classList.remove('active') }); _this.classList.add('active');})(this)" data-hx-get="/bookmarks?filter=duplicated" data-hx-target="#links-table">Duplicated</a></li>
+                        <li class="nav-item"><a class="nav-link"        data-hx-on::before-request="(function(_this) {document.querySelectorAll('.nav-link').forEach(function(n){ n.classList.remove('active') }); _this.classList.add('active');})(this)" data-hx-get="/bookmarks"                   data-hx-target="#links-table">All</a></li>
                     </ul>
                 </div>
             </div>
