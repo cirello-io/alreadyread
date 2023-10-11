@@ -16,10 +16,13 @@ package web // import "cirello.io/alreadyread/pkg/web"
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
+	"path"
 	"slices"
 	"strconv"
+	"strings"
 
 	"cirello.io/alreadyread/frontend"
 	"cirello.io/alreadyread/pkg/actions"
@@ -55,6 +58,7 @@ func (s *Server) registerRoutes() {
 
 	// new
 	router.HandleFunc("/bookmarks", s.bookmarks)
+	router.HandleFunc("/bookmarks/", s.bookmarkOperations)
 
 	router.HandleFunc("/", rootHandler.ServeHTTP)
 	s.handler = router
@@ -211,4 +215,39 @@ func (s *Server) bookmarks(w http.ResponseWriter, r *http.Request) {
 	if err := frontend.LinkTable.Execute(w, bookmarks); err != nil {
 		log.Println("cannot render link table: ", err)
 	}
+}
+
+func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
+	// TODO: handle Access-Control-Allow-Origin correctly
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	switch r.Method {
+	case http.MethodDelete:
+		id, err := extractID("/bookmarks", r.URL.String())
+		if err != nil {
+			log.Println("cannot parse bookmark ID:", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		actions.DeleteBookmarkByID(s.db, id)
+		return
+	}
+
+}
+
+func extractID(root, urlPath string) (int64, error) {
+	if root == "" {
+		return 0, errors.New("empty root")
+	}
+	if urlPath == "" {
+		return 0, errors.New("empty URL Path")
+	}
+	root = path.Clean(root + "/")
+	urlPath = path.Clean(urlPath + "/")
+	if !strings.HasPrefix(urlPath, root) {
+		return 0, errors.New("URL Path doesn't start with root:" + urlPath + " " + root)
+	}
+	urlPath = strings.TrimPrefix(urlPath, root)[1:]
+	urlPathParts := strings.Split(strings.Trim(urlPath, "/"), "/")
+	return strconv.ParseInt(urlPathParts[0], 10, 64)
 }

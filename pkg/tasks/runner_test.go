@@ -16,10 +16,10 @@ package tasks
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
-	"cirello.io/alreadyread/pkg/errors"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -31,7 +31,7 @@ func Test_run(t *testing.T) {
 			Exec: func(*sqlx.DB) error {
 				count++
 				time.Sleep(5 * time.Second)
-				return errors.E("fake error")
+				return errors.New("fake error")
 			},
 			Frequency: 1 * time.Second,
 		},

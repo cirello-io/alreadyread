@@ -11,7 +11,7 @@
 			<td>
 				<button class="btn btn-link">📤</button>
 				<button class="btn btn-link">💤</button>
-				<button class="btn btn-link" data-hx-confirm="Are you sure you want to delete '{{.Title}}'?" data-hx-delete="/bookmarks?id={{.ID}}" data-hx-target="#bookmark-{{.ID}}">🗑</button>
+				<button class="btn btn-link" data-hx-confirm="Are you sure you want to delete '{{.Title}}'?" data-hx-delete="/bookmarks/{{.ID}}" data-hx-target="#bookmark-{{.ID}}">🗑</button>
 				<a href="{{.URL}}" target="_blank">{{ .Title }}</a>
 			</td>
 			<td>
