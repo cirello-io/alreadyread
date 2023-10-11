@@ -16,6 +16,7 @@ package cli
 
 import (
 	"fmt"
+	"text/tabwriter"
 
 	"cirello.io/alreadyread/pkg/actions"
 	"github.com/urfave/cli"
@@ -31,10 +32,11 @@ func (c *commands) listBookmarks() cli.Command {
 			if err != nil {
 				return cliError(fmt.Errorf("cannot load bookmarks: %w", err))
 			}
-
+			w := tabwriter.NewWriter(ctx.App.Writer, 0, 0, 1, ' ', 0)
 			for _, b := range bookmarks {
-				fmt.Println(b.URL)
+				fmt.Fprintln(w, b.Title, "\t", b.URL)
 			}
+			w.Flush()
 			return nil
 		},
 	}
