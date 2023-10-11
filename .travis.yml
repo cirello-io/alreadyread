@@ -1,6 +1,6 @@
 language: go
 sudo: false
-go_import_path: cirello.io/bookmarkd
+go_import_path: cirello.io/alreadyread
 go:
   - "1.16"
 env:

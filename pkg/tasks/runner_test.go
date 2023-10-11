@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	"cirello.io/errors"
+	"cirello.io/alreadyread/pkg/errors"
 	"github.com/jmoiron/sqlx"
 )
 

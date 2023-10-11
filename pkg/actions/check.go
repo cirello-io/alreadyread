@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package actions // import "cirello.io/bookmarkd/pkg/actions"
+package actions // import "cirello.io/alreadyread/pkg/actions"
 
 import (
-	"cirello.io/bookmarkd/pkg/tasks"
+	"cirello.io/alreadyread/pkg/tasks"
 	"github.com/jmoiron/sqlx"
 )
 

@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main // import "cirello.io/bookmarkd/cmd/bookmarkd"
+package main // import "cirello.io/alreadyread/cmd/bookmarkd"
 
 import (
 	"log"
 	"os"
 
-	"cirello.io/bookmarkd/pkg/cli"
-	"cirello.io/bookmarkd/pkg/db"
+	"cirello.io/alreadyread/pkg/cli"
+	"cirello.io/alreadyread/pkg/db"
 )
 
 func main() {

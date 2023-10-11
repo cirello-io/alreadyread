@@ -17,16 +17,16 @@ package actions
 import (
 	"net/url"
 
-	"cirello.io/bookmarkd/pkg/models"
-	"cirello.io/bookmarkd/pkg/net"
-	"cirello.io/errors"
+	"cirello.io/alreadyread/pkg/errors"
+	"cirello.io/alreadyread/pkg/models"
+	"cirello.io/alreadyread/pkg/net"
 	"github.com/jmoiron/sqlx"
 )
 
 // AddBookmarkByURL reads a URL and inserts its bookmark into the database.
 func AddBookmarkByURL(db *sqlx.DB, u string) error {
 	if _, err := url.Parse(u); err != nil {
-		return errors.E(errors.Invalid, err, "invalid URL")
+		return errors.Invalidf(err, "invalid URL")
 	}
 
 	b := net.CheckLink(&models.Bookmark{
@@ -34,19 +34,19 @@ func AddBookmarkByURL(db *sqlx.DB, u string) error {
 	})
 
 	_, err := models.NewBookmarkDAO(db).Insert(b)
-	return errors.E(errors.Internal, err)
+	return errors.Internal(err)
 }
 
 // AddBookmark stores one bookmark into the database.
 func AddBookmark(db *sqlx.DB, b *models.Bookmark, broadcast func(msg interface{})) error {
 	if _, err := url.Parse(b.URL); err != nil {
-		return errors.E(errors.Invalid, err, "invalid URL")
+		return errors.Invalidf(err, "invalid URL")
 	}
 
 	b = net.CheckLink(b)
 	b, err := models.NewBookmarkDAO(db).Insert(b)
 	if err != nil {
-		return errors.E(errors.Internal, err)
+		return errors.Internal(err)
 	}
 	broadcast(
 		&struct {

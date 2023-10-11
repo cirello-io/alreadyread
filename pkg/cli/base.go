@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cli // import "cirello.io/bookmarkd/pkg/cli"
+package cli // import "cirello.io/alreadyread/pkg/cli"
 
 import (
 	"log"
@@ -20,8 +20,7 @@ import (
 	"sort"
 	"strings"
 
-	"cirello.io/errors"
-	"cirello.io/bookmarkd/pkg/models"
+	"cirello.io/alreadyread/pkg/models"
 	"github.com/jmoiron/sqlx"
 	"github.com/urfave/cli"
 )
@@ -34,7 +33,7 @@ func (c *commands) bootstrap(ctx *cli.Context) error {
 	bookmarkDAO := models.NewBookmarkDAO(c.db)
 
 	if err := bookmarkDAO.Bootstrap(); err != nil {
-		return errors.E(ctx, err)
+		return cliError(err)
 	}
 
 	return nil
@@ -64,4 +63,11 @@ func Run(db *sqlx.DB) {
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func cliError(err error) error {
+	if err == nil {
+		return nil
+	}
+	return cli.NewExitError(err.Error(), 1)
 }

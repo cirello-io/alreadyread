@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	"cirello.io/bookmarkd/pkg/models"
+	"cirello.io/alreadyread/pkg/models"
 )
 
 func TestCheckLink(t *testing.T) {

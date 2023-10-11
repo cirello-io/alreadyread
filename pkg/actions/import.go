@@ -19,8 +19,8 @@ import (
 	"io"
 	"net/http"
 
-	"cirello.io/bookmarkd/pkg/models"
-	"cirello.io/errors"
+	"cirello.io/alreadyread/pkg/errors"
+	"cirello.io/alreadyread/pkg/models"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -36,11 +36,11 @@ func ImportBookmarks(db *sqlx.DB, r io.Reader) error {
 			LastStatusCheck:  0,
 			LastStatusReason: "",
 		}); err != nil {
-			return errors.E(errors.Internal, err)
+			return errors.Internal(err)
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		return errors.E(errors.Internal, err, "reading input")
+		return errors.Internalf(err, "reading input")
 	}
 	return nil
 }

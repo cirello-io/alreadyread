@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package models // import "cirello.io/bookmarkd/pkg/models"
+package models // import "cirello.io/alreadyread/pkg/models"
 
 import (
 	"net/url"
 	"time"
 
-	"cirello.io/errors"
+	"cirello.io/alreadyread/pkg/errors"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -172,11 +172,11 @@ func (b *bookmarkDAO) Insert(bookmark *Bookmark) (*Bookmark, error) {
 		(:url, :last_status_code, :last_status_check, :last_status_reason, :title, :created_at, :inbox)
 	`, bookmark)
 	if err != nil {
-		return nil, errors.E(err, "cannot insert row")
+		return nil, errors.Errorf(err, "cannot insert row")
 	}
 	id, err := result.LastInsertId()
 	if err != nil {
-		return nil, errors.E(err, "cannot load last inserted ID")
+		return nil, errors.Errorf(err, "cannot load last inserted ID")
 	}
 	err = b.db.Get(bookmark, `
 		SELECT
@@ -187,13 +187,13 @@ func (b *bookmarkDAO) Insert(bookmark *Bookmark) (*Bookmark, error) {
 			id = $1
 	`, id)
 	if err != nil {
-		return nil, errors.E(err, "cannot reload inserted row")
+		return nil, errors.Errorf(err, "cannot reload inserted row")
 	}
 	u, err := url.Parse(bookmark.URL)
 	if err == nil {
 		bookmark.Host = u.Host
 	}
-	return bookmark, errors.E(err, "cannot parse URL")
+	return bookmark, errors.Errorf(err, "cannot parse URL")
 }
 
 // GetByID loads one bookmark.
@@ -208,13 +208,13 @@ func (b *bookmarkDAO) GetByID(id int64) (*Bookmark, error) {
 		id = $1
 	`, id)
 	if err != nil {
-		return nil, errors.E(err, "cannot find row")
+		return nil, errors.Errorf(err, "cannot find row")
 	}
 	u, err := url.Parse(bookmark.URL)
 	if err == nil {
 		bookmark.Host = u.Host
 	}
-	return bookmark, errors.E(err, "cannot parse URL")
+	return bookmark, errors.Errorf(err, "cannot parse URL")
 }
 
 // Update one bookmark.

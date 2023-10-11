@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package db // import "cirello.io/bookmarkd/pkg/db"
+package db // import "cirello.io/alreadyread/pkg/db"
 
 import (
-	"cirello.io/errors"
+	"cirello.io/alreadyread/pkg/errors"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // SQLite3 driver
 )

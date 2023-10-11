@@ -27,9 +27,9 @@ import (
 	"strings"
 	"time"
 
-	"cirello.io/bookmarkd/pkg/actions"
-	"cirello.io/bookmarkd/pkg/models"
-	"cirello.io/bookmarkd/pkg/pubsub"
+	"cirello.io/alreadyread/pkg/actions"
+	"cirello.io/alreadyread/pkg/models"
+	"cirello.io/alreadyread/pkg/pubsub"
 	smtp "github.com/emersion/go-smtp"
 	"github.com/jmoiron/sqlx"
 	xurls "mvdan.cc/xurls/v2"

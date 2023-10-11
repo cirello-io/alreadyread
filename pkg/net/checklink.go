@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"cirello.io/bookmarkd/pkg/models"
+	"cirello.io/alreadyread/pkg/models"
 	"github.com/PuerkitoBio/goquery"
 )
 

@@ -22,11 +22,11 @@ import (
 	"net/http"
 	"os"
 
-	"cirello.io/bookmarkd/pkg/mail"
-	"cirello.io/bookmarkd/pkg/pubsub"
-	"cirello.io/bookmarkd/pkg/tasks"
-	"cirello.io/bookmarkd/pkg/web"
-	"cirello.io/errors"
+	"cirello.io/alreadyread/pkg/errors"
+	"cirello.io/alreadyread/pkg/mail"
+	"cirello.io/alreadyread/pkg/pubsub"
+	"cirello.io/alreadyread/pkg/tasks"
+	"cirello.io/alreadyread/pkg/web"
 	"github.com/urfave/cli"
 )
 
@@ -76,11 +76,11 @@ func (c *commands) httpMode() cli.Command {
 		Action: func(ctx *cli.Context) error {
 			lHTTP, err := net.Listen("tcp", ctx.String("bind"))
 			if err != nil {
-				return errors.E(err, "cannot bind port")
+				return errors.Errorf(err, "cannot bind port")
 			}
 			lMX, err := net.Listen("tcp", ctx.String("mx-bind"))
 			if err != nil {
-				return errors.E(err, "cannot bind port (MX)")
+				return errors.Errorf(err, "cannot bind port (MX)")
 			}
 			broker := pubsub.New()
 			tasks.Run(c.db)
@@ -107,14 +107,14 @@ func readUsersListFile(fn string) ([]string, error) {
 	var users []string
 	fd, err := os.Open(fn)
 	if err != nil {
-		return users, errors.E(err, "cannot open users list file")
+		return users, errors.Errorf(err, "cannot open users list file")
 	}
 	scanner := bufio.NewScanner(fd)
 	for scanner.Scan() {
 		users = append(users, scanner.Text())
 	}
 	if err := scanner.Err(); err != nil {
-		return users, errors.E(err, "cannot read users list")
+		return users, errors.Errorf(err, "cannot read users list")
 	}
 	return users, nil
 }

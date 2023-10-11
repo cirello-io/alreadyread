@@ -12,17 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tasks // import "cirello.io/bookmarkd/pkg/tasks"
+package tasks // import "cirello.io/alreadyread/pkg/tasks"
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 	"time"
 
-	"cirello.io/bookmarkd/pkg/models"
-	"cirello.io/bookmarkd/pkg/net"
-	"cirello.io/errors"
+	"cirello.io/alreadyread/pkg/errors"
+	"cirello.io/alreadyread/pkg/models"
+	"cirello.io/alreadyread/pkg/net"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/sync/singleflight"
 )
@@ -75,15 +76,11 @@ func run(ctx context.Context, db *sqlx.DB, tasks []Task) {
 
 // LinkHealth checks if the expired links are still valid.
 func LinkHealth(db *sqlx.DB) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = errors.E(errors.Internal, r)
-		}
-	}()
+	defer recoverPanic(&err)
 	bookmarkDAO := models.NewBookmarkDAO(db)
 	bookmarks, err := bookmarkDAO.Expired()
 	if err != nil {
-		return errors.E(errors.Internal, err, "cannot load expired bookmarks")
+		return errors.Internalf(err, "cannot load expired bookmarks")
 	}
 
 	bookmarkCh := make(chan *models.Bookmark)
@@ -112,24 +109,22 @@ func LinkHealth(db *sqlx.DB) (err error) {
 
 // Vacuum executes a SQLite3 vacuum clean up.
 func Vacuum(db *sqlx.DB) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = errors.E(errors.Internal, r)
-		}
-	}()
+	defer recoverPanic(&err)
 
 	_, err = db.Exec("VACUUM")
-	return errors.E(err, "cannot run vacuum")
+	return errors.Errorf(err, "cannot run vacuum")
 }
 
 // RestorePostponedLinks revamp rescheduled links in the inbox.
 func RestorePostponedLinks(db *sqlx.DB) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = errors.E(errors.Internal, r)
-		}
-	}()
+	defer recoverPanic(&err)
 
 	_, err = db.Exec("UPDATE bookmarks SET inbox = 1 WHERE inbox = 2")
-	return errors.E(err, "cannot run restore rescheduled links")
+	return errors.Errorf(err, "cannot run restore rescheduled links")
+}
+
+func recoverPanic(outErr *error) {
+	if r := recover(); r != nil {
+		*outErr = fmt.Errorf("recovered panic: %v", r)
+	}
 }

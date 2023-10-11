@@ -15,8 +15,8 @@
 package cli
 
 import (
-	"cirello.io/bookmarkd/pkg/actions"
-	"cirello.io/errors"
+	"cirello.io/alreadyread/pkg/actions"
+	"cirello.io/alreadyread/pkg/errors"
 	"github.com/urfave/cli"
 )
 
@@ -28,7 +28,7 @@ func (c *commands) addBookmark() cli.Command {
 		Description: "add a bookmarks",
 		Action: func(ctx *cli.Context) error {
 			if err := actions.AddBookmarkByURL(c.db, ctx.Args().First()); err != nil {
-				return errors.E(ctx, err, "cannot add the bookmark")
+				return cliError(errors.Errorf(err, "cannot add the bookmark"))
 			}
 			return nil
 		},

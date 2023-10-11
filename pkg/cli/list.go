@@ -17,8 +17,8 @@ package cli
 import (
 	"fmt"
 
-	"cirello.io/bookmarkd/pkg/actions"
-	"cirello.io/errors"
+	"cirello.io/alreadyread/pkg/actions"
+	"cirello.io/alreadyread/pkg/errors"
 	"github.com/urfave/cli"
 )
 
@@ -30,7 +30,7 @@ func (c *commands) listBookmarks() cli.Command {
 		Action: func(ctx *cli.Context) error {
 			bookmarks, err := actions.ListBookmarks(c.db)
 			if err != nil {
-				return errors.E(ctx, err, "cannot load bookmarks")
+				return cliError(errors.Errorf(err, "cannot load bookmarks"))
 			}
 
 			for _, b := range bookmarks {

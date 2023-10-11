@@ -12,21 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package web // import "cirello.io/bookmarkd/pkg/web"
+package web // import "cirello.io/alreadyread/pkg/web"
 
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
-	"cirello.io/bookmarkd/generated"
-	"cirello.io/bookmarkd/pkg/actions"
-	"cirello.io/bookmarkd/pkg/models"
-	"cirello.io/bookmarkd/pkg/net"
-	"cirello.io/bookmarkd/pkg/pubsub"
-	"cirello.io/errors"
+	"cirello.io/alreadyread/generated"
+	"cirello.io/alreadyread/pkg/actions"
+	"cirello.io/alreadyread/pkg/errors"
+	"cirello.io/alreadyread/pkg/models"
+	"cirello.io/alreadyread/pkg/net"
+	"cirello.io/alreadyread/pkg/pubsub"
 	svcjwt "cirello.io/svc/pkg/jwt"
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -117,21 +118,21 @@ func (s *Server) authentication(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 	if err := s.authMiddleware.CheckJWT(w, r); err != nil {
-		return errors.E("cannot find JWT in the request")
+		return fmt.Errorf("cannot find JWT in the request")
 	}
 	token, ok := r.Context().Value("user").(*jwt.Token)
 	if !ok {
-		return errors.E("cannot find token in context")
+		return fmt.Errorf("cannot find token in context")
 	}
 	claims, err := svcjwt.Claims(token)
 	if err != nil {
-		return errors.E(err, "unexpected token set")
+		return errors.Errorf(err, "unexpected token set")
 	}
 	if claims.Target != "bookmarkd.cirello.io" {
-		return errors.E("invalid target in token")
+		return fmt.Errorf("invalid target in token")
 	}
 	if _, ok := s.acceptableEmails[claims.Email]; !ok {
-		return errors.E("access for this account")
+		return fmt.Errorf("access for this account")
 	}
 	*r = *r.WithContext(context.WithValue(r.Context(),
 		trustLevel, claims.Trust))

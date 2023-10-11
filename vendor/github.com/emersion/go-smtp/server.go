@@ -37,12 +37,25 @@ type Server struct {
 	Domain            string
 	MaxRecipients     int
 	MaxMessageBytes   int
+	MaxLineLength     int
 	AllowInsecureAuth bool
 	Strict            bool
 	Debug             io.Writer
 	ErrorLog          Logger
 	ReadTimeout       time.Duration
 	WriteTimeout      time.Duration
+
+	// Advertise SMTPUTF8 (RFC 6531) capability.
+	// Should be used only if backend supports it.
+	EnableSMTPUTF8 bool
+
+	// Advertise REQUIRETLS (RFC 8689) capability.
+	// Should be used only if backend supports it.
+	EnableREQUIRETLS bool
+
+	// Advertise BINARYMIME (RFC 3030) capability.
+	// Should be used only if backend supports it.
+	EnableBINARYMIME bool
 
 	// If set, the AUTH command will not be advertised and authentication
 	// attempts will be rejected. This setting overrides AllowInsecureAuth.
@@ -51,20 +64,25 @@ type Server struct {
 	// The server backend.
 	Backend Backend
 
-	listener net.Listener
-	caps     []string
-	auths    map[string]SaslServerFactory
+	caps  []string
+	auths map[string]SaslServerFactory
+	done  chan struct{}
 
-	locker sync.Mutex
-	conns  map[*Conn]struct{}
+	locker    sync.Mutex
+	listeners []net.Listener
+	conns     map[*Conn]struct{}
 }
 
 // New creates a new SMTP server.
 func NewServer(be Backend) *Server {
 	return &Server{
+		// Doubled maximum line length per RFC 5321 (Section 4.5.3.1.6)
+		MaxLineLength: 2000,
+
 		Backend:  be,
+		done:     make(chan struct{}, 1),
 		ErrorLog: log.New(os.Stderr, "smtp/server ", log.LstdFlags),
-		caps:     []string{"PIPELINING", "8BITMIME", "ENHANCEDSTATUSCODES"},
+		caps:     []string{"PIPELINING", "8BITMIME", "ENHANCEDSTATUSCODES", "CHUNKING"},
 		auths: map[string]SaslServerFactory{
 			sasl.Plain: func(conn *Conn) sasl.Server {
 				return sasl.NewPlainServer(func(identity, username, password string) error {
@@ -89,13 +107,20 @@ func NewServer(be Backend) *Server {
 
 // Serve accepts incoming connections on the Listener l.
 func (s *Server) Serve(l net.Listener) error {
-	s.listener = l
-	defer s.Close()
+	s.locker.Lock()
+	s.listeners = append(s.listeners, l)
+	s.locker.Unlock()
 
 	for {
 		c, err := l.Accept()
 		if err != nil {
-			return err
+			select {
+			case <-s.done:
+				// we called Close()
+				return nil
+			default:
+				return err
+			}
 		}
 
 		go s.handleConn(newConn(c, s))
@@ -122,14 +147,17 @@ func (s *Server) handleConn(c *Conn) error {
 		if err == nil {
 			cmd, arg, err := parseCmd(line)
 			if err != nil {
-				c.nbrErrors++
-				c.WriteResponse(501, EnhancedCode{5, 5, 2}, "Bad command")
+				c.protocolError(501, EnhancedCode{5, 5, 2}, "Bad command")
 				continue
 			}
 
 			c.handle(cmd, arg)
 		} else {
 			if err == io.EOF {
+				return nil
+			}
+			if err == ErrTooLongLine {
+				c.WriteResponse(500, EnhancedCode{5, 4, 0}, "Too long line, closing connection")
 				return nil
 			}
 
@@ -189,16 +217,32 @@ func (s *Server) ListenAndServeTLS() error {
 	return s.Serve(l)
 }
 
-// Close stops the server.
-func (s *Server) Close() {
-	s.listener.Close()
+// Close immediately closes all active listeners and connections.
+//
+// Close returns any error returned from closing the server's underlying
+// listener(s).
+func (s *Server) Close() error {
+	select {
+	case <-s.done:
+		return errors.New("smtp: server already closed")
+	default:
+		close(s.done)
+	}
+
+	var err error
+	for _, l := range s.listeners {
+		if lerr := l.Close(); lerr != nil && err == nil {
+			err = lerr
+		}
+	}
 
 	s.locker.Lock()
-	defer s.locker.Unlock()
-
 	for conn := range s.conns {
 		conn.Close()
 	}
+	s.locker.Unlock()
+
+	return err
 }
 
 // EnableAuth enables an authentication mechanism on this server.

@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package actions // import "cirello.io/bookmarkd/pkg/actions"
+package actions // import "cirello.io/alreadyread/pkg/actions"
 
 import (
-	"cirello.io/bookmarkd/pkg/models"
-	"cirello.io/errors"
+	"cirello.io/alreadyread/pkg/errors"
+	"cirello.io/alreadyread/pkg/models"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -25,7 +25,7 @@ func ListBookmarks(db *sqlx.DB) ([]*models.Bookmark, error) {
 	bookmarkDAO := models.NewBookmarkDAO(db)
 	bookmarks, err := bookmarkDAO.All()
 	if err != nil {
-		return nil, errors.E(errors.Internal, err, "cannot load all bookmarks")
+		return nil, errors.Internalf(err, "cannot load all bookmarks")
 	}
 	return bookmarks, nil
 }

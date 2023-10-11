@@ -15,8 +15,8 @@
 package actions
 
 import (
-	"cirello.io/bookmarkd/pkg/models"
-	"cirello.io/errors"
+	"cirello.io/alreadyread/pkg/errors"
+	"cirello.io/alreadyread/pkg/models"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -24,7 +24,7 @@ import (
 func DeleteBookmark(db *sqlx.DB, b *models.Bookmark, broadcast func(interface{})) error {
 	err := models.NewBookmarkDAO(db).Delete(b)
 	if err != nil {
-		return errors.E(errors.Internal, err)
+		return errors.Internal(err)
 	}
 	broadcast(&struct {
 		WSType string `json:"type"`

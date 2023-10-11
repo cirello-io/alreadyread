@@ -15,8 +15,8 @@
 package actions
 
 import (
-	"cirello.io/bookmarkd/pkg/models"
-	"cirello.io/errors"
+	"cirello.io/alreadyread/pkg/errors"
+	"cirello.io/alreadyread/pkg/models"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -25,11 +25,11 @@ func MarkBookmarkAsRead(db *sqlx.DB, id int64, broadcast func(msg interface{})) 
 	dao := models.NewBookmarkDAO(db)
 	b, err := dao.GetByID(id)
 	if err != nil {
-		return errors.E(errors.Internal, err, "cannot find bookmark")
+		return errors.Internalf(err, "cannot find bookmark")
 	}
 	b.Inbox = 0
 	if err := dao.Update(b); err != nil {
-		return errors.E(errors.Internal, err, "cannot update bookmarkd")
+		return errors.Internalf(err, "cannot update bookmarkd")
 	}
 	broadcast(
 		&struct {
