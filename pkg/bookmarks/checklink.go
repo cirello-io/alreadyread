@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package net
+package bookmarks
 
 import (
 	"compress/gzip"
@@ -20,14 +20,13 @@ import (
 	"strings"
 	"time"
 
-	"cirello.io/alreadyread/pkg/models"
 	"github.com/PuerkitoBio/goquery"
 )
 
 var now = time.Now
 
 // CheckLink dials bookmark URL and updates its state with the errors if any.
-func CheckLink(bookmark *models.Bookmark) *models.Bookmark {
+func CheckLink(bookmark *Bookmark) *Bookmark {
 	res, err := http.Get(bookmark.URL)
 	if err != nil {
 		bookmark.LastStatusCheck = now().Unix()

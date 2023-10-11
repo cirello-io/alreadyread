@@ -12,14 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package net
+package bookmarks
 
 import (
 	"reflect"
 	"testing"
 	"time"
-
-	"cirello.io/alreadyread/pkg/models"
 )
 
 func TestCheckLink(t *testing.T) {
@@ -28,19 +26,19 @@ func TestCheckLink(t *testing.T) {
 		return time.Unix(0, 0)
 	}
 	type args struct {
-		bookmark *models.Bookmark
+		bookmark *Bookmark
 	}
 	tests := []struct {
 		name string
 		args args
-		want *models.Bookmark
+		want *Bookmark
 	}{
 		{
 			"404",
 			args{
-				&models.Bookmark{URL: "http://example.com/404"},
+				&Bookmark{URL: "http://example.com/404"},
 			},
-			&models.Bookmark{
+			&Bookmark{
 				URL:              "http://example.com/404",
 				LastStatusCode:   404,
 				LastStatusReason: "Not Found",
@@ -50,9 +48,9 @@ func TestCheckLink(t *testing.T) {
 		{
 			"200",
 			args{
-				&models.Bookmark{URL: "http://example.com/"},
+				&Bookmark{URL: "http://example.com/"},
 			},
-			&models.Bookmark{
+			&Bookmark{
 				URL:              "http://example.com/",
 				LastStatusCode:   200,
 				LastStatusReason: "OK",
@@ -63,9 +61,9 @@ func TestCheckLink(t *testing.T) {
 		{
 			"invalid URL",
 			args{
-				&models.Bookmark{URL: "invalid-url"},
+				&Bookmark{URL: "invalid-url"},
 			},
-			&models.Bookmark{
+			&Bookmark{
 				URL:              "invalid-url",
 				LastStatusCode:   0,
 				LastStatusReason: "Get \"invalid-url\": unsupported protocol scheme \"\"",
@@ -84,7 +82,7 @@ func TestCheckLink(t *testing.T) {
 }
 
 func TestContentExtraction(t *testing.T) {
-	b := &models.Bookmark{
+	b := &Bookmark{
 		URL: "https://www.example.org",
 	}
 	b = CheckLink(b)

@@ -20,14 +20,12 @@ import (
 	"log"
 	"net/http"
 	"path"
-	"slices"
 	"strconv"
 	"strings"
 
 	"cirello.io/alreadyread/frontend"
-	"cirello.io/alreadyread/pkg/actions"
-	"cirello.io/alreadyread/pkg/models"
-	"cirello.io/alreadyread/pkg/net"
+	"cirello.io/alreadyread/pkg/bookmarks"
+	"cirello.io/alreadyread/pkg/bookmarks/sqliterepo"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -64,36 +62,17 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *Server) bookmarks(w http.ResponseWriter, r *http.Request) {
 	// TODO: handle Access-Control-Allow-Origin correctly
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	repository := sqliterepo.New(s.db)
 
-	bookmarks, err := actions.ListBookmarks(s.db)
+	// TODO: use specifications
+	list, err := bookmarks.List(repository, r.URL.Query().Get("filter"))
 	if err != nil {
 		log.Println("cannot load all bookmarks:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
-	switch r.URL.Query().Get("filter") {
-	case "new":
-		bookmarks = slices.DeleteFunc(bookmarks, func(bookmark *models.Bookmark) bool {
-			return bookmark.Inbox != models.New
-		})
-	case "duplicated":
-		duplicates := map[string][]*models.Bookmark{}
-		for _, bookmark := range bookmarks {
-			duplicates[bookmark.URL] = append(duplicates[bookmark.URL], bookmark)
-		}
-		bookmarks = nil
-		for _, duplicate := range duplicates {
-			if len(duplicate) > 1 {
-				bookmarks = append(bookmarks, duplicate...)
-			}
-		}
-		slices.SortFunc(bookmarks, func(a, b *models.Bookmark) int {
-			return b.CreatedAt.Compare(a.CreatedAt)
-		})
-	}
-
-	if err := frontend.LinkTable.Execute(w, bookmarks); err != nil {
+	if err := frontend.LinkTable.Execute(w, list); err != nil {
 		log.Println("cannot render link table: ", err)
 	}
 }
@@ -102,6 +81,7 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 	// TODO: handle Access-Control-Allow-Origin correctly
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
+	repository := sqliterepo.New(s.db)
 	id, err := extractID("/bookmarks", r.URL.String())
 	if err != nil {
 		log.Println("cannot parse bookmark ID:", err)
@@ -111,7 +91,7 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodDelete:
-		err := actions.DeleteBookmarkByID(s.db, id)
+		err := bookmarks.DeleteByID(repository, id)
 		if err != nil {
 			log.Println("cannot delete bookmark:", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -120,7 +100,7 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 		return
 	case http.MethodPatch:
 		if inbox := r.FormValue("inbox"); inbox != "" {
-			err := actions.UpdateInbox(s.db, id, inbox)
+			err := bookmarks.UpdateInbox(repository, id, inbox)
 			if err != nil {
 				log.Println("cannot update bookmark:", err)
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -129,7 +109,7 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	case http.MethodPost:
-		bookmark, err := actions.AddBookmark(s.db, &models.Bookmark{
+		bookmark, err := bookmarks.Create(repository, &bookmarks.Bookmark{
 			Title: r.FormValue("title"),
 			URL:   r.FormValue("url"),
 		})
@@ -177,8 +157,7 @@ func extractID(root, urlPath string) (int64, error) {
 func (s *Server) urlTitle(w http.ResponseWriter, r *http.Request) {
 	// TODO: handle Access-Control-Allow-Origin correctly
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	b := net.CheckLink(&models.Bookmark{
+	b := bookmarks.CheckLink(&bookmarks.Bookmark{
 		URL: r.FormValue("url"),
 	})
 	fmt.Fprintln(w, b.Title)

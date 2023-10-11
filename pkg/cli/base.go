@@ -20,7 +20,7 @@ import (
 	"sort"
 	"strings"
 
-	"cirello.io/alreadyread/pkg/models"
+	"cirello.io/alreadyread/pkg/bookmarks/sqliterepo"
 	"github.com/jmoiron/sqlx"
 	"github.com/urfave/cli"
 )
@@ -30,8 +30,7 @@ type commands struct {
 }
 
 func (c *commands) bootstrap(*cli.Context) error {
-	bookmarkDAO := models.NewBookmarkDAO(c.db)
-	return bookmarkDAO.Bootstrap()
+	return sqliterepo.New(c.db).Bootstrap()
 }
 
 // Run executes the application in CLI mode.

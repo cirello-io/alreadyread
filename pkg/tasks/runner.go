@@ -21,8 +21,8 @@ import (
 	"sync"
 	"time"
 
-	"cirello.io/alreadyread/pkg/models"
-	"cirello.io/alreadyread/pkg/net"
+	"cirello.io/alreadyread/pkg/bookmarks"
+	"cirello.io/alreadyread/pkg/bookmarks/sqliterepo"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/sync/singleflight"
 )
@@ -76,13 +76,13 @@ func run(ctx context.Context, db *sqlx.DB, tasks []Task) {
 // LinkHealth checks if the expired links are still valid.
 func LinkHealth(db *sqlx.DB) (err error) {
 	defer recoverPanic(&err)
-	bookmarkDAO := models.NewBookmarkDAO(db)
-	bookmarks, err := bookmarkDAO.Expired()
+	repository := sqliterepo.New(db)
+	expiredBookmarks, err := repository.Expired()
 	if err != nil {
 		return fmt.Errorf("cannot load expired bookmarks: %w", err)
 	}
 
-	bookmarkCh := make(chan *models.Bookmark)
+	bookmarkCh := make(chan *bookmarks.Bookmark)
 	var wg sync.WaitGroup
 	for i := 0; i < 4; i++ {
 		wg.Add(1)
@@ -90,14 +90,14 @@ func LinkHealth(db *sqlx.DB) (err error) {
 			defer wg.Done()
 			for bookmark := range bookmarkCh {
 				log.Println("linkHealth:", bookmark.ID, bookmark.URL)
-				bookmark = net.CheckLink(bookmark)
-				if err := bookmarkDAO.Update(bookmark); err != nil {
+				bookmark = bookmarks.CheckLink(bookmark)
+				if err := repository.Update(bookmark); err != nil {
 					log.Println(err, "cannot update link during link health check - status OK")
 				}
 			}
 		}()
 	}
-	for _, bookmark := range bookmarks {
+	for _, bookmark := range expiredBookmarks {
 		bookmarkCh <- bookmark
 	}
 	close(bookmarkCh)

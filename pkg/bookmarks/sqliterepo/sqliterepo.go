@@ -12,53 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package models // import "cirello.io/alreadyread/pkg/models"
+package sqliterepo
 
 import (
 	"fmt"
 	"net/url"
 	"time"
 
+	"cirello.io/alreadyread/pkg/bookmarks"
 	"github.com/jmoiron/sqlx"
 )
 
-// Bookmark stores the basic information of a web URL.
-type Bookmark struct {
-	ID               int64     `db:"id" json:"id"`
-	URL              string    `db:"url" json:"url"`
-	LastStatusCode   int64     `db:"last_status_code" json:"last_status_code"`
-	LastStatusCheck  int64     `db:"last_status_check" json:"last_status_check"`
-	LastStatusReason string    `db:"last_status_reason" json:"last_status_reason"`
-	Title            string    `db:"title" json:"title"`
-	CreatedAt        time.Time `db:"created_at" json:"created_at"`
-	Inbox            Inbox     `db:"inbox" json:"inbox"`
-
-	Host string `db:"-" json:"host"`
-}
-
-// BookmarkDAO provides DB persistence to bookmarks.
-type BookmarkDAO interface {
-	All() ([]*Bookmark, error)
-	Bootstrap() error
-	Delete(*Bookmark) error
-	Expired() ([]*Bookmark, error)
-	GetByID(id int64) (*Bookmark, error)
-	Insert(*Bookmark) (*Bookmark, error)
-	Invalid() ([]*Bookmark, error)
-	Update(*Bookmark) error
-}
-
-type Bookmarks struct {
+type Repository struct {
 	db *sqlx.DB
 }
 
-// NewBookmarkDAO instanties a BookmarkDAO.
-func NewBookmarkDAO(db *sqlx.DB) *Bookmarks {
-	return &Bookmarks{db: db}
+// New instanties a SQLite based repository.
+func New(db *sqlx.DB) *Repository {
+	return &Repository{db: db}
 }
 
-// Bootstrap creates table if missing.
-func (b *Bookmarks) Bootstrap() error {
+func (b *Repository) Bootstrap() error {
 	cmds := []string{
 		`create table if not exists bookmarks (
 			id integer primary key autoincrement,
@@ -87,9 +61,8 @@ func (b *Bookmarks) Bootstrap() error {
 	return nil
 }
 
-// All returns all known bookmarks.
-func (b *Bookmarks) All() ([]*Bookmark, error) {
-	var bookmarks []*Bookmark
+func (b *Repository) All() ([]*bookmarks.Bookmark, error) {
+	var bookmarks []*bookmarks.Bookmark
 	err := b.db.Select(&bookmarks, `
 		SELECT
 			*
@@ -118,9 +91,8 @@ func (b *Bookmarks) All() ([]*Bookmark, error) {
 	return bookmarks, nil
 }
 
-// Expired return all valid but expired bookmarks.
-func (b *Bookmarks) Expired() ([]*Bookmark, error) {
-	var bookmarks []*Bookmark
+func (b *Repository) Expired() ([]*bookmarks.Bookmark, error) {
+	var bookmarks []*bookmarks.Bookmark
 	const week = 7 * 24 * time.Hour
 	deadline := time.Now().Add(-week).Unix()
 	err := b.db.Select(&bookmarks, `
@@ -144,9 +116,8 @@ func (b *Bookmarks) Expired() ([]*Bookmark, error) {
 	return bookmarks, nil
 }
 
-// Invalid return all invalid bookmarks.
-func (b *Bookmarks) Invalid() ([]*Bookmark, error) {
-	var bookmarks []*Bookmark
+func (b *Repository) Invalid() ([]*bookmarks.Bookmark, error) {
+	var bookmarks []*bookmarks.Bookmark
 	err := b.db.Select(&bookmarks, `
 		SELECT
 			*
@@ -167,8 +138,7 @@ func (b *Bookmarks) Invalid() ([]*Bookmark, error) {
 	return bookmarks, nil
 }
 
-// Insert one bookmark.
-func (b *Bookmarks) Insert(bookmark *Bookmark) (*Bookmark, error) {
+func (b *Repository) Insert(bookmark *bookmarks.Bookmark) (*bookmarks.Bookmark, error) {
 	bookmark.CreatedAt = time.Now()
 	bookmark.Inbox = 1
 	result, err := b.db.NamedExec(`
@@ -203,9 +173,8 @@ func (b *Bookmarks) Insert(bookmark *Bookmark) (*Bookmark, error) {
 	return bookmark, nil
 }
 
-// GetByID loads one bookmark.
-func (b *Bookmarks) GetByID(id int64) (*Bookmark, error) {
-	bookmark := &Bookmark{}
+func (b *Repository) GetByID(id int64) (*bookmarks.Bookmark, error) {
+	bookmark := &bookmarks.Bookmark{}
 	err := b.db.Get(bookmark, `
 	SELECT
 		*
@@ -225,8 +194,7 @@ func (b *Bookmarks) GetByID(id int64) (*Bookmark, error) {
 	return bookmark, nil
 }
 
-// Update one bookmark.
-func (b *Bookmarks) Update(bookmark *Bookmark) error {
+func (b *Repository) Update(bookmark *bookmarks.Bookmark) error {
 	_, err := b.db.NamedExec(`
 		UPDATE bookmarks
 		SET
@@ -242,33 +210,7 @@ func (b *Bookmarks) Update(bookmark *Bookmark) error {
 	return err
 }
 
-// Delete one bookmark.
-func (b *Bookmarks) Delete(bookmark *Bookmark) error {
+func (b *Repository) Delete(bookmark *bookmarks.Bookmark) error {
 	_, err := b.db.NamedExec(`DELETE FROM bookmarks WHERE id = :id`, bookmark)
 	return err
-}
-
-type Inbox int64
-
-const (
-	Read Inbox = iota
-	New
-	Postponed
-)
-
-func (i Inbox) IsValid() bool {
-	return i == Read || i == New || i == Postponed
-}
-
-func ParseInbox(v string) (Inbox, error) {
-	switch v {
-	case "read":
-		return Read, nil
-	case "new":
-		return New, nil
-	case "postponed":
-		return Postponed, nil
-	default:
-		return 0, fmt.Errorf("invalid inbox status: %s", v)
-	}
 }

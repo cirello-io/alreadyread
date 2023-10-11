@@ -18,7 +18,8 @@ import (
 	"fmt"
 	"text/tabwriter"
 
-	"cirello.io/alreadyread/pkg/actions"
+	"cirello.io/alreadyread/pkg/bookmarks"
+	"cirello.io/alreadyread/pkg/bookmarks/sqliterepo"
 	"github.com/urfave/cli"
 )
 
@@ -28,7 +29,8 @@ func (c *commands) listBookmarks() cli.Command {
 		Usage:       "list bookmarks",
 		Description: "list all bookmarks",
 		Action: func(ctx *cli.Context) error {
-			bookmarks, err := actions.ListBookmarks(c.db)
+			repository := sqliterepo.New(c.db)
+			bookmarks, err := bookmarks.List(repository, "")
 			if err != nil {
 				return cliError(fmt.Errorf("cannot load bookmarks: %w", err))
 			}
