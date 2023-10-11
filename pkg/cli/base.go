@@ -46,10 +46,7 @@ func Run(db *sqlx.DB) {
 	}
 	app.Before = cmds.bootstrap
 	app.Commands = []cli.Command{
-		cmds.addBookmark(),
-		cmds.checkBookmarks(),
 		cmds.httpMode(),
-		cmds.importBookmarks(),
 		cmds.listBookmarks(),
 	}
 	sort.Slice(app.Commands, func(i, j int) bool {

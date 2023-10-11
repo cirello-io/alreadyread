@@ -23,18 +23,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// AddBookmarkByURL reads a URL and inserts its bookmark into the database.
-func AddBookmarkByURL(db *sqlx.DB, u string) error {
-	if _, err := url.Parse(u); err != nil {
-		return fmt.Errorf("invalid URL: %w", err)
-	}
-	b := net.CheckLink(&models.Bookmark{
-		URL: u,
-	})
-	_, err := models.NewBookmarkDAO(db).Insert(b)
-	return err
-}
-
 // AddBookmark stores one bookmark into the database.
 func AddBookmark(db *sqlx.DB, b *models.Bookmark) (*models.Bookmark, error) {
 	if _, err := url.Parse(b.URL); err != nil {
