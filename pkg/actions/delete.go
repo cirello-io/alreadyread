@@ -19,17 +19,11 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// DeleteBookmark deletes one bookmark from the database.
-func DeleteBookmark(db *sqlx.DB, b *models.Bookmark) error {
-	err := models.NewBookmarkDAO(db).Delete(b)
-	return err
-}
-
 // DeleteBookmarkByID deletes one bookmar, by ID, from the database.
 func DeleteBookmarkByID(db *sqlx.DB, id int64) error {
 	bookmark, err := models.NewBookmarkDAO(db).GetByID(id)
 	if err != nil {
 		return err
 	}
-	return DeleteBookmark(db, bookmark)
+	return models.NewBookmarkDAO(db).Delete(bookmark)
 }

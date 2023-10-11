@@ -144,7 +144,7 @@ func (b *Bookmarks) Expired() ([]*Bookmark, error) {
 	return bookmarks, nil
 }
 
-// Invalid return all invalid  bookmarks.
+// Invalid return all invalid bookmarks.
 func (b *Bookmarks) Invalid() ([]*Bookmark, error) {
 	var bookmarks []*Bookmark
 	err := b.db.Select(&bookmarks, `
