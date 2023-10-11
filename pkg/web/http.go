@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"slices"
 
 	"cirello.io/alreadyread/frontend"
 	"cirello.io/alreadyread/pkg/actions"
@@ -50,6 +51,7 @@ func New(db *sqlx.DB, broker *pubsub.Broker) (*Server, error) {
 func (s *Server) registerRoutes() error {
 	rootHandler := http.FileServer(http.FS(frontend.Content))
 	router := http.NewServeMux()
+	// legacy URLs
 	router.HandleFunc("/state", s.state)
 	router.HandleFunc("/loadBookmark", s.loadBookmark)
 	router.HandleFunc("/newBookmark", s.newBookmark)
@@ -57,6 +59,10 @@ func (s *Server) registerRoutes() error {
 	router.HandleFunc("/markBookmarkAsRead", s.markBookmarkAsRead)
 	router.HandleFunc("/markBookmarkAsPostpone", s.markBookmarkAsPostpone)
 	router.HandleFunc("/ws", s.websocket)
+
+	// new
+	router.HandleFunc("/bookmarks", s.bookmarks)
+
 	router.HandleFunc("/", rootHandler.ServeHTTP)
 	s.handler = router
 	return nil
@@ -222,5 +228,41 @@ func (s *Server) websocket(w http.ResponseWriter, r *http.Request) {
 		if err != nil || msgType == websocket.CloseMessage {
 			return
 		}
+	}
+}
+
+func (s *Server) bookmarks(w http.ResponseWriter, r *http.Request) {
+	// TODO: handle Access-Control-Allow-Origin correctly
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	bookmarks, err := actions.ListBookmarks(s.db)
+	if err != nil {
+		log.Println("cannot load all bookmarks:", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	switch r.URL.Query().Get("filter") {
+	case "new":
+		bookmarks = slices.DeleteFunc(bookmarks, func(bookmark *models.Bookmark) bool {
+			return bookmark.Inbox == 0
+		})
+	case "duplicated":
+		duplicates := map[string][]*models.Bookmark{}
+		for _, bookmark := range bookmarks {
+			duplicates[bookmark.URL] = append(duplicates[bookmark.URL], bookmark)
+		}
+		bookmarks = nil
+		for _, duplicate := range duplicates {
+			if len(duplicate) > 1 {
+				bookmarks = append(bookmarks, duplicate...)
+			}
+		}
+		slices.SortFunc(bookmarks, func(a, b *models.Bookmark) int {
+			return b.CreatedAt.Compare(a.CreatedAt)
+		})
+	}
+
+	if err := frontend.LinkTable.Execute(w, bookmarks); err != nil {
+		log.Println("cannot render link table: ", err)
 	}
 }
