@@ -15,6 +15,7 @@
 package actions
 
 import (
+	"fmt"
 	"net/url"
 
 	"cirello.io/alreadyread/pkg/errors"
@@ -26,27 +27,23 @@ import (
 // AddBookmarkByURL reads a URL and inserts its bookmark into the database.
 func AddBookmarkByURL(db *sqlx.DB, u string) error {
 	if _, err := url.Parse(u); err != nil {
-		return errors.Invalidf(err, "invalid URL")
+		return fmt.Errorf("invalid URL: %w", err)
 	}
-
 	b := net.CheckLink(&models.Bookmark{
 		URL: u,
 	})
-
 	_, err := models.NewBookmarkDAO(db).Insert(b)
 	return errors.Internal(err)
 }
 
 // AddBookmark stores one bookmark into the database.
-func AddBookmark(db *sqlx.DB, b *models.Bookmark) error {
+func AddBookmark(db *sqlx.DB, b *models.Bookmark) (*models.Bookmark, error) {
 	if _, err := url.Parse(b.URL); err != nil {
-		return errors.Invalidf(err, "invalid URL")
+		return nil, fmt.Errorf("invalid URL: %w", err)
 	}
-
 	b = net.CheckLink(b)
-	b, err := models.NewBookmarkDAO(db).Insert(b)
-	if err != nil {
-		return errors.Internal(err)
+	if _, err := models.NewBookmarkDAO(db).Insert(b); err != nil {
+		return nil, fmt.Errorf("cannot insert bookmark: %w", err)
 	}
-	return nil
+	return b, nil
 }

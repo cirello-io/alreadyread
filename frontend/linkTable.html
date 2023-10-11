@@ -1,3 +1,18 @@
+{{ define "link" }}
+<tr id="bookmark-{{.ID}}">
+	<td>
+		<form data-hx-target="#bookmark-{{.ID}}">
+		<button class="btn btn-link" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="read">📤</button>
+		<button class="btn btn-link" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="postponed">💤</button>
+		<button class="btn btn-link" data-hx-confirm="Are you sure you want to delete '{{.Title}}'?" data-hx-delete="/bookmarks/{{.ID}}">🗑</button>
+		<a href="{{.URL}}" target="_blank">{{ .Title }}</a>
+		</form>
+	</td>
+	<td>
+		<a href="{{.URL}}" target="_blank">{{ .URL }}</a>
+	</td>
+</tr>
+{{ end }}
 <table class="table">
 	<thead>
 		<tr>
@@ -5,21 +20,9 @@
 			<th>URL</th>
 		</tr>
 	</thead>
-	<tbody>
+	<tbody id="links-table-body">
 		{{ range . }}
-		<tr id="bookmark-{{.ID}}">
-			<td>
-				<form data-hx-target="#bookmark-{{.ID}}">
-				<button class="btn btn-link" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="read">📤</button>
-				<button class="btn btn-link" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="postponed">💤</button>
-				<button class="btn btn-link" data-hx-confirm="Are you sure you want to delete '{{.Title}}'?" data-hx-delete="/bookmarks/{{.ID}}">🗑</button>
-				<a href="{{.URL}}" target="_blank">{{ .Title }}</a>
-				</form>
-			</td>
-			<td>
-				<a href="{{.URL}}" target="_blank">{{ .URL }}</a>
-			</td>
-		</tr>
+		{{ template "link" . }}
 		{{ end }}
 	</tbody>
 </table>

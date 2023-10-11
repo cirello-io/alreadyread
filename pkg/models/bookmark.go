@@ -191,10 +191,11 @@ func (b *bookmarkDAO) Insert(bookmark *Bookmark) (*Bookmark, error) {
 		return nil, fmt.Errorf("cannot reload inserted row: %w", err)
 	}
 	u, err := url.Parse(bookmark.URL)
-	if err == nil {
-		bookmark.Host = u.Host
+	if err != nil {
+		return bookmark, nil
 	}
-	return bookmark, fmt.Errorf("cannot parse URL: %w", err)
+	bookmark.Host = u.Host
+	return bookmark, nil
 }
 
 // GetByID loads one bookmark.

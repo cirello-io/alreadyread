@@ -15,8 +15,8 @@
 package web // import "cirello.io/alreadyread/pkg/web"
 
 import (
-	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"path"
@@ -27,6 +27,7 @@ import (
 	"cirello.io/alreadyread/frontend"
 	"cirello.io/alreadyread/pkg/actions"
 	"cirello.io/alreadyread/pkg/models"
+	"cirello.io/alreadyread/pkg/net"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -49,39 +50,15 @@ func (s *Server) registerRoutes() {
 	rootHandler := http.FileServer(http.FS(frontend.Content))
 	router := http.NewServeMux()
 
-	// new
-	router.HandleFunc("/newBookmark", s.newBookmark)
+	router.HandleFunc("/urlTitle", s.urlTitle)
 	router.HandleFunc("/bookmarks", s.bookmarks)
 	router.HandleFunc("/bookmarks/", s.bookmarkOperations)
-
 	router.HandleFunc("/", rootHandler.ServeHTTP)
 	s.handler = router
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.handler.ServeHTTP(w, r)
-}
-
-func (s *Server) newBookmark(w http.ResponseWriter, r *http.Request) {
-	// TODO: handle Access-Control-Allow-Origin correctly
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	bookmark := &models.Bookmark{}
-	if err := json.NewDecoder(r.Body).Decode(bookmark); err != nil {
-		log.Println("cannot unmarshal bookmark request:", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError),
-			http.StatusInternalServerError)
-		return
-	}
-
-	if err := actions.AddBookmark(s.db, bookmark); err != nil {
-		log.Println("cannot save bookmark:", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError),
-			http.StatusInternalServerError)
-		return
-	}
-
-	w.Write([]byte("{}"))
 }
 
 func (s *Server) bookmarks(w http.ResponseWriter, r *http.Request) {
@@ -151,6 +128,25 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		return
+	case http.MethodPost:
+		bookmark, err := actions.AddBookmark(s.db, &models.Bookmark{
+			Title: r.FormValue("title"),
+			URL:   r.FormValue("url"),
+		})
+		if err != nil {
+			log.Println("cannot store new bookmark:", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError),
+				http.StatusInternalServerError)
+			return
+		}
+		err = frontend.LinkTable.ExecuteTemplate(w, "link", bookmark)
+		if err != nil {
+			log.Println("cannot render new bookmark:", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError),
+				http.StatusInternalServerError)
+			return
+		}
+		return
 	default:
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 	}
@@ -169,7 +165,21 @@ func extractID(root, urlPath string) (int64, error) {
 	if !strings.HasPrefix(urlPath, root) {
 		return 0, errors.New("URL Path doesn't start with root:" + urlPath + " " + root)
 	}
-	urlPath = strings.TrimPrefix(urlPath, root)[1:]
+	urlPath = strings.TrimPrefix(urlPath, root)
+	if urlPath == "" {
+		return 0, nil
+	}
+	urlPath = urlPath[1:]
 	urlPathParts := strings.Split(strings.Trim(urlPath, "/"), "/")
 	return strconv.ParseInt(urlPathParts[0], 10, 64)
+}
+
+func (s *Server) urlTitle(w http.ResponseWriter, r *http.Request) {
+	// TODO: handle Access-Control-Allow-Origin correctly
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	b := net.CheckLink(&models.Bookmark{
+		URL: r.FormValue("url"),
+	})
+	fmt.Fprintln(w, b.Title)
 }
