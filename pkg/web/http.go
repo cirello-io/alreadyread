@@ -27,7 +27,6 @@ import (
 	"cirello.io/alreadyread/frontend"
 	"cirello.io/alreadyread/pkg/actions"
 	"cirello.io/alreadyread/pkg/models"
-	"cirello.io/alreadyread/pkg/net"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -49,12 +48,9 @@ func New(db *sqlx.DB) *Server {
 func (s *Server) registerRoutes() {
 	rootHandler := http.FileServer(http.FS(frontend.Content))
 	router := http.NewServeMux()
-	// legacy URLs
-	router.HandleFunc("/state", s.state)
-	router.HandleFunc("/loadBookmark", s.loadBookmark)
-	router.HandleFunc("/newBookmark", s.newBookmark)
 
 	// new
+	router.HandleFunc("/newBookmark", s.newBookmark)
 	router.HandleFunc("/bookmarks", s.bookmarks)
 	router.HandleFunc("/bookmarks/", s.bookmarkOperations)
 
@@ -64,45 +60,6 @@ func (s *Server) registerRoutes() {
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.handler.ServeHTTP(w, r)
-}
-
-func (s *Server) state(w http.ResponseWriter, r *http.Request) {
-	// TODO: handle Access-Control-Allow-Origin correctly
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	bookmarks, err := actions.ListBookmarks(s.db)
-	if err != nil {
-		log.Println("cannot load all bookmarks:", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
-	if err := json.NewEncoder(w).Encode(bookmarks); err != nil {
-		log.Println("cannot marshal bookmarks:", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-}
-
-func (s *Server) loadBookmark(w http.ResponseWriter, r *http.Request) {
-	// TODO: handle Access-Control-Allow-Origin correctly
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	bookmark := &models.Bookmark{}
-	if err := json.NewDecoder(r.Body).Decode(bookmark); err != nil {
-		log.Println("cannot unmarshal bookmark request:", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError),
-			http.StatusInternalServerError)
-		return
-	}
-
-	bookmark = net.CheckLink(bookmark)
-
-	if err := json.NewEncoder(w).Encode(bookmark); err != nil {
-		log.Println("cannot marshal bookmark:", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError),
-			http.StatusInternalServerError)
-		return
-	}
 }
 
 func (s *Server) newBookmark(w http.ResponseWriter, r *http.Request) {
