@@ -15,11 +15,10 @@
 package cli
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 
-	"cirello.io/alreadyread/pkg/errors"
-	"cirello.io/alreadyread/pkg/pubsub"
 	"cirello.io/alreadyread/pkg/tasks"
 	"cirello.io/alreadyread/pkg/web"
 	"github.com/urfave/cli"
@@ -41,16 +40,14 @@ func (c *commands) httpMode() cli.Command {
 		Action: func(ctx *cli.Context) error {
 			lHTTP, err := net.Listen("tcp", ctx.String("bind"))
 			if err != nil {
-				return errors.Errorf(err, "cannot bind port")
+				return cliError(fmt.Errorf("cannot bind port: %w", err))
 			}
-			broker := pubsub.New()
 			tasks.Run(c.db)
-			srv, err := web.New(c.db, broker)
-			if err != nil {
-				return errors.E(err)
+			srv := web.New(c.db)
+			if err := http.Serve(lHTTP, srv); err != nil {
+				return cliError(err)
 			}
-			err = http.Serve(lHTTP, srv)
-			return errors.E(err)
+			return nil
 		},
 	}
 }

@@ -21,26 +21,19 @@ import (
 )
 
 // DeleteBookmark deletes one bookmark from the database.
-func DeleteBookmark(db *sqlx.DB, b *models.Bookmark, broadcast func(interface{})) error {
+func DeleteBookmark(db *sqlx.DB, b *models.Bookmark) error {
 	err := models.NewBookmarkDAO(db).Delete(b)
 	if err != nil {
 		return errors.Internal(err)
 	}
-	broadcast(&struct {
-		WSType string `json:"type"`
-		ID     int64  `json:"id"`
-	}{
-		"BOOKMARK_DELETED",
-		b.ID,
-	})
 	return nil
 }
 
 // DeleteBookmarkByID deletes one bookmar, by ID, from the database.
-func DeleteBookmarkByID(db *sqlx.DB, id int64, broadcast func(interface{})) error {
+func DeleteBookmarkByID(db *sqlx.DB, id int64) error {
 	bookmark, err := models.NewBookmarkDAO(db).GetByID(id)
 	if err != nil {
 		return errors.Internal(err)
 	}
-	return DeleteBookmark(db, bookmark, broadcast)
+	return DeleteBookmark(db, bookmark)
 }

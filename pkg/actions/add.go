@@ -38,7 +38,7 @@ func AddBookmarkByURL(db *sqlx.DB, u string) error {
 }
 
 // AddBookmark stores one bookmark into the database.
-func AddBookmark(db *sqlx.DB, b *models.Bookmark, broadcast func(msg interface{})) error {
+func AddBookmark(db *sqlx.DB, b *models.Bookmark) error {
 	if _, err := url.Parse(b.URL); err != nil {
 		return errors.Invalidf(err, "invalid URL")
 	}
@@ -48,14 +48,5 @@ func AddBookmark(db *sqlx.DB, b *models.Bookmark, broadcast func(msg interface{}
 	if err != nil {
 		return errors.Internal(err)
 	}
-	broadcast(
-		&struct {
-			WSType   string           `json:"type"`
-			Bookmark *models.Bookmark `json:"bookmark"`
-		}{
-			"BOOKMARK_ADDED",
-			b,
-		},
-	)
 	return nil
 }

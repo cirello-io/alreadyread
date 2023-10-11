@@ -21,7 +21,7 @@ import (
 )
 
 // MarkBookmarkAsPostpone moves a bookmark to a delayed position in the inbox.
-func MarkBookmarkAsPostpone(db *sqlx.DB, id int64, broadcast func(msg interface{})) error {
+func MarkBookmarkAsPostpone(db *sqlx.DB, id int64) error {
 	dao := models.NewBookmarkDAO(db)
 	b, err := dao.GetByID(id)
 	if err != nil {
@@ -31,14 +31,5 @@ func MarkBookmarkAsPostpone(db *sqlx.DB, id int64, broadcast func(msg interface{
 	if err := dao.Update(b); err != nil {
 		return errors.Internalf(err, "cannot update bookmarkd")
 	}
-	broadcast(
-		&struct {
-			WSType   string           `json:"type"`
-			Bookmark *models.Bookmark `json:"bookmark"`
-		}{
-			"BOOKMARK_UPDATED",
-			b,
-		},
-	)
 	return nil
 }
