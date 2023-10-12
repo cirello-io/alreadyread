@@ -23,13 +23,26 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-var now = time.Now
+//go:generate moq -out urlchecker_mocks_test.go . URLChecker
+type URLChecker interface {
+	Check(*Bookmark) *Bookmark
+}
 
-// CheckLink dials bookmark URL and updates its state with the errors if any.
-func CheckLink(bookmark *Bookmark) *Bookmark {
+type urlChecker struct {
+	timeNow func() time.Time
+}
+
+func NewURLChecker() URLChecker {
+	return &urlChecker{
+		timeNow: time.Now,
+	}
+}
+
+// Check dials bookmark URL and updates its state with the errors if any.
+func (u *urlChecker) Check(bookmark *Bookmark) *Bookmark {
 	res, err := http.Get(bookmark.URL)
 	if err != nil {
-		bookmark.LastStatusCheck = now().Unix()
+		bookmark.LastStatusCheck = u.timeNow().Unix()
 		bookmark.LastStatusCode = 0
 		bookmark.LastStatusReason = err.Error()
 		return bookmark
@@ -37,7 +50,7 @@ func CheckLink(bookmark *Bookmark) *Bookmark {
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		bookmark.LastStatusCheck = now().Unix()
+		bookmark.LastStatusCheck = u.timeNow().Unix()
 		bookmark.LastStatusCode = int64(res.StatusCode)
 		bookmark.LastStatusReason = http.StatusText(res.StatusCode)
 		return bookmark
@@ -45,7 +58,7 @@ func CheckLink(bookmark *Bookmark) *Bookmark {
 
 	bookmark.LastStatusCode = int64(res.StatusCode)
 	bookmark.LastStatusReason = http.StatusText(res.StatusCode)
-	bookmark.LastStatusCheck = now().Unix()
+	bookmark.LastStatusCheck = u.timeNow().Unix()
 
 	isHTML := strings.Contains(res.Header.Get("Content-Type"), "text/html")
 	if bookmark.Title != "" || !isHTML {

@@ -21,10 +21,11 @@ import (
 )
 
 func TestCheckLink(t *testing.T) {
-	oldNow := now
-	now = func() time.Time {
+	now := func() time.Time {
 		return time.Unix(0, 0)
 	}
+	checker := NewURLChecker()
+	checker.(*urlChecker).timeNow = now
 	type args struct {
 		bookmark *Bookmark
 	}
@@ -73,19 +74,22 @@ func TestCheckLink(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := CheckLink(tt.args.bookmark); !reflect.DeepEqual(got, tt.want) {
+			if got := checker.Check(tt.args.bookmark); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("%s CheckLink() = %v, want %v", tt.name, got, tt.want)
 			}
 		})
 	}
-	now = oldNow
 }
 
 func TestContentExtraction(t *testing.T) {
+	checker := NewURLChecker()
+	checker.(*urlChecker).timeNow = func() time.Time {
+		return time.Unix(0, 0)
+	}
 	b := &Bookmark{
 		URL: "https://www.example.org",
 	}
-	b = CheckLink(b)
+	b = checker.Check(b)
 	if b.Title != "Example Domain" {
 		t.Fatal("cannot extract HTML title")
 	}

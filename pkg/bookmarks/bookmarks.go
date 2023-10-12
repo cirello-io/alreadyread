@@ -15,19 +15,76 @@
 package bookmarks
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"slices"
 )
 
-func (b *Bookmark) Insert(repository Repository) error {
-	if _, err := url.Parse(b.URL); err != nil {
-		return fmt.Errorf("invalid URL: %w", err)
+type Bookmarks struct {
+	repository Repository
+	urlChecker URLChecker
+}
+
+func New(repository Repository, urlChecker URLChecker) *Bookmarks {
+	return &Bookmarks{
+		repository: repository,
+		urlChecker: urlChecker,
 	}
-	if _, err := repository.Insert(b); err != nil {
-		return fmt.Errorf("cannot insert bookmark: %w", err)
+}
+
+var (
+	errBookmarksRepositoryNotSet = fmt.Errorf("repository is not set")
+	errBookmarksURLCheckerNotSet = fmt.Errorf("url checker is not set")
+)
+
+func (b *Bookmarks) isSetup() error {
+	if b.repository == nil {
+		return errBookmarksRepositoryNotSet
+	}
+	if b.urlChecker == nil {
+		return errBookmarksURLCheckerNotSet
 	}
 	return nil
+}
+
+var (
+	errNilBookmark = fmt.Errorf("cannot insert nil bookmark")
+)
+
+type BadURLError struct {
+	cause error
+}
+
+func (b BadURLError) Error() string {
+	return fmt.Sprintf("invalid URL: %v", b.cause)
+}
+
+func (b BadURLError) Unwrap() error {
+	return b.cause
+}
+
+func (b BadURLError) Is(target error) bool {
+	errBadURL := &BadURLError{}
+	return errors.As(target, &errBadURL)
+}
+
+func (b *Bookmarks) Insert(bookmark *Bookmark) (*Bookmark, error) {
+	if err := b.isSetup(); err != nil {
+		return nil, fmt.Errorf("cannot begin inserting bookmark: %w", err)
+	}
+	if bookmark == nil {
+		return nil, errNilBookmark
+	}
+	if _, err := url.Parse(bookmark.URL); err != nil {
+		return nil, &BadURLError{cause: err}
+	}
+	b.urlChecker.Check(bookmark)
+	inserted, err := b.repository.Insert(bookmark)
+	if err != nil {
+		return nil, fmt.Errorf("cannot insert bookmark: %w", err)
+	}
+	return inserted, nil
 }
 
 func DeleteByID(repository Repository, id int64) error {
@@ -62,7 +119,7 @@ func List(repository Repository, filter string) ([]*Bookmark, error) {
 	switch filter {
 	case "new":
 		list = slices.DeleteFunc(list, func(bookmark *Bookmark) bool {
-			return bookmark.Inbox != New
+			return bookmark.Inbox != NewLink
 		})
 	case "duplicated":
 		duplicates := map[string][]*Bookmark{}

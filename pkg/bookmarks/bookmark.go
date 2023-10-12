@@ -37,12 +37,12 @@ type Inbox int64
 
 const (
 	Read Inbox = iota
-	New
+	NewLink
 	Postponed
 )
 
 func (i Inbox) IsValid() bool {
-	return i == Read || i == New || i == Postponed
+	return i == Read || i == NewLink || i == Postponed
 }
 
 func ParseInbox(v string) (Inbox, error) {
@@ -50,7 +50,7 @@ func ParseInbox(v string) (Inbox, error) {
 	case "read":
 		return Read, nil
 	case "new":
-		return New, nil
+		return NewLink, nil
 	case "postponed":
 		return Postponed, nil
 	default:
