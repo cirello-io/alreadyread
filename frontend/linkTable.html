@@ -1,28 +1,47 @@
 {{ define "link" }}
 <tr id="bookmark-{{.ID}}">
 	<td>
-		<form data-hx-target="#bookmark-{{.ID}}">
-		<button class="btn btn-link" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="read">📤</button>
-		<button class="btn btn-link" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="postponed">💤</button>
-		<button class="btn btn-link" data-hx-confirm="Are you sure you want to delete '{{.Title}}'?" data-hx-delete="/bookmarks/{{.ID}}">🗑</button>
-		<a href="{{.URL}}" target="_blank">{{ .Title }}</a>
-		</form>
+		<a href="{{.URL}}" target="_blank">{{ .URL }}</a>
 	</td>
 	<td>
-		<a href="{{.URL}}" target="_blank">{{ .URL }}</a>
+		<a href="{{.URL}}" target="_blank">{{ .Title }}</a>
+	</td>
+	<td>
+		<form data-hx-target="#bookmark-{{.ID}}">
+			<button class="btn btn-link" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="read">📤</button>
+			<button class="btn btn-link" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="postponed">💤</button>
+			<button class="btn btn-link" data-hx-confirm="Are you sure you want to delete '{{.Title}}'?" data-hx-delete="/bookmarks/{{.ID}}">🗑</button>
+		</form>
 	</td>
 </tr>
 {{ end }}
-<table class="table">
-	<thead>
-		<tr>
-			<th>Site</th>
-			<th>URL</th>
-		</tr>
-	</thead>
-	<tbody id="links-table-body">
-		{{ range . }}
-		{{ template "link" . }}
-		{{ end }}
-	</tbody>
-</table>
+{{ define "newLink" }}
+<div class="card" id="new-link-card">
+	<div class="card-header"><span>Insert New Bookmark</span></div>
+	<div class="card-body">
+		<div class="table-responsive table mt-2" id="dataTable" role="grid" aria-describedby="dataTable_info">
+			<form>
+			<table class="table my-0" id="dataTable">
+			<thead>
+				<tr>
+				<th>URL</th>
+				<th>Title</th>
+				<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+				<td><input type="url"  placeholder="URL"        name="url"   id="new-link-URL"   data-hx-get="/newLink"     data-hx-target="#dialog-card"           data-hx-trigger="keyup changed delay:500ms"        value="{{- .URL -}}"></td>
+				<td><input type="text" placeholder="Site Title" name="title" id="new-link-title"                                                                                                                       value="{{- .Title -}}"></td>
+				<td><button class="btn btn-primary"                                              data-hx-post="/bookmarks/" data-hx-target="#links-table-container"                                             data-hx-swap="afterbegin">add</button></td>
+				</tr>
+			</tbody>
+			</table>
+			</form>
+		</div>
+	</div>
+</div>
+{{ end }}
+{{ range . }}
+{{ template "link" . }}
+{{ end }}

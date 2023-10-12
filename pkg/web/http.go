@@ -48,7 +48,7 @@ func (s *Server) registerRoutes() {
 	rootHandler := http.FileServer(http.FS(frontend.Content))
 	router := http.NewServeMux()
 
-	router.HandleFunc("/urlTitle", s.urlTitle)
+	router.HandleFunc("/newLink", s.newLink)
 	router.HandleFunc("/bookmarks", s.bookmarks)
 	router.HandleFunc("/bookmarks/", s.bookmarkOperations)
 	router.HandleFunc("/", rootHandler.ServeHTTP)
@@ -160,4 +160,18 @@ func (s *Server) urlTitle(w http.ResponseWriter, r *http.Request) {
 		URL: r.FormValue("url"),
 	})
 	fmt.Fprintln(w, b.Title)
+}
+
+func (s *Server) newLink(w http.ResponseWriter, r *http.Request) {
+	// TODO: handle Access-Control-Allow-Origin correctly
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	bookmark := &bookmarks.Bookmark{
+		URL: r.URL.Query().Get("url"),
+	}
+	bookmark = bookmarks.NewURLChecker().Check(bookmark)
+	if err := frontend.LinkTable.ExecuteTemplate(w, "newLink", bookmark); err != nil {
+		log.Println("cannot render new bookmark form:", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
 }
