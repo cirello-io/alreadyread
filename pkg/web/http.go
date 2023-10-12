@@ -109,11 +109,11 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	case http.MethodPost:
-		bookmark, err := bookmarks.Create(repository, &bookmarks.Bookmark{
+		bookmark := &bookmarks.Bookmark{
 			Title: r.FormValue("title"),
 			URL:   r.FormValue("url"),
-		})
-		if err != nil {
+		}
+		if err := bookmark.Insert(repository); err != nil {
 			log.Println("cannot store new bookmark:", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError),
 				http.StatusInternalServerError)

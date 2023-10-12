@@ -23,8 +23,8 @@ var _ Repository = &RepositoryMock{}
 //			BootstrapFunc: func() error {
 //				panic("mock out the Bootstrap method")
 //			},
-//			DeleteFunc: func(bookmark *Bookmark) error {
-//				panic("mock out the Delete method")
+//			DeleteByIDFunc: func(id int64) error {
+//				panic("mock out the DeleteByID method")
 //			},
 //			ExpiredFunc: func() ([]*Bookmark, error) {
 //				panic("mock out the Expired method")
@@ -54,8 +54,8 @@ type RepositoryMock struct {
 	// BootstrapFunc mocks the Bootstrap method.
 	BootstrapFunc func() error
 
-	// DeleteFunc mocks the Delete method.
-	DeleteFunc func(bookmark *Bookmark) error
+	// DeleteByIDFunc mocks the DeleteByID method.
+	DeleteByIDFunc func(id int64) error
 
 	// ExpiredFunc mocks the Expired method.
 	ExpiredFunc func() ([]*Bookmark, error)
@@ -80,10 +80,10 @@ type RepositoryMock struct {
 		// Bootstrap holds details about calls to the Bootstrap method.
 		Bootstrap []struct {
 		}
-		// Delete holds details about calls to the Delete method.
-		Delete []struct {
-			// Bookmark is the bookmark argument value.
-			Bookmark *Bookmark
+		// DeleteByID holds details about calls to the DeleteByID method.
+		DeleteByID []struct {
+			// ID is the id argument value.
+			ID int64
 		}
 		// Expired holds details about calls to the Expired method.
 		Expired []struct {
@@ -107,14 +107,14 @@ type RepositoryMock struct {
 			Bookmark *Bookmark
 		}
 	}
-	lockAll       sync.RWMutex
-	lockBootstrap sync.RWMutex
-	lockDelete    sync.RWMutex
-	lockExpired   sync.RWMutex
-	lockGetByID   sync.RWMutex
-	lockInsert    sync.RWMutex
-	lockInvalid   sync.RWMutex
-	lockUpdate    sync.RWMutex
+	lockAll        sync.RWMutex
+	lockBootstrap  sync.RWMutex
+	lockDeleteByID sync.RWMutex
+	lockExpired    sync.RWMutex
+	lockGetByID    sync.RWMutex
+	lockInsert     sync.RWMutex
+	lockInvalid    sync.RWMutex
+	lockUpdate     sync.RWMutex
 }
 
 // All calls AllFunc.
@@ -171,35 +171,35 @@ func (mock *RepositoryMock) BootstrapCalls() []struct {
 	return calls
 }
 
-// Delete calls DeleteFunc.
-func (mock *RepositoryMock) Delete(bookmark *Bookmark) error {
-	if mock.DeleteFunc == nil {
-		panic("RepositoryMock.DeleteFunc: method is nil but Repository.Delete was just called")
+// DeleteByID calls DeleteByIDFunc.
+func (mock *RepositoryMock) DeleteByID(id int64) error {
+	if mock.DeleteByIDFunc == nil {
+		panic("RepositoryMock.DeleteByIDFunc: method is nil but Repository.DeleteByID was just called")
 	}
 	callInfo := struct {
-		Bookmark *Bookmark
+		ID int64
 	}{
-		Bookmark: bookmark,
+		ID: id,
 	}
-	mock.lockDelete.Lock()
-	mock.calls.Delete = append(mock.calls.Delete, callInfo)
-	mock.lockDelete.Unlock()
-	return mock.DeleteFunc(bookmark)
+	mock.lockDeleteByID.Lock()
+	mock.calls.DeleteByID = append(mock.calls.DeleteByID, callInfo)
+	mock.lockDeleteByID.Unlock()
+	return mock.DeleteByIDFunc(id)
 }
 
-// DeleteCalls gets all the calls that were made to Delete.
+// DeleteByIDCalls gets all the calls that were made to DeleteByID.
 // Check the length with:
 //
-//	len(mockedRepository.DeleteCalls())
-func (mock *RepositoryMock) DeleteCalls() []struct {
-	Bookmark *Bookmark
+//	len(mockedRepository.DeleteByIDCalls())
+func (mock *RepositoryMock) DeleteByIDCalls() []struct {
+	ID int64
 } {
 	var calls []struct {
-		Bookmark *Bookmark
+		ID int64
 	}
-	mock.lockDelete.RLock()
-	calls = mock.calls.Delete
-	mock.lockDelete.RUnlock()
+	mock.lockDeleteByID.RLock()
+	calls = mock.calls.DeleteByID
+	mock.lockDeleteByID.RUnlock()
 	return calls
 }
 

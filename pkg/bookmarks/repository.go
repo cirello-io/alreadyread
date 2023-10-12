@@ -8,8 +8,8 @@ type Repository interface {
 	// Bootstrap creates table if missing.
 	Bootstrap() error
 
-	// Delete one bookmark.
-	Delete(*Bookmark) error
+	// DeleteByID excludes the bookmark from the repository.
+	DeleteByID(id int64) error
 
 	// Expired return all valid but expired bookmarks.
 	Expired() ([]*Bookmark, error)

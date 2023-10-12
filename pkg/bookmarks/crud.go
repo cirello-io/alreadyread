@@ -20,23 +20,18 @@ import (
 	"slices"
 )
 
-func Create(repository Repository, b *Bookmark) (*Bookmark, error) {
+func (b *Bookmark) Insert(repository Repository) error {
 	if _, err := url.Parse(b.URL); err != nil {
-		return nil, fmt.Errorf("invalid URL: %w", err)
+		return fmt.Errorf("invalid URL: %w", err)
 	}
-	b = CheckLink(b)
 	if _, err := repository.Insert(b); err != nil {
-		return nil, fmt.Errorf("cannot insert bookmark: %w", err)
+		return fmt.Errorf("cannot insert bookmark: %w", err)
 	}
-	return b, nil
+	return nil
 }
 
 func DeleteByID(repository Repository, id int64) error {
-	bookmark, err := repository.GetByID(id)
-	if err != nil {
-		return fmt.Errorf("cannot load bookmark for deletion: %w", err)
-	}
-	if err := repository.Delete(bookmark); err != nil {
+	if err := repository.DeleteByID(id); err != nil {
 		return fmt.Errorf("cannot delete bookmark: %w", err)
 	}
 	return nil

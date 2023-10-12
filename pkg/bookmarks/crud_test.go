@@ -30,24 +30,10 @@ func TestDeleteByID(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"badDB",
-			args{
-				repository: &RepositoryMock{
-					GetByIDFunc: func(id int64) (*Bookmark, error) {
-						return nil, errors.New("mocked error")
-					},
-				},
-				id: 0},
-			true,
-		},
-		{
 			"badDelete",
 			args{
 				repository: &RepositoryMock{
-					GetByIDFunc: func(id int64) (*Bookmark, error) {
-						return &Bookmark{ID: id}, nil
-					},
-					DeleteFunc: func(bookmark *Bookmark) error {
+					DeleteByIDFunc: func(id int64) error {
 						return errors.New("mocked error")
 					},
 				},
@@ -58,10 +44,7 @@ func TestDeleteByID(t *testing.T) {
 			"goodDelete",
 			args{
 				repository: &RepositoryMock{
-					GetByIDFunc: func(id int64) (*Bookmark, error) {
-						return &Bookmark{ID: id}, nil
-					},
-					DeleteFunc: func(bookmark *Bookmark) error {
+					DeleteByIDFunc: func(id int64) error {
 						return nil
 					},
 				},
@@ -73,6 +56,62 @@ func TestDeleteByID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := DeleteByID(tt.args.repository, tt.args.id); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteByID() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestBookmark_Insert(t *testing.T) {
+	type args struct {
+		repository Repository
+		b          *Bookmark
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			"badURL",
+			args{
+				repository: &RepositoryMock{},
+				b:          &Bookmark{URL: "://"},
+			},
+			true,
+		},
+		{
+			"badDB",
+			args{
+				repository: &RepositoryMock{
+					InsertFunc: func(bookmark *Bookmark) (*Bookmark, error) {
+						return nil, errors.New("mocked error")
+					},
+				},
+				b: &Bookmark{Title: "Example.com", URL: "http://example.com"},
+			},
+			true,
+		},
+		{
+			"good",
+			args{
+				repository: &RepositoryMock{
+					InsertFunc: func(bookmark *Bookmark) (*Bookmark, error) {
+						bookmark.ID = 1
+						return bookmark, nil
+					},
+				},
+				b: &Bookmark{Title: "Example.com", URL: "http://example.com"},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			bookmark := tt.args.b
+			err := bookmark.Insert(tt.args.repository)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Insert() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
 		})
 	}

@@ -210,7 +210,7 @@ func (b *Repository) Update(bookmark *bookmarks.Bookmark) error {
 	return err
 }
 
-func (b *Repository) Delete(bookmark *bookmarks.Bookmark) error {
-	_, err := b.db.NamedExec(`DELETE FROM bookmarks WHERE id = :id`, bookmark)
+func (b *Repository) DeleteByID(id int64) error {
+	_, err := b.db.Exec(`DELETE FROM bookmarks WHERE id = $1`, id)
 	return err
 }
