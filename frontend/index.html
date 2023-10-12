@@ -27,9 +27,15 @@
         </nav>
         <form data-hx-target="#links-table-body" data-hx-post="/bookmarks/" data-hx-trigger="submit" data-hx-swap="afterbegin" data-hx-on::after-request="if(event.detail.successful && event.detail.pathInfo.requestPath=='/bookmarks/') { this.reset(); }">
             <div class="form-group row">
-                <input type="text" name="url"   placeholder="URL"   class="form-control w-25" id="new-link-URL" data-hx-post="/urlTitle" data-hx-swap="none" data-hx-trigger="keyup changed delay:500ms" data-hx-on::after-request="document.getElementById('new-link-title').value = event.detail.xhr.response">
-                <input type="text" name="title" placeholder="Title" class="form-control w-25" id="new-link-title">
-                <button class="btn btn-primary" type="submit" class="form-control w-25">Add</button>
+                <div class="col-auto">
+                    <input type="text" name="url"   placeholder="URL"   class="" id="new-link-URL" data-hx-post="/urlTitle" data-hx-swap="none" data-hx-trigger="keyup changed delay:500ms" data-hx-on::after-request="document.getElementById('new-link-title').value = event.detail.xhr.response">
+                </div>
+                <div class="col-3">
+                    <input type="text" name="title" placeholder="Title" class="" id="new-link-title">
+                </div>
+                <div class="col-3">
+                    <button class="btn btn-primary" type="submit" class="">Add</button>
+                </div>
             </div>
         </form>
         <div id="links-table-container" class="table-responsive" data-hx-get="/bookmarks?filter=new" data-hx-trigger="load"></div>
