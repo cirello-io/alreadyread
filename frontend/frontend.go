@@ -19,10 +19,17 @@ import (
 	"html/template"
 )
 
-//go:embed index.html assets
+//go:embed assets
 var Content embed.FS
 
-//go:embed linkTable.html
-var linkTableTPL string
+var (
+	//go:embed linkTable.html
+	linkTableTPL string
+	LinkTable    = template.Must(template.New("linkTable").Parse(linkTableTPL))
+)
 
-var LinkTable = template.Must(template.New("linkTable").Parse(linkTableTPL))
+var (
+	//go:embed index.html
+	indexTPL string
+	Index    = template.Must(template.New("index").Parse(indexTPL))
+)

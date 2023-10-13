@@ -27,7 +27,7 @@
 			</thead>
 			<tbody>
 				<tr>
-				<td><input type="url"  placeholder="URL"        name="url"   id="new-link-URL"   data-hx-get="/newLink"     data-hx-target="#container"           data-hx-trigger="keyup changed delay:500ms"        value="{{- .URL -}}"  ></td>
+				<td><input type="url"  placeholder="URL"        name="url"   id="new-link-URL"   data-hx-get="/post"     data-hx-target="#container"           data-hx-trigger="keyup changed delay:500ms"        value="{{- .URL -}}"  ></td>
 				<td><input type="text" placeholder="Site Title" name="title" id="new-link-title"                                                                                                                     value="{{- .Title -}}"></td>
 				<td><button class="btn btn-primary"                                              data-hx-post="/bookmarks/" data-hx-target="#container"                                                                                    >add</button></td>
 				</tr>

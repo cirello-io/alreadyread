@@ -17,7 +17,7 @@
                 <nav class="navbar navbar-expand bg-white shadow mb-4 topbar static-top navbar-light">
                     <div class="container-fluid"><button class="btn btn-link d-md-none rounded-circle me-3" id="sidebarToggleTop" type="button"><i class="fas fa-bars"></i></button><a class="navbar-brand" href="#">alreadyread</a>
 
-                        <button class="btn btn-primary btn-sm" type="button" style="margin-right: 20px;" data-hx-get="/newLink" data-hx-target="#container" data-hx-on::before-request="resetButtons(this)">New</button>
+                        <button class="btn btn-primary btn-sm" type="button" style="margin-right: 20px;" data-hx-get="/post" data-hx-target="#container" data-hx-on::before-request="resetButtons(this)">New</button>
 
                         <div class="btn-group btn-group-sm" role="group" id="filter-group">
                             <button class="btn btn-secondary active" id="inbox-btn"      type="button" data-hx-on::before-request="resetButtons(this)" data-hx-get="/inbox"      data-hx-target="#container">Inbox</button>
@@ -40,7 +40,9 @@
                     </div>
                 </nav>
                 <div class="container-fluid" >
-                    <div id="container" class="card" data-hx-get="/inbox" data-hx-trigger="load"></div>
+                    <div id="container" class="card" {{- if not .Container }} data-hx-get="/inbox" data-hx-trigger="load"{{ end -}}>
+                        {{ .Container }}
+                    </div>
                 </div>
             </div>
             <footer class="bg-white sticky-footer">

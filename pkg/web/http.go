@@ -15,8 +15,11 @@
 package web // import "cirello.io/alreadyread/pkg/web"
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"path"
@@ -52,13 +55,13 @@ func (s *Server) registerRoutes() {
 	rootHandler := http.FileServer(http.FS(frontend.Content))
 	router := http.NewServeMux()
 
-	router.HandleFunc("/newLink", s.newLink)
+	router.HandleFunc("/post", s.post)
 	router.HandleFunc("/inbox", s.inbox)
 	router.HandleFunc("/duplicated", s.duplicated)
 	router.HandleFunc("/all", s.all)
 	router.HandleFunc("/search", s.search)
 	router.HandleFunc("/bookmarks/", s.bookmarkOperations)
-	router.HandleFunc("/", rootHandler.ServeHTTP)
+	router.HandleFunc("/", s.index(rootHandler))
 	s.handler = router
 }
 
@@ -84,17 +87,30 @@ func (s *Server) handleCORS(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
-func (s *Server) newLink(w http.ResponseWriter, r *http.Request) {
+func (s *Server) post(w http.ResponseWriter, r *http.Request) {
 	title, _, _, _ := url.NewChecker().Check(r.URL.Query().Get("url"), "")
 	bookmark := &bookmarks.Bookmark{
 		URL:   r.URL.Query().Get("url"),
 		Title: title,
 	}
-	if err := frontend.LinkTable.ExecuteTemplate(w, "newLink", bookmark); err != nil {
+	var out io.Writer = w
+	if r.Header.Get("HX-Request") != "true" {
+		buf := &bytes.Buffer{}
+		out = buf
+		defer func() {
+			err := frontend.Index.Execute(w, struct{ Container template.HTML }{template.HTML(buf.String())})
+			if err != nil {
+				log.Println("cannot render new bookmark form page:", err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			}
+		}()
+	}
+	if err := frontend.LinkTable.ExecuteTemplate(out, "newLink", bookmark); err != nil {
 		log.Println("cannot render new bookmark form:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+
 }
 
 func (s *Server) inbox(w http.ResponseWriter, _ *http.Request) {
@@ -191,6 +207,22 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 	}
 
+}
+
+func (s *Server) index(rootHandler http.Handler) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.String() == "/" {
+			err := frontend.Index.Execute(w, nil)
+			if err != nil {
+				log.Println("cannot store new bookmark:", err)
+				http.Error(w, http.StatusText(http.StatusInternalServerError),
+					http.StatusInternalServerError)
+				return
+			}
+			return
+		}
+		rootHandler.ServeHTTP(w, r)
+	}
 }
 
 func extractID(root, urlPath string) (int64, error) {
