@@ -29,14 +29,19 @@ import (
 
 // Server implements the web interface.
 type Server struct {
-	bookmarks *bookmarks.Bookmarks
-	handler   http.Handler
+	allowedOrigins map[string]struct{}
+	bookmarks      *bookmarks.Bookmarks
+	handler        http.Handler
 }
 
 // New creates a web interface handler.
-func New(bookmarks *bookmarks.Bookmarks) *Server {
+func New(bookmarks *bookmarks.Bookmarks, allowedOrigins []string) *Server {
 	s := &Server{
 		bookmarks: bookmarks,
+	}
+	s.allowedOrigins = make(map[string]struct{})
+	for _, allowedOrigin := range allowedOrigins {
+		s.allowedOrigins[allowedOrigin] = struct{}{}
 	}
 	s.registerRoutes()
 	return s
@@ -57,12 +62,28 @@ func (s *Server) registerRoutes() {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if !s.handleCORS(w, r) {
+		return
+	}
 	s.handler.ServeHTTP(w, r)
 }
 
+func (s *Server) handleCORS(w http.ResponseWriter, r *http.Request) bool {
+	origin := r.Header.Get("Origin")
+	if _, ok := s.allowedOrigins[origin]; ok {
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+	}
+	if r.Method == "OPTIONS" {
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Max-Age", "3600")
+		w.WriteHeader(http.StatusNoContent)
+		return false
+	}
+	return true
+}
+
 func (s *Server) newLink(w http.ResponseWriter, r *http.Request) {
-	// TODO: handle Access-Control-Allow-Origin correctly
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	bookmark := &bookmarks.Bookmark{
 		URL: r.URL.Query().Get("url"),
 	}
@@ -75,8 +96,6 @@ func (s *Server) newLink(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) inbox(w http.ResponseWriter, r *http.Request) {
-	// TODO: handle Access-Control-Allow-Origin correctly
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	list, err := s.bookmarks.Inbox()
 	if err != nil {
 		log.Println("cannot load bookmarks for inbox:", err)
@@ -89,8 +108,6 @@ func (s *Server) inbox(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) duplicated(w http.ResponseWriter, r *http.Request) {
-	// TODO: handle Access-Control-Allow-Origin correctly
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	list, err := s.bookmarks.Duplicated()
 	if err != nil {
 		log.Println("cannot load duplicated bookmarks:", err)
@@ -103,8 +120,6 @@ func (s *Server) duplicated(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) all(w http.ResponseWriter, r *http.Request) {
-	// TODO: handle Access-Control-Allow-Origin correctly
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	list, err := s.bookmarks.All()
 	if err != nil {
 		log.Println("cannot load all bookmarks:", err)
@@ -117,8 +132,6 @@ func (s *Server) all(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) search(w http.ResponseWriter, r *http.Request) {
-	// TODO: handle Access-Control-Allow-Origin correctly
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	list, err := s.bookmarks.Search(r.URL.Query().Get("term"))
 	if err != nil {
 		log.Println("cannot load all bookmarks:", err)
@@ -131,8 +144,6 @@ func (s *Server) search(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
-	// TODO: handle Access-Control-Allow-Origin correctly
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	id, err := extractID("/bookmarks", r.URL.String())
 	if err != nil {

@@ -38,6 +38,11 @@ func (c *commands) httpMode() cli.Command {
 				Value:  ":8080",
 				EnvVar: "ALREADYREAD_LISTEN",
 			},
+			cli.StringSliceFlag{
+				Name:   "allowedOrigins",
+				Value:  &cli.StringSlice{"localhost:8080"},
+				EnvVar: "ALREADYREAD_ALLOWEDORIGINS",
+			},
 		},
 		Action: func(ctx *cli.Context) error {
 			lHTTP, err := net.Listen("tcp", ctx.String("bind"))
@@ -46,7 +51,7 @@ func (c *commands) httpMode() cli.Command {
 			}
 			tasks.Run(c.db)
 			bookmarks := bookmarks.New(sqliterepo.New(c.db))
-			srv := web.New(bookmarks)
+			srv := web.New(bookmarks, ctx.StringSlice("allowedOrigins"))
 			if err := http.Serve(lHTTP, srv); err != nil {
 				return cliError(err)
 			}
