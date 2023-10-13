@@ -138,7 +138,7 @@ func (b *Repository) Invalid() ([]*bookmarks.Bookmark, error) {
 	return bookmarks, nil
 }
 
-func (b *Repository) Insert(bookmark *bookmarks.Bookmark) (*bookmarks.Bookmark, error) {
+func (b *Repository) Insert(bookmark *bookmarks.Bookmark) error {
 	bookmark.CreatedAt = time.Now()
 	bookmark.Inbox = 1
 	result, err := b.db.NamedExec(`
@@ -148,11 +148,11 @@ func (b *Repository) Insert(bookmark *bookmarks.Bookmark) (*bookmarks.Bookmark, 
 		(:url, :last_status_code, :last_status_check, :last_status_reason, :title, :created_at, :inbox)
 	`, bookmark)
 	if err != nil {
-		return nil, fmt.Errorf("cannot insert row: %w", err)
+		return fmt.Errorf("cannot insert row: %w", err)
 	}
 	id, err := result.LastInsertId()
 	if err != nil {
-		return nil, fmt.Errorf("cannot load last inserted ID: %w", err)
+		return fmt.Errorf("cannot load last inserted ID: %w", err)
 	}
 	err = b.db.Get(bookmark, `
 		SELECT
@@ -163,14 +163,13 @@ func (b *Repository) Insert(bookmark *bookmarks.Bookmark) (*bookmarks.Bookmark, 
 			id = $1
 	`, id)
 	if err != nil {
-		return nil, fmt.Errorf("cannot reload inserted row: %w", err)
+		return fmt.Errorf("cannot reload inserted row: %w", err)
 	}
 	u, err := url.Parse(bookmark.URL)
-	if err != nil {
-		return bookmark, nil
+	if err == nil {
+		bookmark.Host = u.Host
 	}
-	bookmark.Host = u.Host
-	return bookmark, nil
+	return nil
 }
 
 func (b *Repository) GetByID(id int64) (*bookmarks.Bookmark, error) {

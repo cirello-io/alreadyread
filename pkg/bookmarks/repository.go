@@ -32,7 +32,7 @@ type Repository interface {
 	GetByID(id int64) (*Bookmark, error)
 
 	// Insert one bookmark.
-	Insert(*Bookmark) (*Bookmark, error)
+	Insert(*Bookmark) error
 
 	// Invalid return all invalid bookmarks.
 	Invalid() ([]*Bookmark, error)

@@ -69,22 +69,21 @@ func (b BadURLError) Is(target error) bool {
 	return errors.As(target, &errBadURL)
 }
 
-func (b *Bookmarks) Insert(bookmark *Bookmark) (*Bookmark, error) {
+func (b *Bookmarks) Insert(bookmark *Bookmark) error {
 	if err := b.isSetup(); err != nil {
-		return nil, fmt.Errorf("cannot begin inserting bookmark: %w", err)
+		return fmt.Errorf("cannot begin inserting bookmark: %w", err)
 	}
 	if bookmark == nil {
-		return nil, errNilBookmark
+		return errNilBookmark
 	}
 	if _, err := url.Parse(bookmark.URL); err != nil {
-		return nil, &BadURLError{cause: err}
+		return &BadURLError{cause: err}
 	}
 	b.urlChecker.Check(bookmark)
-	inserted, err := b.repository.Insert(bookmark)
-	if err != nil {
-		return nil, fmt.Errorf("cannot insert bookmark: %w", err)
+	if err := b.repository.Insert(bookmark); err != nil {
+		return fmt.Errorf("cannot insert bookmark: %w", err)
 	}
-	return inserted, nil
+	return nil
 }
 
 func DeleteByID(repository Repository, id int64) error {
@@ -111,7 +110,7 @@ func UpdateInbox(repository Repository, id int64, inbox string) error {
 }
 
 func List(repository Repository, filter string) ([]*Bookmark, error) {
-	// TODO: use specifications
+	// TODO: use specifications and database filtering
 	list, err := repository.All()
 	if err != nil {
 		return nil, fmt.Errorf("cannot load all bookmarks: %w", err)

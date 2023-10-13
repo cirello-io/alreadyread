@@ -32,7 +32,7 @@ var _ Repository = &RepositoryMock{}
 //			GetByIDFunc: func(id int64) (*Bookmark, error) {
 //				panic("mock out the GetByID method")
 //			},
-//			InsertFunc: func(bookmark *Bookmark) (*Bookmark, error) {
+//			InsertFunc: func(bookmark *Bookmark) error {
 //				panic("mock out the Insert method")
 //			},
 //			InvalidFunc: func() ([]*Bookmark, error) {
@@ -64,7 +64,7 @@ type RepositoryMock struct {
 	GetByIDFunc func(id int64) (*Bookmark, error)
 
 	// InsertFunc mocks the Insert method.
-	InsertFunc func(bookmark *Bookmark) (*Bookmark, error)
+	InsertFunc func(bookmark *Bookmark) error
 
 	// InvalidFunc mocks the Invalid method.
 	InvalidFunc func() ([]*Bookmark, error)
@@ -263,7 +263,7 @@ func (mock *RepositoryMock) GetByIDCalls() []struct {
 }
 
 // Insert calls InsertFunc.
-func (mock *RepositoryMock) Insert(bookmark *Bookmark) (*Bookmark, error) {
+func (mock *RepositoryMock) Insert(bookmark *Bookmark) error {
 	if mock.InsertFunc == nil {
 		panic("RepositoryMock.InsertFunc: method is nil but Repository.Insert was just called")
 	}

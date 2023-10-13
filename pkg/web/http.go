@@ -109,7 +109,7 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	case http.MethodPost:
-		bookmark, err := bookmarksRoot.Insert(&bookmarks.Bookmark{
+		err := bookmarksRoot.Insert(&bookmarks.Bookmark{
 			Title: r.FormValue("title"),
 			URL:   r.FormValue("url"),
 		})
@@ -119,12 +119,9 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 				http.StatusInternalServerError)
 			return
 		}
-		if err := frontend.LinkTable.ExecuteTemplate(w, "link", bookmark); err != nil {
-			log.Println("cannot render new bookmark:", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError),
-				http.StatusInternalServerError)
-			return
-		}
+		fmt.Fprintln(w, `
+		<div class="alert" role="alert" data-hx-trigger="load delay:5s" data-hx-on::load="javascript: htmx.trigger('#inbox-btn','click',{})">Bookmark saved!</div>
+		`)
 		return
 	default:
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
@@ -151,15 +148,6 @@ func extractID(root, urlPath string) (int64, error) {
 	urlPath = urlPath[1:]
 	urlPathParts := strings.Split(strings.Trim(urlPath, "/"), "/")
 	return strconv.ParseInt(urlPathParts[0], 10, 64)
-}
-
-func (s *Server) urlTitle(w http.ResponseWriter, r *http.Request) {
-	// TODO: handle Access-Control-Allow-Origin correctly
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	b := bookmarks.NewURLChecker().Check(&bookmarks.Bookmark{
-		URL: r.FormValue("url"),
-	})
-	fmt.Fprintln(w, b.Title)
 }
 
 func (s *Server) newLink(w http.ResponseWriter, r *http.Request) {

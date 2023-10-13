@@ -31,9 +31,9 @@
 			</thead>
 			<tbody>
 				<tr>
-				<td><input type="url"  placeholder="URL"        name="url"   id="new-link-URL"   data-hx-get="/newLink"     data-hx-target="#dialog-card"           data-hx-trigger="keyup changed delay:500ms"        value="{{- .URL -}}"></td>
-				<td><input type="text" placeholder="Site Title" name="title" id="new-link-title"                                                                                                                       value="{{- .Title -}}"></td>
-				<td><button class="btn btn-primary"                                              data-hx-post="/bookmarks/" data-hx-target="#links-table-container"                                             data-hx-swap="afterbegin">add</button></td>
+				<td><input type="url"  placeholder="URL"        name="url"   id="new-link-URL"   data-hx-get="/newLink"     data-hx-target="#container"           data-hx-trigger="keyup changed delay:500ms"        value="{{- .URL -}}"  ></td>
+				<td><input type="text" placeholder="Site Title" name="title" id="new-link-title"                                                                                                                     value="{{- .Title -}}"></td>
+				<td><button class="btn btn-primary"                                              data-hx-post="/bookmarks/" data-hx-target="#container"                                                                                    >add</button></td>
 				</tr>
 			</tbody>
 			</table>
@@ -42,6 +42,22 @@
 	</div>
 </div>
 {{ end }}
-{{ range . }}
-{{ template "link" . }}
-{{ end }}
+
+<div class="card-body">
+	<div class="table-responsive table mt-2" id="dataTable-1" role="grid" aria-describedby="dataTable_info">
+	    <table class="table my-0" id="dataTable">
+		<thead>
+		    <tr>
+			<th>Title</th>
+			<th>URL</th>
+			<th>Actions</th>
+		    </tr>
+		</thead>
+		<tbody>
+			{{ range . }}
+			{{ template "link" . }}
+			{{ end }}
+		</tbody>
+	    </table>
+	</div>
+</div>
