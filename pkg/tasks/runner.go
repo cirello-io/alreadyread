@@ -16,6 +16,7 @@ package tasks // import "cirello.io/alreadyread/pkg/tasks"
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"sync"
@@ -23,7 +24,6 @@ import (
 
 	"cirello.io/alreadyread/pkg/bookmarks"
 	"cirello.io/alreadyread/pkg/bookmarks/sqliterepo"
-	"github.com/jmoiron/sqlx"
 	"golang.org/x/sync/singleflight"
 )
 
@@ -31,7 +31,7 @@ import (
 // as it is used as key to lock.
 type Task struct {
 	Name      string
-	Exec      func(db *sqlx.DB) error
+	Exec      func(db *sql.DB) error
 	Frequency time.Duration
 }
 
@@ -43,11 +43,11 @@ var tasks = []Task{
 }
 
 // Run executes background maintenance tasks.
-func Run(db *sqlx.DB) {
+func Run(db *sql.DB) {
 	run(context.Background(), db, tasks)
 }
 
-func run(ctx context.Context, db *sqlx.DB, tasks []Task) {
+func run(ctx context.Context, db *sql.DB, tasks []Task) {
 	for _, t := range tasks {
 		t := t
 		go func() {
@@ -74,7 +74,7 @@ func run(ctx context.Context, db *sqlx.DB, tasks []Task) {
 }
 
 // LinkHealth checks if the expired links are still valid.
-func LinkHealth(db *sqlx.DB) (err error) {
+func LinkHealth(db *sql.DB) (err error) {
 	defer recoverPanic(&err)
 	repository := sqliterepo.New(db)
 	expiredBookmarks, err := repository.Expired()
@@ -108,7 +108,7 @@ func LinkHealth(db *sqlx.DB) (err error) {
 }
 
 // Vacuum executes a SQLite3 vacuum clean up.
-func Vacuum(db *sqlx.DB) (err error) {
+func Vacuum(db *sql.DB) (err error) {
 	defer recoverPanic(&err)
 	_, err = db.Exec("VACUUM")
 	if err != nil {
@@ -118,7 +118,7 @@ func Vacuum(db *sqlx.DB) (err error) {
 }
 
 // RestorePostponedLinks revamp rescheduled links in the inbox.
-func RestorePostponedLinks(db *sqlx.DB) (err error) {
+func RestorePostponedLinks(db *sql.DB) (err error) {
 	defer recoverPanic(&err)
 	_, err = db.Exec("UPDATE bookmarks SET inbox = 1 WHERE inbox = 2")
 	if err != nil {

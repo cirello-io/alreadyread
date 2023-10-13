@@ -15,18 +15,18 @@
 package cli // import "cirello.io/alreadyread/pkg/cli"
 
 import (
+	"database/sql"
 	"log"
 	"os"
 	"sort"
 	"strings"
 
 	"cirello.io/alreadyread/pkg/bookmarks/sqliterepo"
-	"github.com/jmoiron/sqlx"
 	"github.com/urfave/cli"
 )
 
 type commands struct {
-	db *sqlx.DB
+	db *sql.DB
 }
 
 func (c *commands) bootstrap(*cli.Context) error {
@@ -34,7 +34,7 @@ func (c *commands) bootstrap(*cli.Context) error {
 }
 
 // Run executes the application in CLI mode.
-func Run(db *sqlx.DB) {
+func Run(db *sql.DB) {
 	app := cli.NewApp()
 	app.Name = "alreadyread"
 	app.Usage = "bookmarks manager"

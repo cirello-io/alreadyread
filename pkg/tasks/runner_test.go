@@ -16,11 +16,10 @@ package tasks
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"testing"
 	"time"
-
-	"github.com/jmoiron/sqlx"
 )
 
 func Test_run(t *testing.T) {
@@ -28,7 +27,7 @@ func Test_run(t *testing.T) {
 	tasks := []Task{
 		{
 			Name: "overlapping tasks",
-			Exec: func(*sqlx.DB) error {
+			Exec: func(*sql.DB) error {
 				count++
 				time.Sleep(5 * time.Second)
 				return errors.New("fake error")

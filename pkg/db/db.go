@@ -15,7 +15,8 @@
 package db // import "cirello.io/alreadyread/pkg/db"
 
 import (
-	"github.com/jmoiron/sqlx"
+	"database/sql"
+
 	_ "github.com/mattn/go-sqlite3" // SQLite3 driver
 )
 
@@ -25,8 +26,8 @@ type Config struct {
 }
 
 // Connect dials to the database.
-func Connect(config Config) (*sqlx.DB, error) {
-	db, err := sqlx.Open("sqlite3", config.Filename)
+func Connect(config Config) (*sql.DB, error) {
+	db, err := sql.Open("sqlite3", config.Filename)
 	if err != nil {
 		return nil, err
 	}
