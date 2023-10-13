@@ -41,10 +41,6 @@ const (
 	Postponed
 )
 
-func (i Inbox) IsValid() bool {
-	return i == Read || i == NewLink || i == Postponed
-}
-
 func ParseInbox(v string) (Inbox, error) {
 	switch v {
 	case "read":
