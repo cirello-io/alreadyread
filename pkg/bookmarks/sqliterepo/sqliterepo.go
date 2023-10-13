@@ -94,6 +94,14 @@ func (b *Repository) Inbox() ([]*bookmarks.Bookmark, error) {
 	return b.scanRows(rows)
 }
 
+func (b *Repository) Duplicated() ([]*bookmarks.Bookmark, error) {
+	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox FROM bookmarks WHERE url IN (SELECT url FROM bookmarks GROUP BY url HAVING count(url) > 1) ORDER BY url, created_at DESC`)
+	if err != nil {
+		return nil, err
+	}
+	return b.scanRows(rows)
+}
+
 func (b *Repository) All() ([]*bookmarks.Bookmark, error) {
 	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox FROM bookmarks ORDER BY CASE WHEN last_status_code = 0 THEN 999 ELSE last_status_code END ASC, created_at DESC, id DESC`)
 	if err != nil {
@@ -127,7 +135,7 @@ func (b *Repository) Insert(bookmark *bookmarks.Bookmark) error {
 		INSERT INTO bookmarks
 		(url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox)
 		VALUES
-		($1, $2, $3, $4, $5, $6, $6)
+		($1, $2, $3, $4, $5, $6, $7)
 	`, bookmark.URL, bookmark.LastStatusCode, bookmark.LastStatusCheck, bookmark.LastStatusReason, bookmark.Title, bookmark.CreatedAt, bookmark.Inbox)
 	if err != nil {
 		return fmt.Errorf("cannot insert row: %w", err)
@@ -162,7 +170,7 @@ func (b *Repository) Update(bookmark *bookmarks.Bookmark) error {
 			title = $5,
 			inbox = $6
 		WHERE
-			id = $1
+			id = $7
 	`, bookmark.URL, bookmark.LastStatusCode, bookmark.LastStatusCheck, bookmark.LastStatusReason, bookmark.Title, bookmark.Inbox, bookmark.ID)
 	return err
 }
@@ -172,19 +180,11 @@ func (b *Repository) DeleteByID(id int64) error {
 	return err
 }
 
-func (b *Repository) Duplicated() ([]*bookmarks.Bookmark, error) {
-	rows, err := b.db.Query(`SELECT * FROM bookmarks WHERE url IN (SELECT url FROM bookmarks GROUP BY url HAVING count(url) > 1) ORDER BY url, created_at DESC`)
-	if err != nil {
-		return nil, err
-	}
-	return b.scanRows(rows)
-}
-
 func (b *Repository) Search(term string) ([]*bookmarks.Bookmark, error) {
 	explodedTerm := "%" + strings.Join(strings.Split(term, ""), "%") + "%"
 	rows, err := b.db.Query(`
 		SELECT
-			*
+			id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox
 		FROM
 			bookmarks
 		WHERE
