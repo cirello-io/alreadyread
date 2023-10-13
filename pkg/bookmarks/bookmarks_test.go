@@ -19,7 +19,7 @@ import (
 	"testing"
 )
 
-func TestDeleteByID(t *testing.T) {
+func TestBookmarks_DeleteByID(t *testing.T) {
 	type args struct {
 		repository Repository
 		id         int64
