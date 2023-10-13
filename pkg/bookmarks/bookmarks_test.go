@@ -232,3 +232,41 @@ func TestBookmarks_All(t *testing.T) {
 		})
 	}
 }
+
+func TestBookmarks_Search(t *testing.T) {
+	errDB := errors.New("DB error")
+	foundBookmark := &Bookmark{ID: 1, Title: "title", URL: "http://url.com"}
+	type fields struct {
+		repository Repository
+	}
+	type args struct {
+		term string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    []*Bookmark
+		wantErr bool
+	}{
+		{"badDB", fields{repository: &RepositoryMock{SearchFunc: func(term string) ([]*Bookmark, error) { return nil, errDB }}}, args{}, nil, true},
+		{"nilResult", fields{repository: &RepositoryMock{SearchFunc: func(term string) ([]*Bookmark, error) { return nil, nil }}}, args{}, nil, false},
+		{"emptyResult", fields{repository: &RepositoryMock{SearchFunc: func(term string) ([]*Bookmark, error) { return []*Bookmark{}, nil }}}, args{}, []*Bookmark{}, false},
+		{"good", fields{repository: &RepositoryMock{SearchFunc: func(term string) ([]*Bookmark, error) { return []*Bookmark{foundBookmark}, nil }}}, args{}, []*Bookmark{foundBookmark}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &Bookmarks{
+				repository: tt.fields.repository,
+			}
+			got, err := b.Search(tt.args.term)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Bookmarks.Search() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Bookmarks.Search() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
