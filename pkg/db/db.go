@@ -30,5 +30,8 @@ func Connect(config Config) (*sqlx.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	if _, err := db.Exec("PRAGMA case_sensitive_like=false"); err != nil {
+		return nil, err
+	}
 	return db, nil
 }

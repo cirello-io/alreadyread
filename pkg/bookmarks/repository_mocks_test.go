@@ -26,17 +26,26 @@ var _ Repository = &RepositoryMock{}
 //			DeleteByIDFunc: func(id int64) error {
 //				panic("mock out the DeleteByID method")
 //			},
+//			DuplicatedFunc: func() ([]*Bookmark, error) {
+//				panic("mock out the Duplicated method")
+//			},
 //			ExpiredFunc: func() ([]*Bookmark, error) {
 //				panic("mock out the Expired method")
 //			},
 //			GetByIDFunc: func(id int64) (*Bookmark, error) {
 //				panic("mock out the GetByID method")
 //			},
+//			InboxFunc: func() ([]*Bookmark, error) {
+//				panic("mock out the Inbox method")
+//			},
 //			InsertFunc: func(bookmark *Bookmark) error {
 //				panic("mock out the Insert method")
 //			},
 //			InvalidFunc: func() ([]*Bookmark, error) {
 //				panic("mock out the Invalid method")
+//			},
+//			SearchFunc: func(term string) ([]*Bookmark, error) {
+//				panic("mock out the Search method")
 //			},
 //			UpdateFunc: func(bookmark *Bookmark) error {
 //				panic("mock out the Update method")
@@ -57,17 +66,26 @@ type RepositoryMock struct {
 	// DeleteByIDFunc mocks the DeleteByID method.
 	DeleteByIDFunc func(id int64) error
 
+	// DuplicatedFunc mocks the Duplicated method.
+	DuplicatedFunc func() ([]*Bookmark, error)
+
 	// ExpiredFunc mocks the Expired method.
 	ExpiredFunc func() ([]*Bookmark, error)
 
 	// GetByIDFunc mocks the GetByID method.
 	GetByIDFunc func(id int64) (*Bookmark, error)
 
+	// InboxFunc mocks the Inbox method.
+	InboxFunc func() ([]*Bookmark, error)
+
 	// InsertFunc mocks the Insert method.
 	InsertFunc func(bookmark *Bookmark) error
 
 	// InvalidFunc mocks the Invalid method.
 	InvalidFunc func() ([]*Bookmark, error)
+
+	// SearchFunc mocks the Search method.
+	SearchFunc func(term string) ([]*Bookmark, error)
 
 	// UpdateFunc mocks the Update method.
 	UpdateFunc func(bookmark *Bookmark) error
@@ -85,6 +103,9 @@ type RepositoryMock struct {
 			// ID is the id argument value.
 			ID int64
 		}
+		// Duplicated holds details about calls to the Duplicated method.
+		Duplicated []struct {
+		}
 		// Expired holds details about calls to the Expired method.
 		Expired []struct {
 		}
@@ -93,6 +114,9 @@ type RepositoryMock struct {
 			// ID is the id argument value.
 			ID int64
 		}
+		// Inbox holds details about calls to the Inbox method.
+		Inbox []struct {
+		}
 		// Insert holds details about calls to the Insert method.
 		Insert []struct {
 			// Bookmark is the bookmark argument value.
@@ -100,6 +124,11 @@ type RepositoryMock struct {
 		}
 		// Invalid holds details about calls to the Invalid method.
 		Invalid []struct {
+		}
+		// Search holds details about calls to the Search method.
+		Search []struct {
+			// Term is the term argument value.
+			Term string
 		}
 		// Update holds details about calls to the Update method.
 		Update []struct {
@@ -110,10 +139,13 @@ type RepositoryMock struct {
 	lockAll        sync.RWMutex
 	lockBootstrap  sync.RWMutex
 	lockDeleteByID sync.RWMutex
+	lockDuplicated sync.RWMutex
 	lockExpired    sync.RWMutex
 	lockGetByID    sync.RWMutex
+	lockInbox      sync.RWMutex
 	lockInsert     sync.RWMutex
 	lockInvalid    sync.RWMutex
+	lockSearch     sync.RWMutex
 	lockUpdate     sync.RWMutex
 }
 
@@ -203,6 +235,33 @@ func (mock *RepositoryMock) DeleteByIDCalls() []struct {
 	return calls
 }
 
+// Duplicated calls DuplicatedFunc.
+func (mock *RepositoryMock) Duplicated() ([]*Bookmark, error) {
+	if mock.DuplicatedFunc == nil {
+		panic("RepositoryMock.DuplicatedFunc: method is nil but Repository.Duplicated was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockDuplicated.Lock()
+	mock.calls.Duplicated = append(mock.calls.Duplicated, callInfo)
+	mock.lockDuplicated.Unlock()
+	return mock.DuplicatedFunc()
+}
+
+// DuplicatedCalls gets all the calls that were made to Duplicated.
+// Check the length with:
+//
+//	len(mockedRepository.DuplicatedCalls())
+func (mock *RepositoryMock) DuplicatedCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockDuplicated.RLock()
+	calls = mock.calls.Duplicated
+	mock.lockDuplicated.RUnlock()
+	return calls
+}
+
 // Expired calls ExpiredFunc.
 func (mock *RepositoryMock) Expired() ([]*Bookmark, error) {
 	if mock.ExpiredFunc == nil {
@@ -262,6 +321,33 @@ func (mock *RepositoryMock) GetByIDCalls() []struct {
 	return calls
 }
 
+// Inbox calls InboxFunc.
+func (mock *RepositoryMock) Inbox() ([]*Bookmark, error) {
+	if mock.InboxFunc == nil {
+		panic("RepositoryMock.InboxFunc: method is nil but Repository.Inbox was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockInbox.Lock()
+	mock.calls.Inbox = append(mock.calls.Inbox, callInfo)
+	mock.lockInbox.Unlock()
+	return mock.InboxFunc()
+}
+
+// InboxCalls gets all the calls that were made to Inbox.
+// Check the length with:
+//
+//	len(mockedRepository.InboxCalls())
+func (mock *RepositoryMock) InboxCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockInbox.RLock()
+	calls = mock.calls.Inbox
+	mock.lockInbox.RUnlock()
+	return calls
+}
+
 // Insert calls InsertFunc.
 func (mock *RepositoryMock) Insert(bookmark *Bookmark) error {
 	if mock.InsertFunc == nil {
@@ -318,6 +404,38 @@ func (mock *RepositoryMock) InvalidCalls() []struct {
 	mock.lockInvalid.RLock()
 	calls = mock.calls.Invalid
 	mock.lockInvalid.RUnlock()
+	return calls
+}
+
+// Search calls SearchFunc.
+func (mock *RepositoryMock) Search(term string) ([]*Bookmark, error) {
+	if mock.SearchFunc == nil {
+		panic("RepositoryMock.SearchFunc: method is nil but Repository.Search was just called")
+	}
+	callInfo := struct {
+		Term string
+	}{
+		Term: term,
+	}
+	mock.lockSearch.Lock()
+	mock.calls.Search = append(mock.calls.Search, callInfo)
+	mock.lockSearch.Unlock()
+	return mock.SearchFunc(term)
+}
+
+// SearchCalls gets all the calls that were made to Search.
+// Check the length with:
+//
+//	len(mockedRepository.SearchCalls())
+func (mock *RepositoryMock) SearchCalls() []struct {
+	Term string
+} {
+	var calls []struct {
+		Term string
+	}
+	mock.lockSearch.RLock()
+	calls = mock.calls.Search
+	mock.lockSearch.RUnlock()
 	return calls
 }
 

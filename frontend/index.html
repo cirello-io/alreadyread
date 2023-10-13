@@ -17,24 +17,22 @@
                 <nav class="navbar navbar-expand bg-white shadow mb-4 topbar static-top navbar-light">
                     <div class="container-fluid"><button class="btn btn-link d-md-none rounded-circle me-3" id="sidebarToggleTop" type="button"><i class="fas fa-bars"></i></button><a class="navbar-brand" href="#">alreadyread</a>
 
-                        <button class="btn btn-primary btn-sm" type="button" style="margin-right: 20px;" data-hx-get="/newLink" data-hx-target="#container" data-hx-on::before-request="(function(_this) {document.querySelectorAll('#filter-group button').forEach(function(n){ n.classList.remove('active') }); _this.classList.add('active');})(this)">New</button>
+                        <button class="btn btn-primary btn-sm" type="button" style="margin-right: 20px;" data-hx-get="/newLink" data-hx-target="#container" data-hx-on::before-request="resetButtons(this)">New</button>
 
                         <div class="btn-group btn-group-sm" role="group" id="filter-group">
-                            <button class="btn btn-secondary active" id="inbox-btn"      type="button" data-hx-on::before-request="(function(_this) {document.querySelectorAll('#filter-group button').forEach(function(n){ n.classList.remove('active') }); _this.classList.add('active');})(this)" data-hx-get="/bookmarks?filter=new"        data-hx-target="#container">Inbox</button>
-                            <button class="btn btn-secondary"        id="duplicated-btn" type="button" data-hx-on::before-request="(function(_this) {document.querySelectorAll('#filter-group button').forEach(function(n){ n.classList.remove('active') }); _this.classList.add('active');})(this)" data-hx-get="/bookmarks?filter=duplicated" data-hx-target="#container">Duplicated</button>
-                            <button class="btn btn-secondary"        id="all-btn"        type="button" data-hx-on::before-request="(function(_this) {document.querySelectorAll('#filter-group button').forEach(function(n){ n.classList.remove('active') }); _this.classList.add('active');})(this)" data-hx-get="/bookmarks"                   data-hx-target="#container">All</button>
+                            <button class="btn btn-secondary active" id="inbox-btn"      type="button" data-hx-on::before-request="resetButtons(this)" data-hx-get="/inbox"      data-hx-target="#container">Inbox</button>
+                            <button class="btn btn-secondary"        id="duplicated-btn" type="button" data-hx-on::before-request="resetButtons(this)" data-hx-get="/duplicated" data-hx-target="#container">Duplicated</button>
+                            <button class="btn btn-secondary"        id="all-btn"        type="button" data-hx-on::before-request="resetButtons(this)" data-hx-get="/all"        data-hx-target="#container">All</button>
 
                         </div>
                         <form id="link-search" class="d-none d-sm-inline-block me-auto ms-md-3 my-2 my-md-0 mw-100 navbar-search">
-                            <div class="input-group"><input class="bg-light form-control border-0 small" type="text" placeholder="Search for ..."><button class="btn btn-primary py-0" type="button"><i class="fas fa-search"></i></button></div>
+                            <div class="input-group"><input class="bg-light form-control border-0 small" type="text" placeholder="Search for ..." data-hx-trigger="keyup changed delay:500ms" data-hx-get="/search" name="term" data-hx-target="#container" data-hx-on::before-request="resetButtons(this)"></div>
                         </form>
                         <ul class="navbar-nav flex-nowrap ms-auto">
                             <li class="nav-item dropdown d-sm-none no-arrow"><a class="dropdown-toggle nav-link" aria-expanded="false" data-bs-toggle="dropdown" href="#"><i class="fas fa-search"></i></a>
                                 <div class="dropdown-menu dropdown-menu-end p-3 animated--grow-in" aria-labelledby="searchDropdown">
                                     <form class="me-auto navbar-search w-100">
-                                        <div class="input-group"><input class="bg-light form-control border-0 small" type="text" placeholder="Search for ...">
-                                            <div class="input-group-append"><button class="btn btn-primary py-0" type="button"><i class="fas fa-search"></i></button></div>
-                                        </div>
+                                        <div class="input-group"><input class="bg-light form-control border-0 small" type="text" placeholder="Search for ..." data-hx-trigger="keyup changed delay:500ms" data-hx-get="/search" name="term" data-hx-target="#container" data-hx-on::before-request="resetButtons(this)"></div>
                                     </form>
                                 </div>
                             </li>
@@ -42,7 +40,7 @@
                     </div>
                 </nav>
                 <div class="container-fluid" >
-                    <div id="container" class="card" data-hx-get="/bookmarks?filter=new" data-hx-trigger="load"></div>
+                    <div id="container" class="card" data-hx-get="/inbox" data-hx-trigger="load"></div>
                 </div>
             </div>
             <footer class="bg-white sticky-footer">
@@ -56,5 +54,10 @@
     <script src="assets/js/theme.js?h=79f403485707cf2617c5bc5a2d386bb0"></script>
     <script src="https://unpkg.com/htmx.org@1.9.6"></script>
 </body>
-
+<script>
+function resetButtons(_this) {
+    document.querySelectorAll('#filter-group button').forEach(function(n){ n.classList.remove('active') });
+    _this.classList.add('active');
+}
+</script>
 </html>

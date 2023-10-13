@@ -25,20 +25,18 @@ import (
 
 	"cirello.io/alreadyread/frontend"
 	"cirello.io/alreadyread/pkg/bookmarks"
-	"cirello.io/alreadyread/pkg/bookmarks/sqliterepo"
-	"github.com/jmoiron/sqlx"
 )
 
 // Server implements the web interface.
 type Server struct {
-	db      *sqlx.DB
-	handler http.Handler
+	bookmarks *bookmarks.Bookmarks
+	handler   http.Handler
 }
 
 // New creates a web interface handler.
-func New(db *sqlx.DB) *Server {
+func New(bookmarks *bookmarks.Bookmarks) *Server {
 	s := &Server{
-		db: db,
+		bookmarks: bookmarks,
 	}
 	s.registerRoutes()
 	return s
@@ -49,7 +47,10 @@ func (s *Server) registerRoutes() {
 	router := http.NewServeMux()
 
 	router.HandleFunc("/newLink", s.newLink)
-	router.HandleFunc("/bookmarks", s.bookmarks)
+	router.HandleFunc("/inbox", s.inbox)
+	router.HandleFunc("/duplicated", s.duplicated)
+	router.HandleFunc("/all", s.all)
+	router.HandleFunc("/search", s.search)
 	router.HandleFunc("/bookmarks/", s.bookmarkOperations)
 	router.HandleFunc("/", rootHandler.ServeHTTP)
 	s.handler = router
@@ -59,19 +60,71 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.handler.ServeHTTP(w, r)
 }
 
-func (s *Server) bookmarks(w http.ResponseWriter, r *http.Request) {
+func (s *Server) newLink(w http.ResponseWriter, r *http.Request) {
 	// TODO: handle Access-Control-Allow-Origin correctly
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	repository := sqliterepo.New(s.db)
+	bookmark := &bookmarks.Bookmark{
+		URL: r.URL.Query().Get("url"),
+	}
+	bookmark = bookmarks.NewURLChecker().Check(bookmark)
+	if err := frontend.LinkTable.ExecuteTemplate(w, "newLink", bookmark); err != nil {
+		log.Println("cannot render new bookmark form:", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+}
 
-	// TODO: use specifications
-	list, err := bookmarks.List(repository, r.URL.Query().Get("filter"))
+func (s *Server) inbox(w http.ResponseWriter, r *http.Request) {
+	// TODO: handle Access-Control-Allow-Origin correctly
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	list, err := s.bookmarks.Inbox()
+	if err != nil {
+		log.Println("cannot load bookmarks for inbox:", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	if err := frontend.LinkTable.Execute(w, list); err != nil {
+		log.Println("cannot render link table for inbox: ", err)
+	}
+}
+
+func (s *Server) duplicated(w http.ResponseWriter, r *http.Request) {
+	// TODO: handle Access-Control-Allow-Origin correctly
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	list, err := s.bookmarks.Duplicated()
+	if err != nil {
+		log.Println("cannot load duplicated bookmarks:", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	if err := frontend.LinkTable.Execute(w, list); err != nil {
+		log.Println("cannot render link table for duplicated list: ", err)
+	}
+}
+
+func (s *Server) all(w http.ResponseWriter, r *http.Request) {
+	// TODO: handle Access-Control-Allow-Origin correctly
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	list, err := s.bookmarks.All()
 	if err != nil {
 		log.Println("cannot load all bookmarks:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+	if err := frontend.LinkTable.Execute(w, list); err != nil {
+		log.Println("cannot render link table: ", err)
+	}
+}
 
+func (s *Server) search(w http.ResponseWriter, r *http.Request) {
+	// TODO: handle Access-Control-Allow-Origin correctly
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	list, err := s.bookmarks.Search(r.URL.Query().Get("term"))
+	if err != nil {
+		log.Println("cannot load all bookmarks:", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
 	if err := frontend.LinkTable.Execute(w, list); err != nil {
 		log.Println("cannot render link table: ", err)
 	}
@@ -81,17 +134,15 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 	// TODO: handle Access-Control-Allow-Origin correctly
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	repository := sqliterepo.New(s.db)
 	id, err := extractID("/bookmarks", r.URL.String())
 	if err != nil {
 		log.Println("cannot parse bookmark ID:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	bookmarksRoot := bookmarks.New(repository, bookmarks.NewURLChecker())
 	switch r.Method {
 	case http.MethodDelete:
-		err := bookmarks.DeleteByID(repository, id)
+		err := s.bookmarks.DeleteByID(id)
 		if err != nil {
 			log.Println("cannot delete bookmark:", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -100,7 +151,7 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 		return
 	case http.MethodPatch:
 		if inbox := r.FormValue("inbox"); inbox != "" {
-			err := bookmarks.UpdateInbox(repository, id, inbox)
+			err := s.bookmarks.UpdateInbox(id, inbox)
 			if err != nil {
 				log.Println("cannot update bookmark:", err)
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -109,10 +160,10 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	case http.MethodPost:
-		err := bookmarksRoot.Insert(&bookmarks.Bookmark{
+		err := s.bookmarks.Insert(&bookmarks.Bookmark{
 			Title: r.FormValue("title"),
 			URL:   r.FormValue("url"),
-		})
+		}, bookmarks.NewURLChecker())
 		if err != nil {
 			log.Println("cannot store new bookmark:", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError),
@@ -148,18 +199,4 @@ func extractID(root, urlPath string) (int64, error) {
 	urlPath = urlPath[1:]
 	urlPathParts := strings.Split(strings.Trim(urlPath, "/"), "/")
 	return strconv.ParseInt(urlPathParts[0], 10, 64)
-}
-
-func (s *Server) newLink(w http.ResponseWriter, r *http.Request) {
-	// TODO: handle Access-Control-Allow-Origin correctly
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	bookmark := &bookmarks.Bookmark{
-		URL: r.URL.Query().Get("url"),
-	}
-	bookmark = bookmarks.NewURLChecker().Check(bookmark)
-	if err := frontend.LinkTable.ExecuteTemplate(w, "newLink", bookmark); err != nil {
-		log.Println("cannot render new bookmark form:", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
 }

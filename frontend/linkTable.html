@@ -1,17 +1,13 @@
 {{ define "link" }}
 <tr id="bookmark-{{.ID}}">
 	<td>
-		<a href="{{.URL}}" target="_blank">{{ .URL }}</a>
-	</td>
-	<td>
+		<button class="btn btn-link" data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="read">📤</button>
+		<button class="btn btn-link" data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="postponed">💤</button>
+		<button class="btn btn-link" data-hx-target="#bookmark-{{.ID}}" data-hx-delete="/bookmarks/{{.ID}}">🗑</button>
 		<a href="{{.URL}}" target="_blank">{{ .Title }}</a>
 	</td>
 	<td>
-		<form data-hx-target="#bookmark-{{.ID}}">
-			<button class="btn btn-link" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="read">📤</button>
-			<button class="btn btn-link" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="postponed">💤</button>
-			<button class="btn btn-link" data-hx-confirm="Are you sure you want to delete '{{.Title}}'?" data-hx-delete="/bookmarks/{{.ID}}">🗑</button>
-		</form>
+		<a href="{{.URL}}" target="_blank">{{ .URL }}</a>
 	</td>
 </tr>
 {{ end }}
@@ -50,7 +46,6 @@
 		    <tr>
 			<th>Title</th>
 			<th>URL</th>
-			<th>Actions</th>
 		    </tr>
 		</thead>
 		<tbody>

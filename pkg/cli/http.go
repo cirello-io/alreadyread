@@ -19,6 +19,8 @@ import (
 	"net"
 	"net/http"
 
+	"cirello.io/alreadyread/pkg/bookmarks"
+	"cirello.io/alreadyread/pkg/bookmarks/sqliterepo"
 	"cirello.io/alreadyread/pkg/tasks"
 	"cirello.io/alreadyread/pkg/web"
 	"github.com/urfave/cli"
@@ -43,7 +45,8 @@ func (c *commands) httpMode() cli.Command {
 				return cliError(fmt.Errorf("cannot bind port: %w", err))
 			}
 			tasks.Run(c.db)
-			srv := web.New(c.db)
+			bookmarks := bookmarks.New(sqliterepo.New(c.db))
+			srv := web.New(bookmarks)
 			if err := http.Serve(lHTTP, srv); err != nil {
 				return cliError(err)
 			}

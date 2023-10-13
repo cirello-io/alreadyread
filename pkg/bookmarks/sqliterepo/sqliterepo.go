@@ -17,6 +17,7 @@ package sqliterepo
 import (
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"cirello.io/alreadyread/pkg/bookmarks"
@@ -61,6 +62,33 @@ func (b *Repository) Bootstrap() error {
 	return nil
 }
 
+func (b *Repository) Inbox() ([]*bookmarks.Bookmark, error) {
+	var bookmarks []*bookmarks.Bookmark
+	err := b.db.Select(&bookmarks, `
+		SELECT
+			*
+
+		FROM
+			bookmarks
+		WHERE
+			inbox = 1
+
+		ORDER BY
+			created_at DESC,
+			id DESC
+	`)
+	for _, b := range bookmarks {
+		u, err := url.Parse(b.URL)
+		if err == nil {
+			b.Host = u.Host
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	return bookmarks, nil
+}
+
 func (b *Repository) All() ([]*bookmarks.Bookmark, error) {
 	var bookmarks []*bookmarks.Bookmark
 	err := b.db.Select(&bookmarks, `
@@ -78,15 +106,14 @@ func (b *Repository) All() ([]*bookmarks.Bookmark, error) {
 			created_at DESC,
 			id DESC
 	`)
-
+	if err != nil {
+		return nil, err
+	}
 	for _, b := range bookmarks {
 		u, err := url.Parse(b.URL)
 		if err == nil {
 			b.Host = u.Host
 		}
-	}
-	if err != nil {
-		return nil, err
 	}
 	return bookmarks, nil
 }
@@ -212,4 +239,51 @@ func (b *Repository) Update(bookmark *bookmarks.Bookmark) error {
 func (b *Repository) DeleteByID(id int64) error {
 	_, err := b.db.Exec(`DELETE FROM bookmarks WHERE id = $1`, id)
 	return err
+}
+
+func (b *Repository) Duplicated() ([]*bookmarks.Bookmark, error) {
+	var bookmarks []*bookmarks.Bookmark
+	err := b.db.Select(&bookmarks, `SELECT * FROM bookmarks WHERE url IN (SELECT url FROM bookmarks GROUP BY url HAVING count(url) > 1) ORDER BY url, created_at DESC`)
+	for _, b := range bookmarks {
+		u, err := url.Parse(b.URL)
+		if err == nil {
+			b.Host = u.Host
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	return bookmarks, nil
+}
+
+func (b *Repository) Search(term string) ([]*bookmarks.Bookmark, error) {
+	var bookmarks []*bookmarks.Bookmark
+	explodedTerm := "%" + strings.Join(strings.Split(term, ""), "%") + "%"
+	err := b.db.Select(&bookmarks, `
+		SELECT
+			*
+		FROM
+			bookmarks
+		WHERE
+			title LIKE $1 COLLATE NOCASE
+			OR
+			url LIKE $1 COLLATE NOCASE
+		ORDER BY
+			CASE
+				WHEN last_status_code = 0 THEN 999
+				ELSE last_status_code
+			END ASC,
+			created_at DESC,
+			id DESC
+	`, explodedTerm)
+	if err != nil {
+		return nil, err
+	}
+	for _, b := range bookmarks {
+		u, err := url.Parse(b.URL)
+		if err == nil {
+			b.Host = u.Host
+		}
+	}
+	return bookmarks, nil
 }
