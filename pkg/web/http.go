@@ -17,7 +17,6 @@ package web // import "cirello.io/alreadyread/pkg/web"
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -199,9 +198,7 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 				http.StatusInternalServerError)
 			return
 		}
-		fmt.Fprintln(w, `
-		<div class="alert" role="alert" data-hx-trigger="load delay:5s" data-hx-on::load="javascript: htmx.trigger('#inbox-btn','click',{})">Bookmark saved!</div>
-		`)
+		w.Header().Add("HX-Location", "/")
 		return
 	default:
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
