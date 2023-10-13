@@ -16,6 +16,7 @@ package bookmarks
 
 import (
 	"errors"
+	"reflect"
 	"testing"
 )
 
@@ -125,6 +126,108 @@ func TestBadURLError(t *testing.T) {
 			}
 			if got := b.Is(tt.fields.target); got != tt.wantIs {
 				t.Errorf("BadURLError.Is() = %v, want %v", got, tt.wantIs)
+			}
+		})
+	}
+}
+
+func TestBookmarks_Inbox(t *testing.T) {
+	errDB := errors.New("DB error")
+	foundBookmark := &Bookmark{ID: 1, Title: "title", URL: "http://url.com"}
+	type fields struct {
+		repository Repository
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    []*Bookmark
+		wantErr bool
+	}{
+		{"badDB", fields{repository: &RepositoryMock{InboxFunc: func() ([]*Bookmark, error) { return nil, errDB }}}, nil, true},
+		{"nilResult", fields{repository: &RepositoryMock{InboxFunc: func() ([]*Bookmark, error) { return nil, nil }}}, nil, false},
+		{"emptyResult", fields{repository: &RepositoryMock{InboxFunc: func() ([]*Bookmark, error) { return []*Bookmark{}, nil }}}, []*Bookmark{}, false},
+		{"good", fields{repository: &RepositoryMock{InboxFunc: func() ([]*Bookmark, error) { return []*Bookmark{foundBookmark}, nil }}}, []*Bookmark{foundBookmark}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &Bookmarks{
+				repository: tt.fields.repository,
+			}
+			got, err := b.Inbox()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Bookmarks.Inbox() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Bookmarks.Inbox() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBookmarks_Duplicated(t *testing.T) {
+	errDB := errors.New("DB error")
+	foundBookmark := &Bookmark{ID: 1, Title: "title", URL: "http://url.com"}
+	type fields struct {
+		repository Repository
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    []*Bookmark
+		wantErr bool
+	}{
+		{"badDB", fields{repository: &RepositoryMock{DuplicatedFunc: func() ([]*Bookmark, error) { return nil, errDB }}}, nil, true},
+		{"nilResult", fields{repository: &RepositoryMock{DuplicatedFunc: func() ([]*Bookmark, error) { return nil, nil }}}, nil, false},
+		{"emptyResult", fields{repository: &RepositoryMock{DuplicatedFunc: func() ([]*Bookmark, error) { return []*Bookmark{}, nil }}}, []*Bookmark{}, false},
+		{"good", fields{repository: &RepositoryMock{DuplicatedFunc: func() ([]*Bookmark, error) { return []*Bookmark{foundBookmark}, nil }}}, []*Bookmark{foundBookmark}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &Bookmarks{
+				repository: tt.fields.repository,
+			}
+			got, err := b.Duplicated()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Bookmarks.Duplicated() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Bookmarks.Duplicated() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBookmarks_All(t *testing.T) {
+	errDB := errors.New("DB error")
+	foundBookmark := &Bookmark{ID: 1, Title: "title", URL: "http://url.com"}
+	type fields struct {
+		repository Repository
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    []*Bookmark
+		wantErr bool
+	}{
+		{"badDB", fields{repository: &RepositoryMock{AllFunc: func() ([]*Bookmark, error) { return nil, errDB }}}, nil, true},
+		{"nilResult", fields{repository: &RepositoryMock{AllFunc: func() ([]*Bookmark, error) { return nil, nil }}}, nil, false},
+		{"emptyResult", fields{repository: &RepositoryMock{AllFunc: func() ([]*Bookmark, error) { return []*Bookmark{}, nil }}}, []*Bookmark{}, false},
+		{"good", fields{repository: &RepositoryMock{AllFunc: func() ([]*Bookmark, error) { return []*Bookmark{foundBookmark}, nil }}}, []*Bookmark{foundBookmark}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &Bookmarks{
+				repository: tt.fields.repository,
+			}
+			got, err := b.All()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Bookmarks.All() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Bookmarks.All() = %v, want %v", got, tt.want)
 			}
 		})
 	}
