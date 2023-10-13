@@ -17,7 +17,7 @@ var _ URLChecker = &URLCheckerMock{}
 //
 //		// make and configure a mocked URLChecker
 //		mockedURLChecker := &URLCheckerMock{
-//			CheckFunc: func(bookmark *Bookmark) *Bookmark {
+//			CheckFunc: func(url string, originalTitle string) (string, int64, int64, string) {
 //				panic("mock out the Check method")
 //			},
 //		}
@@ -28,33 +28,37 @@ var _ URLChecker = &URLCheckerMock{}
 //	}
 type URLCheckerMock struct {
 	// CheckFunc mocks the Check method.
-	CheckFunc func(bookmark *Bookmark) *Bookmark
+	CheckFunc func(url string, originalTitle string) (string, int64, int64, string)
 
 	// calls tracks calls to the methods.
 	calls struct {
 		// Check holds details about calls to the Check method.
 		Check []struct {
-			// Bookmark is the bookmark argument value.
-			Bookmark *Bookmark
+			// URL is the url argument value.
+			URL string
+			// OriginalTitle is the originalTitle argument value.
+			OriginalTitle string
 		}
 	}
 	lockCheck sync.RWMutex
 }
 
 // Check calls CheckFunc.
-func (mock *URLCheckerMock) Check(bookmark *Bookmark) *Bookmark {
+func (mock *URLCheckerMock) Check(url string, originalTitle string) (string, int64, int64, string) {
 	if mock.CheckFunc == nil {
 		panic("URLCheckerMock.CheckFunc: method is nil but URLChecker.Check was just called")
 	}
 	callInfo := struct {
-		Bookmark *Bookmark
+		URL           string
+		OriginalTitle string
 	}{
-		Bookmark: bookmark,
+		URL:           url,
+		OriginalTitle: originalTitle,
 	}
 	mock.lockCheck.Lock()
 	mock.calls.Check = append(mock.calls.Check, callInfo)
 	mock.lockCheck.Unlock()
-	return mock.CheckFunc(bookmark)
+	return mock.CheckFunc(url, originalTitle)
 }
 
 // CheckCalls gets all the calls that were made to Check.
@@ -62,10 +66,12 @@ func (mock *URLCheckerMock) Check(bookmark *Bookmark) *Bookmark {
 //
 //	len(mockedURLChecker.CheckCalls())
 func (mock *URLCheckerMock) CheckCalls() []struct {
-	Bookmark *Bookmark
+	URL           string
+	OriginalTitle string
 } {
 	var calls []struct {
-		Bookmark *Bookmark
+		URL           string
+		OriginalTitle string
 	}
 	mock.lockCheck.RLock()
 	calls = mock.calls.Check

@@ -24,6 +24,7 @@ import (
 
 	"cirello.io/alreadyread/pkg/bookmarks"
 	"cirello.io/alreadyread/pkg/bookmarks/sqliterepo"
+	"cirello.io/alreadyread/pkg/bookmarks/url"
 	"golang.org/x/sync/singleflight"
 )
 
@@ -88,10 +89,10 @@ func LinkHealth(db *sql.DB) (err error) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			urlChecker := bookmarks.NewURLChecker()
+			urlChecker := url.NewChecker()
 			for bookmark := range bookmarkCh {
 				log.Println("linkHealth:", bookmark.ID, bookmark.URL)
-				bookmark = urlChecker.Check(bookmark)
+				bookmark.Title, bookmark.LastStatusCheck, bookmark.LastStatusCode, bookmark.LastStatusReason = urlChecker.Check(bookmark.URL, bookmark.Title)
 				if err := repository.Update(bookmark); err != nil {
 					log.Println(err, "cannot update link during link health check - status OK")
 				}

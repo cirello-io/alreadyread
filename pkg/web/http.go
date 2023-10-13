@@ -25,6 +25,7 @@ import (
 
 	"cirello.io/alreadyread/frontend"
 	"cirello.io/alreadyread/pkg/bookmarks"
+	"cirello.io/alreadyread/pkg/bookmarks/url"
 )
 
 // Server implements the web interface.
@@ -84,10 +85,11 @@ func (s *Server) handleCORS(w http.ResponseWriter, r *http.Request) bool {
 }
 
 func (s *Server) newLink(w http.ResponseWriter, r *http.Request) {
+	title, _, _, _ := url.NewChecker().Check(r.URL.Query().Get("url"), "")
 	bookmark := &bookmarks.Bookmark{
-		URL: r.URL.Query().Get("url"),
+		URL:   r.URL.Query().Get("url"),
+		Title: title,
 	}
-	bookmark = bookmarks.NewURLChecker().Check(bookmark)
 	if err := frontend.LinkTable.ExecuteTemplate(w, "newLink", bookmark); err != nil {
 		log.Println("cannot render new bookmark form:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -95,7 +97,7 @@ func (s *Server) newLink(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) inbox(w http.ResponseWriter, r *http.Request) {
+func (s *Server) inbox(w http.ResponseWriter, _ *http.Request) {
 	list, err := s.bookmarks.Inbox()
 	if err != nil {
 		log.Println("cannot load bookmarks for inbox:", err)
@@ -107,7 +109,7 @@ func (s *Server) inbox(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) duplicated(w http.ResponseWriter, r *http.Request) {
+func (s *Server) duplicated(w http.ResponseWriter, _ *http.Request) {
 	list, err := s.bookmarks.Duplicated()
 	if err != nil {
 		log.Println("cannot load duplicated bookmarks:", err)
@@ -119,7 +121,7 @@ func (s *Server) duplicated(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) all(w http.ResponseWriter, r *http.Request) {
+func (s *Server) all(w http.ResponseWriter, _ *http.Request) {
 	list, err := s.bookmarks.All()
 	if err != nil {
 		log.Println("cannot load all bookmarks:", err)
@@ -174,7 +176,7 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 		err := s.bookmarks.Insert(&bookmarks.Bookmark{
 			Title: r.FormValue("title"),
 			URL:   r.FormValue("url"),
-		}, bookmarks.NewURLChecker())
+		}, url.NewChecker())
 		if err != nil {
 			log.Println("cannot store new bookmark:", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError),

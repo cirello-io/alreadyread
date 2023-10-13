@@ -76,7 +76,7 @@ func (b *Bookmarks) Insert(bookmark *Bookmark, urlChecker URLChecker) error {
 	if _, err := url.Parse(bookmark.URL); err != nil {
 		return &BadURLError{cause: err}
 	}
-	urlChecker.Check(bookmark)
+	bookmark.Title, bookmark.LastStatusCheck, bookmark.LastStatusCode, bookmark.LastStatusReason = urlChecker.Check(bookmark.URL, bookmark.Title)
 	if err := b.repository.Insert(bookmark); err != nil {
 		return fmt.Errorf("cannot insert bookmark: %w", err)
 	}

@@ -14,76 +14,7 @@
 
 package bookmarks
 
-import (
-	"compress/gzip"
-	"net/http"
-	"strings"
-	"time"
-
-	"github.com/PuerkitoBio/goquery"
-)
-
 //go:generate moq -out urlchecker_mocks_test.go . URLChecker
 type URLChecker interface {
-	Check(*Bookmark) *Bookmark
-}
-
-type urlChecker struct {
-	timeNow func() time.Time
-}
-
-func NewURLChecker() URLChecker {
-	return &urlChecker{
-		timeNow: time.Now,
-	}
-}
-
-// Check dials bookmark URL and updates its state with the errors if any.
-func (u *urlChecker) Check(bookmark *Bookmark) *Bookmark {
-	res, err := http.Get(bookmark.URL)
-	if err != nil {
-		bookmark.LastStatusCheck = u.timeNow().Unix()
-		bookmark.LastStatusCode = 0
-		bookmark.LastStatusReason = err.Error()
-		return bookmark
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		bookmark.LastStatusCheck = u.timeNow().Unix()
-		bookmark.LastStatusCode = int64(res.StatusCode)
-		bookmark.LastStatusReason = http.StatusText(res.StatusCode)
-		return bookmark
-	}
-
-	bookmark.LastStatusCode = int64(res.StatusCode)
-	bookmark.LastStatusReason = http.StatusText(res.StatusCode)
-	bookmark.LastStatusCheck = u.timeNow().Unix()
-
-	isHTML := strings.Contains(res.Header.Get("Content-Type"), "text/html")
-	if bookmark.Title != "" || !isHTML {
-		return bookmark
-	}
-
-	isGzipped := strings.Contains(res.Header.Get("Content-Encoding"), "gzip")
-	if isGzipped {
-		res.Body, err = gzip.NewReader(res.Body)
-		if err != nil {
-			bookmark.LastStatusReason = "not gzip content"
-			return bookmark
-		}
-	}
-
-	// Load the HTML document
-	doc, err := goquery.NewDocumentFromReader(res.Body)
-	if err != nil {
-		bookmark.LastStatusReason = "cannot parse body"
-		return bookmark
-	}
-
-	doc.Find("HEAD>TITLE").Each(func(i int, s *goquery.Selection) {
-		bookmark.Title = s.Text()
-	})
-
-	return bookmark
+	Check(url, originalTitle string) (title string, when int64, code int64, reason string)
 }

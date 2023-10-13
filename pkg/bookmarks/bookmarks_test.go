@@ -80,8 +80,8 @@ func TestBookmarks_Insert(t *testing.T) {
 		{"badSetup/missingURLChecker", fields{&RepositoryMock{}, nil}, args{&Bookmark{}}, errBookmarksURLCheckerNotSet},
 		{"missingBookmark", fields{&RepositoryMock{}, &URLCheckerMock{}}, args{nil}, errNilBookmark},
 		{"badURL", fields{&RepositoryMock{}, &URLCheckerMock{}}, args{&Bookmark{URL: "://"}}, &BadURLError{}},
-		{"badDB", fields{&RepositoryMock{InsertFunc: func(bookmark *Bookmark) error { return errExpectedDBError }}, &URLCheckerMock{CheckFunc: func(bookmark *Bookmark) *Bookmark { return bookmark }}}, args{&Bookmark{URL: "http://example.org"}}, errExpectedDBError},
-		{"good", fields{&RepositoryMock{InsertFunc: func(bookmark *Bookmark) error { return nil }}, &URLCheckerMock{CheckFunc: func(bookmark *Bookmark) *Bookmark { bookmark.Title = "Title"; return bookmark }}}, args{&Bookmark{URL: "http://example.org"}}, nil},
+		{"badDB", fields{&RepositoryMock{InsertFunc: func(bookmark *Bookmark) error { return errExpectedDBError }}, &URLCheckerMock{CheckFunc: func(url, originalTitle string) (string, int64, int64, string) { return "", 0, 0, "" }}}, args{&Bookmark{URL: "http://example.org"}}, errExpectedDBError},
+		{"good", fields{&RepositoryMock{InsertFunc: func(bookmark *Bookmark) error { return nil }}, &URLCheckerMock{CheckFunc: func(url, originalTitle string) (string, int64, int64, string) { return "", 0, 0, "" }}}, args{&Bookmark{URL: "http://example.org"}}, nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -120,7 +120,7 @@ func TestBadURLError(t *testing.T) {
 			if got := b.Error(); got != tt.wantError {
 				t.Errorf("BadURLError.Error() = %v, want %v", got, tt.wantError)
 			}
-			if got := b.Unwrap(); got != tt.wantUnwrap {
+			if got := b.Unwrap(); !errors.Is(got, tt.wantUnwrap) {
 				t.Errorf("BadURLError.Unwrap() = %v, want %v", got, tt.wantUnwrap)
 			}
 			if got := b.Is(tt.fields.target); got != tt.wantIs {
