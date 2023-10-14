@@ -28,6 +28,7 @@ func Test_extractID(t *testing.T) {
 		{"/bookmarks", "/bookmarks/1", 1, false},
 		{"/bookmarks", "/bookmarks/1/2", 1, false},
 		{"/bookmarks", "/bookmarks", 0, false},
+		{"/bookmarks", "/banana", 0, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.root+tt.url, func(t *testing.T) {
