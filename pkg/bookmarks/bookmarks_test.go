@@ -131,6 +131,56 @@ func TestBookmarks_DeleteByID(t *testing.T) {
 	}
 }
 
+func TestBookmarks_UpdateInbox(t *testing.T) {
+	errDB := errors.New("DB error")
+	foundBookmark := &Bookmark{ID: 1, Title: "title", URL: "http://url.com"}
+	type fields struct {
+		repository Repository
+	}
+	type args struct {
+		id    int64
+		inbox string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{"badInbox", fields{}, args{0, "bad"}, true},
+		{"badDB/Get", fields{repository: &RepositoryMock{GetByIDFunc: func(id int64) (*Bookmark, error) { return nil, errDB }}}, args{0, "new"}, true},
+		{"badDB/Update", fields{repository: &RepositoryMock{GetByIDFunc: func(id int64) (*Bookmark, error) { return foundBookmark, nil }, UpdateFunc: func(bookmark *Bookmark) error { return errDB }}}, args{foundBookmark.ID, "new"}, true},
+		{
+			"done",
+			fields{
+				repository: &RepositoryMock{
+					GetByIDFunc: func(id int64) (*Bookmark, error) {
+						return foundBookmark, nil
+					},
+					UpdateFunc: func(bookmark *Bookmark) error {
+						if bookmark != foundBookmark {
+							t.Error("unexpected bookmark used in update")
+						}
+						return nil
+					},
+				},
+			},
+			args{foundBookmark.ID, "new"},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &Bookmarks{
+				repository: tt.fields.repository,
+			}
+			if err := b.UpdateInbox(tt.args.id, tt.args.inbox); (err != nil) != tt.wantErr {
+				t.Errorf("Bookmarks.UpdateInbox() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestBookmarks_Inbox(t *testing.T) {
 	errDB := errors.New("DB error")
 	foundBookmark := &Bookmark{ID: 1, Title: "title", URL: "http://url.com"}
