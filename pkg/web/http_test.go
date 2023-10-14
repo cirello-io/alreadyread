@@ -14,7 +14,17 @@
 
 package web
 
-import "testing"
+import (
+	"bytes"
+	"errors"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
+	"cirello.io/alreadyread/pkg/bookmarks"
+)
 
 func Test_extractID(t *testing.T) {
 	tests := []struct {
@@ -42,4 +52,58 @@ func Test_extractID(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestServer(t *testing.T) {
+	t.Run("Inbox", func(t *testing.T) {
+		t.Run("badDB", func(t *testing.T) {
+			errDB := errors.New("bad DB")
+			repository := &RepositoryMock{
+				InboxFunc: func() ([]*bookmarks.Bookmark, error) {
+					return nil, errDB
+				},
+			}
+			root := bookmarks.New(repository)
+			ts := httptest.NewServer(New(root, []string{"localhost"}))
+			defer ts.Close()
+			resp, err := ts.Client().Get(ts.URL + "/inbox")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				t.Fatal("not OK")
+			}
+		})
+		t.Run("good", func(t *testing.T) {
+			foundBookmark := &bookmarks.Bookmark{ID: 1, Title: "%FIND-TITLE%", URL: "https://%FIND-%URL.com"}
+			repository := &RepositoryMock{
+				InboxFunc: func() ([]*bookmarks.Bookmark, error) {
+					return []*bookmarks.Bookmark{
+						foundBookmark,
+					}, nil
+				},
+			}
+			root := bookmarks.New(repository)
+			ts := httptest.NewServer(New(root, []string{"localhost"}))
+			defer ts.Close()
+			resp, err := ts.Client().Get(ts.URL + "/inbox")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != http.StatusOK {
+				t.Fatal("not OK")
+			}
+			buf := &bytes.Buffer{}
+			io.Copy(buf, resp.Body)
+			if !strings.Contains(buf.String(), foundBookmark.Title) {
+				t.Error("cannot find expected bookmark title")
+			}
+			if !strings.Contains(buf.String(), foundBookmark.URL) {
+				t.Error("cannot find expected bookmark URL")
+			}
+		})
+	})
+
 }
