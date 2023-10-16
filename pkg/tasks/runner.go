@@ -25,57 +25,59 @@ import (
 	"cirello.io/alreadyread/pkg/bookmarks"
 	"cirello.io/alreadyread/pkg/bookmarks/sqliterepo"
 	"cirello.io/alreadyread/pkg/bookmarks/url"
-	"golang.org/x/sync/singleflight"
+	"cirello.io/oversight"
 )
 
-// Task represents one periodic task executed by the runner. Key must be unique,
-// as it is used as key to lock.
-type Task struct {
+type task struct {
 	Name      string
-	Exec      func(db *sql.DB) error
+	Run       func(context.Context, *sql.DB) error
 	Frequency time.Duration
 }
 
-var execGroup singleflight.Group
-var tasks = []Task{
-	{"check link health", LinkHealth, 6 * time.Hour},
-	{"vacuum", Vacuum, 12 * time.Hour},
-	{"restore postponed links", RestorePostponedLinks, 6 * time.Hour},
+var tasks = []task{
+	{"check link health", linkHealth, 6 * time.Hour},
+	{"vacuum", vacuum, 12 * time.Hour},
+	{"restore postponed links", restorePostponedLinks, 6 * time.Hour},
 }
 
 // Run executes background maintenance tasks.
-func Run(db *sql.DB) {
-	run(context.Background(), db, tasks)
-}
-
-func run(ctx context.Context, db *sql.DB, tasks []Task) {
+func Run(db *sql.DB) oversight.ChildProcessSpecification {
+	svr := oversight.New(
+		oversight.WithRestartStrategy(oversight.OneForOne()),
+		oversight.NeverHalt(),
+	)
 	for _, t := range tasks {
 		t := t
-		go func() {
-			log.Println("tasks: scheduled", t.Name)
-			for {
-				go func() {
-					_, err, _ := execGroup.Do(t.Name, func() (interface{}, error) {
-						log.Println("tasks:", t.Name, "running")
-						defer log.Println("tasks:", t.Name, "done")
-						err := t.Exec(db)
-						return nil, err
-					})
-					if err != nil {
-						log.Println(t.Name, " failed:", err)
-					}
-				}()
+		log.Println("scheduled", t.Name)
+		svr.Add(oversight.ChildProcessSpecification{
+			Name:    t.Name,
+			Restart: oversight.Permanent(),
+			Start: func(ctx context.Context) error {
+				log.Println(t.Name + ": start")
+				if err := t.Run(ctx, db); err != nil {
+					log.Println(t.Name+": error ", err)
+				}
+				log.Println(t.Name + ": done")
 				select {
 				case <-time.After(t.Frequency):
+					return nil
 				case <-ctx.Done():
+					return ctx.Err()
 				}
-			}
-		}()
+			},
+			Shutdown: oversight.Infinity(),
+		})
+	}
+	return oversight.ChildProcessSpecification{
+		Name:     "tasks",
+		Restart:  oversight.Permanent(),
+		Start:    svr.Start,
+		Shutdown: oversight.Infinity(),
 	}
 }
 
-// LinkHealth checks if the expired links are still valid.
-func LinkHealth(db *sql.DB) (err error) {
+// linkHealth checks if the expired links are still valid.
+func linkHealth(ctx context.Context, db *sql.DB) (err error) {
 	defer recoverPanic(&err)
 	repository := sqliterepo.New(db)
 	expiredBookmarks, err := repository.Expired()
@@ -100,6 +102,9 @@ func LinkHealth(db *sql.DB) (err error) {
 		}()
 	}
 	for _, bookmark := range expiredBookmarks {
+		if ctx.Err() != nil {
+			break
+		}
 		bookmarkCh <- bookmark
 	}
 	close(bookmarkCh)
@@ -108,20 +113,20 @@ func LinkHealth(db *sql.DB) (err error) {
 	return nil
 }
 
-// Vacuum executes a SQLite3 vacuum clean up.
-func Vacuum(db *sql.DB) (err error) {
+// vacuum executes a SQLite3 vacuum clean up.
+func vacuum(ctx context.Context, db *sql.DB) (err error) {
 	defer recoverPanic(&err)
-	_, err = db.Exec("VACUUM")
+	_, err = db.ExecContext(ctx, "VACUUM")
 	if err != nil {
 		return fmt.Errorf("cannot run vacuum: %w", err)
 	}
 	return nil
 }
 
-// RestorePostponedLinks revamp rescheduled links in the inbox.
-func RestorePostponedLinks(db *sql.DB) (err error) {
+// restorePostponedLinks revamp rescheduled links in the inbox.
+func restorePostponedLinks(ctx context.Context, db *sql.DB) (err error) {
 	defer recoverPanic(&err)
-	_, err = db.Exec("UPDATE bookmarks SET inbox = 1 WHERE inbox = 2")
+	_, err = db.ExecContext(ctx, "UPDATE bookmarks SET inbox = 1 WHERE inbox = 2")
 	if err != nil {
 		return fmt.Errorf("cannot run restore rescheduled links: %w", err)
 	}
