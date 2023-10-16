@@ -6,7 +6,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/rs/cors v1.10.1
 	github.com/urfave/cli v1.22.5
-	golang.org/x/sync v0.1.0
+	golang.org/x/sync v0.4.0
 )
 
 require (
