@@ -83,7 +83,7 @@ func TestServer(t *testing.T) {
 			}
 
 			buf := &bytes.Buffer{}
-			io.Copy(buf, resp.Body)
+			_, _ = io.Copy(buf, resp.Body)
 			if !strings.Contains(buf.String(), "example-title") {
 				t.Error("cannot find expected bookmark title")
 			}
@@ -133,7 +133,7 @@ func TestServer(t *testing.T) {
 				t.Fatal("not OK:", resp.StatusCode)
 			}
 			buf := &bytes.Buffer{}
-			io.Copy(buf, resp.Body)
+			_, _ = io.Copy(buf, resp.Body)
 			if !strings.Contains(buf.String(), foundBookmark.Title) {
 				t.Error("cannot find expected bookmark title")
 			}
@@ -183,7 +183,7 @@ func TestServer(t *testing.T) {
 				t.Fatal("not OK:", resp.StatusCode)
 			}
 			buf := &bytes.Buffer{}
-			io.Copy(buf, resp.Body)
+			_, _ = io.Copy(buf, resp.Body)
 			if !strings.Contains(buf.String(), foundBookmark.Title) {
 				t.Error("cannot find expected bookmark title")
 			}
@@ -233,7 +233,7 @@ func TestServer(t *testing.T) {
 				t.Fatal("not OK:", resp.StatusCode)
 			}
 			buf := &bytes.Buffer{}
-			io.Copy(buf, resp.Body)
+			_, _ = io.Copy(buf, resp.Body)
 			if !strings.Contains(buf.String(), foundBookmark.Title) {
 				t.Error("cannot find expected bookmark title")
 			}
@@ -287,7 +287,7 @@ func TestServer(t *testing.T) {
 				t.Fatal("not OK:", resp.StatusCode)
 			}
 			buf := &bytes.Buffer{}
-			io.Copy(buf, resp.Body)
+			_, _ = io.Copy(buf, resp.Body)
 			if !strings.Contains(buf.String(), foundBookmark.Title) {
 				t.Error("cannot find expected bookmark title")
 			}
@@ -577,7 +577,7 @@ func TestServer(t *testing.T) {
 			t.Fatal("not OK:", resp.StatusCode)
 		}
 		respBuf := &bytes.Buffer{}
-		io.Copy(respBuf, resp.Body)
+		_, _ = io.Copy(respBuf, resp.Body)
 		tplBuf := &bytes.Buffer{}
 		_ = frontend.Index.Execute(tplBuf, nil)
 		if tplBuf.String() != respBuf.String() {
@@ -598,7 +598,7 @@ func TestServer(t *testing.T) {
 			t.Fatal("not OK:", resp.StatusCode)
 		}
 		respBuf := &bytes.Buffer{}
-		io.Copy(respBuf, resp.Body)
+		_, _ = io.Copy(respBuf, resp.Body)
 
 		css, err := frontend.Content.ReadFile(targetAsset)
 		if err != nil {
