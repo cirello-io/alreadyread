@@ -101,9 +101,7 @@ func (s *Server) inbox(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	if err := frontend.LinkTable.Execute(w, list); err != nil {
-		log.Println("cannot render link table for inbox: ", err)
-	}
+	s.renderList(w, list)
 }
 
 func (s *Server) duplicated(w http.ResponseWriter, _ *http.Request) {
@@ -113,9 +111,7 @@ func (s *Server) duplicated(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	if err := frontend.LinkTable.Execute(w, list); err != nil {
-		log.Println("cannot render link table for duplicated list: ", err)
-	}
+	s.renderList(w, list)
 }
 
 func (s *Server) all(w http.ResponseWriter, _ *http.Request) {
@@ -125,9 +121,7 @@ func (s *Server) all(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	if err := frontend.LinkTable.Execute(w, list); err != nil {
-		log.Println("cannot render link table: ", err)
-	}
+	s.renderList(w, list)
 }
 
 func (s *Server) search(w http.ResponseWriter, r *http.Request) {
@@ -137,9 +131,11 @@ func (s *Server) search(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	if err := frontend.LinkTable.Execute(w, list); err != nil {
-		log.Println("cannot render link table: ", err)
-	}
+	s.renderList(w, list)
+}
+
+func (s *Server) renderList(w io.Writer, list []*bookmarks.Bookmark) {
+	_ = frontend.LinkTable.Execute(w, list)
 }
 
 func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
