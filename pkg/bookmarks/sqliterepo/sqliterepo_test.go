@@ -35,6 +35,15 @@ func newConn(t *testing.T) *sql.DB {
 	return conn
 }
 
+func setup(t *testing.T) *Repository {
+	t.Helper()
+	b := New(newConn(t))
+	if err := b.Bootstrap(); err != nil {
+		t.Fatal("cannot run bootstrap:", err)
+	}
+	return b
+}
+
 func TestRepository_Bootstrap(t *testing.T) {
 	t.Run("badDB", func(t *testing.T) {
 		db, mock, err := sqlmock.New()
@@ -177,4 +186,38 @@ func TestRepository_scanRow(t *testing.T) {
 	if _, err := b.scanRow(row); !errors.Is(err, errRow) {
 		t.Fatal("unexpected error:", err)
 	}
+}
+
+func TestRepository_Insert(t *testing.T) {
+	t.Run("badDB", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errDB := errors.New("bad DB")
+		mock.ExpectExec("INSERT INTO bookmarks").WillReturnError(errDB)
+		if err := New(db).Insert(&bookmarks.Bookmark{}); !errors.Is(err, errDB) {
+			t.Error("expected error missing: ", err)
+		}
+	})
+	t.Run("badLastInsertID", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errResult := errors.New("bad result")
+		mock.ExpectExec("INSERT INTO bookmarks").WillReturnResult(sqlmock.NewErrorResult(errResult))
+		if err := New(db).Insert(&bookmarks.Bookmark{}); !errors.Is(err, errResult) {
+			t.Error("expected error missing: ", err)
+		}
+	})
+	t.Run("good", func(t *testing.T) {
+		bookmark := &bookmarks.Bookmark{URL: "http://example.com"}
+		if err := setup(t).Insert(bookmark); err != nil {
+			t.Error("could not insert bookmark:", err)
+		}
+		if bookmark.ID == 0 {
+			t.Error("did not update bookmark ID")
+		}
+	})
 }
