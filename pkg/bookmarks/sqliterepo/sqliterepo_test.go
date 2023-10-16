@@ -28,7 +28,7 @@ import (
 
 func newConn(t *testing.T) *sql.DB {
 	t.Helper()
-	conn, err := db.Connect(db.Config{Filename: ":memory:"})
+	conn, err := db.Connect(db.Config{Filename: "file::memory:?cache=shared"})
 	if err != nil {
 		t.Fatal("cannot create in memory SQLite:", err)
 	}

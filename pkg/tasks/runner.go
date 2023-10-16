@@ -77,8 +77,7 @@ func Run(db *sql.DB) oversight.ChildProcessSpecification {
 }
 
 // linkHealth checks if the expired links are still valid.
-func linkHealth(ctx context.Context, db *sql.DB) (err error) {
-	defer recoverPanic(&err)
+func linkHealth(ctx context.Context, db *sql.DB) error {
 	repository := sqliterepo.New(db)
 	expiredBookmarks, err := repository.Expired()
 	if err != nil {
@@ -114,27 +113,17 @@ func linkHealth(ctx context.Context, db *sql.DB) (err error) {
 }
 
 // vacuum executes a SQLite3 vacuum clean up.
-func vacuum(ctx context.Context, db *sql.DB) (err error) {
-	defer recoverPanic(&err)
-	_, err = db.ExecContext(ctx, "VACUUM")
-	if err != nil {
+func vacuum(ctx context.Context, db *sql.DB) error {
+	if _, err := db.ExecContext(ctx, "VACUUM"); err != nil {
 		return fmt.Errorf("cannot run vacuum: %w", err)
 	}
 	return nil
 }
 
 // restorePostponedLinks revamp rescheduled links in the inbox.
-func restorePostponedLinks(ctx context.Context, db *sql.DB) (err error) {
-	defer recoverPanic(&err)
-	_, err = db.ExecContext(ctx, "UPDATE bookmarks SET inbox = 1 WHERE inbox = 2")
-	if err != nil {
+func restorePostponedLinks(ctx context.Context, db *sql.DB) error {
+	if _, err := db.ExecContext(ctx, "UPDATE bookmarks SET inbox = 1 WHERE inbox = 2"); err != nil {
 		return fmt.Errorf("cannot run restore rescheduled links: %w", err)
 	}
 	return nil
-}
-
-func recoverPanic(outErr *error) {
-	if r := recover(); r != nil {
-		*outErr = fmt.Errorf("recovered panic: %v", r)
-	}
 }
