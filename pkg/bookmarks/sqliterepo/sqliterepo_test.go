@@ -17,6 +17,7 @@ package sqliterepo
 import (
 	"database/sql"
 	"errors"
+	"net/http"
 	"testing"
 	"time"
 
@@ -218,6 +219,198 @@ func TestRepository_Insert(t *testing.T) {
 		}
 		if bookmark.ID == 0 {
 			t.Error("did not update bookmark ID")
+		}
+	})
+}
+
+func TestRepository_Inbox(t *testing.T) {
+	t.Run("badDB", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errDB := errors.New("bad DB")
+		mock.ExpectQuery("SELECT").WillReturnError(errDB)
+		if _, err := New(db).Inbox(); !errors.Is(err, errDB) {
+			t.Error("expected error missing: ", err)
+		}
+	})
+	t.Run("good", func(t *testing.T) {
+		repository := setup(t)
+		bookmark := &bookmarks.Bookmark{URL: "http://example.com", Inbox: bookmarks.NewLink}
+		if err := repository.Insert(bookmark); err != nil {
+			t.Fatal("could not insert bookmark:", err)
+		}
+		found, err := repository.Inbox()
+		if err != nil {
+			t.Fatal("cannot list bookmarks:", err)
+		}
+		if l := len(found); l != 1 {
+			t.Fatal("unexpected bookmark count")
+		}
+		if found[0].ID != bookmark.ID {
+			t.Fatal("did not find expected bookmark")
+		}
+	})
+}
+
+func TestRepository_Duplicated(t *testing.T) {
+	t.Run("badDB", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errDB := errors.New("bad DB")
+		mock.ExpectQuery("SELECT").WillReturnError(errDB)
+		if _, err := New(db).Duplicated(); !errors.Is(err, errDB) {
+			t.Error("expected error missing: ", err)
+		}
+	})
+	t.Run("good", func(t *testing.T) {
+		repository := setup(t)
+		bookmark := &bookmarks.Bookmark{URL: "http://example.com"}
+		if err := repository.Insert(bookmark); err != nil {
+			t.Fatal("could not insert bookmark:", err)
+		}
+		if err := repository.Insert(bookmark); err != nil {
+			t.Fatal("could not insert bookmark:", err)
+		}
+		found, err := repository.Duplicated()
+		if err != nil {
+			t.Fatal("cannot list bookmarks:", err)
+		}
+		if l := len(found); l != 2 {
+			t.Fatal("unexpected bookmark count")
+		}
+		if found[0].URL != bookmark.URL {
+			t.Fatal("did not find expected bookmark")
+		}
+	})
+}
+
+func TestRepository_All(t *testing.T) {
+	t.Run("badDB", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errDB := errors.New("bad DB")
+		mock.ExpectQuery("SELECT").WillReturnError(errDB)
+		if _, err := New(db).All(); !errors.Is(err, errDB) {
+			t.Error("expected error missing: ", err)
+		}
+	})
+	t.Run("good", func(t *testing.T) {
+		repository := setup(t)
+		bookmark := &bookmarks.Bookmark{URL: "http://example.com"}
+		if err := repository.Insert(bookmark); err != nil {
+			t.Fatal("could not insert bookmark:", err)
+		}
+		if err := repository.Insert(bookmark); err != nil {
+			t.Fatal("could not insert bookmark:", err)
+		}
+		found, err := repository.All()
+		if err != nil {
+			t.Fatal("cannot list bookmarks:", err)
+		}
+		if l := len(found); l != 2 {
+			t.Fatal("unexpected bookmark count")
+		}
+		if found[0].URL != bookmark.URL {
+			t.Fatal("did not find expected bookmark")
+		}
+	})
+}
+
+func TestRepository_Expired(t *testing.T) {
+	t.Run("badDB", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errDB := errors.New("bad DB")
+		mock.ExpectQuery("SELECT").WillReturnError(errDB)
+		if _, err := New(db).Expired(); !errors.Is(err, errDB) {
+			t.Error("expected error missing: ", err)
+		}
+	})
+	t.Run("good", func(t *testing.T) {
+		repository := setup(t)
+		bookmark := &bookmarks.Bookmark{URL: "http://example.com", LastStatusCode: http.StatusOK, LastStatusCheck: time.Now().Add(-30 * 24 * time.Hour).Unix()}
+		if err := repository.Insert(bookmark); err != nil {
+			t.Fatal("could not insert bookmark:", err)
+		}
+		found, err := repository.Expired()
+		if err != nil {
+			t.Fatal("cannot list bookmarks:", err)
+		}
+		if l := len(found); l != 1 {
+			t.Fatal("unexpected bookmark count")
+		}
+		if found[0].URL != bookmark.URL {
+			t.Fatal("did not find expected bookmark")
+		}
+	})
+}
+
+func TestRepository_Invalid(t *testing.T) {
+	t.Run("badDB", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errDB := errors.New("bad DB")
+		mock.ExpectQuery("SELECT").WillReturnError(errDB)
+		if _, err := New(db).Invalid(); !errors.Is(err, errDB) {
+			t.Error("expected error missing: ", err)
+		}
+	})
+	t.Run("good", func(t *testing.T) {
+		repository := setup(t)
+		bookmark := &bookmarks.Bookmark{URL: "http://example.com", LastStatusCode: http.StatusInternalServerError, LastStatusCheck: time.Now().Add(-30 * 24 * time.Hour).Unix()}
+		if err := repository.Insert(bookmark); err != nil {
+			t.Fatal("could not insert bookmark:", err)
+		}
+		found, err := repository.Invalid()
+		if err != nil {
+			t.Fatal("cannot list bookmarks:", err)
+		}
+		if l := len(found); l != 1 {
+			t.Fatal("unexpected bookmark count")
+		}
+		if found[0].URL != bookmark.URL {
+			t.Fatal("did not find expected bookmark")
+		}
+	})
+}
+
+func TestRepository_Search(t *testing.T) {
+	t.Run("badDB", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errDB := errors.New("bad DB")
+		mock.ExpectQuery("SELECT").WillReturnError(errDB)
+		if _, err := New(db).Search(""); !errors.Is(err, errDB) {
+			t.Error("expected error missing: ", err)
+		}
+	})
+	t.Run("good", func(t *testing.T) {
+		repository := setup(t)
+		bookmark := &bookmarks.Bookmark{URL: "http://example.com", LastStatusCode: http.StatusInternalServerError, LastStatusCheck: time.Now().Add(-30 * 24 * time.Hour).Unix()}
+		if err := repository.Insert(bookmark); err != nil {
+			t.Fatal("could not insert bookmark:", err)
+		}
+		found, err := repository.Search("example.com")
+		if err != nil {
+			t.Fatal("cannot list bookmarks:", err)
+		}
+		if l := len(found); l != 1 {
+			t.Fatal("unexpected bookmark count")
+		}
+		if found[0].URL != bookmark.URL {
+			t.Fatal("did not find expected bookmark")
 		}
 	})
 }
