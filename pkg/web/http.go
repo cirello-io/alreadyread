@@ -28,23 +28,23 @@ import (
 	"cirello.io/alreadyread/frontend"
 	"cirello.io/alreadyread/pkg/bookmarks"
 	"cirello.io/alreadyread/pkg/bookmarks/url"
+	"github.com/rs/cors"
 )
 
 // Server implements the web interface.
 type Server struct {
-	allowedOrigins map[string]struct{}
-	bookmarks      *bookmarks.Bookmarks
-	handler        http.Handler
+	bookmarks *bookmarks.Bookmarks
+	cors      *cors.Cors
+	handler   http.Handler
 }
 
 // New creates a web interface handler.
 func New(bookmarks *bookmarks.Bookmarks, allowedOrigins []string) *Server {
 	s := &Server{
 		bookmarks: bookmarks,
-	}
-	s.allowedOrigins = make(map[string]struct{})
-	for _, allowedOrigin := range allowedOrigins {
-		s.allowedOrigins[allowedOrigin] = struct{}{}
+		cors: cors.New(cors.Options{
+			AllowedOrigins: allowedOrigins,
+		}),
 	}
 	s.registerRoutes()
 	return s
@@ -61,29 +61,11 @@ func (s *Server) registerRoutes() {
 	router.HandleFunc("/search", s.search)
 	router.HandleFunc("/bookmarks/", s.bookmarkOperations)
 	router.HandleFunc("/", s.index(rootHandler))
-	s.handler = router
+	s.handler = s.cors.Handler(router)
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if !s.handleCORS(w, r) {
-		return
-	}
 	s.handler.ServeHTTP(w, r)
-}
-
-func (s *Server) handleCORS(w http.ResponseWriter, r *http.Request) bool {
-	origin := r.Header.Get("Origin")
-	if _, ok := s.allowedOrigins[origin]; ok {
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-	}
-	if r.Method == "OPTIONS" {
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		w.Header().Set("Access-Control-Max-Age", "3600")
-		w.WriteHeader(http.StatusNoContent)
-		return false
-	}
-	return true
 }
 
 func (s *Server) post(w http.ResponseWriter, r *http.Request) {
