@@ -23,6 +23,7 @@ import (
 	"strings"
 	"testing"
 
+	"cirello.io/alreadyread/frontend"
 	"cirello.io/alreadyread/pkg/bookmarks"
 )
 
@@ -258,5 +259,51 @@ func TestServer(t *testing.T) {
 				t.Error("cannot find expected bookmark URL")
 			}
 		})
+	})
+	t.Run("index", func(t *testing.T) {
+		root := bookmarks.New(nil)
+		ts := httptest.NewServer(New(root, []string{"localhost"}))
+		defer ts.Close()
+		resp, err := ts.Client().Get(ts.URL)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			t.Fatal("not OK")
+		}
+		respBuf := &bytes.Buffer{}
+		io.Copy(respBuf, resp.Body)
+		tplBuf := &bytes.Buffer{}
+		_ = frontend.Index.Execute(tplBuf, nil)
+		if tplBuf.String() != respBuf.String() {
+			t.Fatal("index page not rendering correctly")
+		}
+	})
+	t.Run("assets", func(t *testing.T) {
+		const targetAsset = "assets/bootstrap/css/bootstrap.min.css"
+		root := bookmarks.New(nil)
+		ts := httptest.NewServer(New(root, []string{"localhost"}))
+		defer ts.Close()
+		resp, err := ts.Client().Get(ts.URL + "/" + targetAsset)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			t.Fatal("not OK")
+		}
+		respBuf := &bytes.Buffer{}
+		io.Copy(respBuf, resp.Body)
+
+		css, err := frontend.Content.ReadFile(targetAsset)
+		if err != nil {
+			t.Fatal("cannot read embedded FS:", err)
+		}
+		if bytes.NewBuffer(css).String() != respBuf.String() {
+			t.Log(bytes.NewBuffer(css).String())
+			t.Log(respBuf.String())
+			t.Fatal("cannot load assets")
+		}
 	})
 }
