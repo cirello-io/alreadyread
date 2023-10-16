@@ -9,7 +9,8 @@ linux:
 		/bin/bash -c 'go build -o alreadyread.linux ./cmd/alreadyread'
 
 test:
-	go test -v ./...
+	GOEXPERIMENT=loopvar go test -coverprofile=coverage.out -v ./...
+	go tool cover -html=coverage.out -o coverage.html
 
 linters:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
