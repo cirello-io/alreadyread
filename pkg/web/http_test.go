@@ -55,7 +55,7 @@ func Test_extractID(t *testing.T) {
 }
 
 func TestServer(t *testing.T) {
-	t.Run("Inbox", func(t *testing.T) {
+	t.Run("inbox", func(t *testing.T) {
 		t.Run("badDB", func(t *testing.T) {
 			errDB := errors.New("bad DB")
 			repository := &RepositoryMock{
@@ -105,7 +105,7 @@ func TestServer(t *testing.T) {
 			}
 		})
 	})
-	t.Run("Duplicated", func(t *testing.T) {
+	t.Run("duplicated", func(t *testing.T) {
 		t.Run("badDB", func(t *testing.T) {
 			errDB := errors.New("bad DB")
 			repository := &RepositoryMock{
