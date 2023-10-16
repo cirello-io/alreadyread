@@ -187,13 +187,8 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 func (s *Server) index(rootHandler http.Handler) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.String() == "/" {
-			err := frontend.Index.Execute(w, nil)
-			if err != nil {
-				log.Println("cannot store new bookmark:", err)
-				http.Error(w, http.StatusText(http.StatusInternalServerError),
-					http.StatusInternalServerError)
-				return
-			}
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			_ = frontend.Index.Execute(w, nil)
 			return
 		}
 		rootHandler.ServeHTTP(w, r)
