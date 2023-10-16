@@ -51,14 +51,12 @@ func (b *Repository) Bootstrap() error {
 		`create index if not exists bookmarks_created_at on bookmarks (created_at)`,
 		`create index if not exists bookmarks_inbox on bookmarks (inbox)`,
 	}
-
 	for _, cmd := range cmds {
 		_, err := b.db.Exec(cmd)
 		if err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -131,7 +129,7 @@ func (b *Repository) Invalid() ([]*bookmarks.Bookmark, error) {
 func (b *Repository) Insert(bookmark *bookmarks.Bookmark) error {
 	bookmark.CreatedAt = time.Now()
 	bookmark.Inbox = 1
-	_, err := b.db.Exec(`
+	result, err := b.db.Exec(`
 		INSERT INTO bookmarks
 		(url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox)
 		VALUES
@@ -140,6 +138,11 @@ func (b *Repository) Insert(bookmark *bookmarks.Bookmark) error {
 	if err != nil {
 		return fmt.Errorf("cannot insert row: %w", err)
 	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("cannot load inserted ID: %w", err)
+	}
+	bookmark.ID = id
 	return nil
 }
 
@@ -152,11 +155,7 @@ func (b *Repository) GetByID(id int64) (*bookmarks.Bookmark, error) {
 	WHERE
 		id = $1
 	`, id)
-	bookmark, err := b.scanRow(row)
-	if err != nil {
-		return nil, err
-	}
-	return bookmark, nil
+	return b.scanRow(row)
 }
 
 func (b *Repository) Update(bookmark *bookmarks.Bookmark) error {
