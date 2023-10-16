@@ -69,6 +69,9 @@ func (b *Repository) scanRows(rows *sql.Rows) ([]*bookmarks.Bookmark, error) {
 		}
 		list = append(list, bookmark)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return list, nil
 }
 

@@ -18,6 +18,7 @@ import (
 	"database/sql"
 	"errors"
 	"testing"
+	"time"
 
 	"cirello.io/alreadyread/pkg/bookmarks"
 	"cirello.io/alreadyread/pkg/db"
@@ -113,5 +114,67 @@ func TestRepository_basicCycle(t *testing.T) {
 	}
 	if l := len(all); l != 0 {
 		t.Fatal("unexpected number of bookmarks:", l)
+	}
+}
+
+func TestRepository_scanRows(t *testing.T) {
+	t.Run("badRows", func(t *testing.T) {
+		errRows := errors.New("bad rows")
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		mock.ExpectQuery("SELECT").WillReturnRows(
+			sqlmock.NewRows([]string{"id"}).CloseError(errRows),
+		)
+		b := New(db)
+		rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox FROM bookmarks`)
+		if err != nil {
+			t.Fatal("unexpected query error:", err)
+		}
+		if _, err := b.scanRows(rows); !errors.Is(err, errRows) {
+			t.Fatal("unexpected scan rows error:", err)
+		}
+	})
+	t.Run("badRowScan", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		mock.ExpectQuery("SELECT").WillReturnRows(
+			sqlmock.NewRows([]string{"id", "url", "last_status_code", "last_status_check", "last_status_reason", "title", "created_at", "inbox"}).
+				// good row
+				AddRow(1, "http://example.com", 200, time.Now().Unix(), "reason", "title", time.Now(), 0).
+				// bad row, will trip row scanner.
+				AddRow(2, "http://example.com", 200, time.Now(), "reason", "title", time.Now(), 0),
+		)
+		b := New(db)
+		rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox FROM bookmarks`)
+		if err != nil {
+			t.Fatal("unexpected query error:", err)
+		}
+		if _, err := b.scanRows(rows); err == nil {
+			t.Fatal("expected scan row error missing")
+		}
+	})
+}
+
+func TestRepository_scanRow(t *testing.T) {
+	errRow := errors.New("bad row")
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal("cannot create mock:", err)
+	}
+	mock.ExpectQuery("SELECT").WillReturnRows(
+		sqlmock.NewRows([]string{"id", "url", "last_status_code", "last_status_check", "last_status_reason", "title", "created_at", "inbox"}).
+			AddRow(1, "http://example.com", 200, time.Now(), "reason", "title", time.Now(), 0).
+			RowError(0, errRow),
+	)
+	b := New(db)
+	row := b.db.QueryRow(`
+	SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox FROM bookmarks
+	`)
+	if _, err := b.scanRow(row); !errors.Is(err, errRow) {
+		t.Fatal("unexpected error:", err)
 	}
 }
