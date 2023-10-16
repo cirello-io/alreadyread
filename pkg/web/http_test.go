@@ -72,8 +72,8 @@ func TestServer(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer resp.Body.Close()
-			if resp.StatusCode == http.StatusOK {
-				t.Fatal("not OK")
+			if resp.StatusCode != http.StatusInternalServerError {
+				t.Fatal("not StatusInternalServerError:", resp.StatusCode)
 			}
 		})
 		t.Run("good", func(t *testing.T) {
@@ -94,7 +94,7 @@ func TestServer(t *testing.T) {
 			}
 			defer resp.Body.Close()
 			if resp.StatusCode != http.StatusOK {
-				t.Fatal("not OK")
+				t.Fatal("not OK:", resp.StatusCode)
 			}
 			buf := &bytes.Buffer{}
 			io.Copy(buf, resp.Body)
@@ -122,8 +122,8 @@ func TestServer(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer resp.Body.Close()
-			if resp.StatusCode == http.StatusOK {
-				t.Fatal("not OK")
+			if resp.StatusCode != http.StatusInternalServerError {
+				t.Fatal("not StatusInternalServerError:", resp.StatusCode)
 			}
 		})
 		t.Run("good", func(t *testing.T) {
@@ -144,7 +144,7 @@ func TestServer(t *testing.T) {
 			}
 			defer resp.Body.Close()
 			if resp.StatusCode != http.StatusOK {
-				t.Fatal("not OK")
+				t.Fatal("not OK:", resp.StatusCode)
 			}
 			buf := &bytes.Buffer{}
 			io.Copy(buf, resp.Body)
@@ -172,8 +172,8 @@ func TestServer(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer resp.Body.Close()
-			if resp.StatusCode == http.StatusOK {
-				t.Fatal("not OK")
+			if resp.StatusCode != http.StatusInternalServerError {
+				t.Fatal("not StatusInternalServerError:", resp.StatusCode)
 			}
 		})
 		t.Run("good", func(t *testing.T) {
@@ -194,7 +194,7 @@ func TestServer(t *testing.T) {
 			}
 			defer resp.Body.Close()
 			if resp.StatusCode != http.StatusOK {
-				t.Fatal("not OK")
+				t.Fatal("not OK:", resp.StatusCode)
 			}
 			buf := &bytes.Buffer{}
 			io.Copy(buf, resp.Body)
@@ -222,8 +222,8 @@ func TestServer(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer resp.Body.Close()
-			if resp.StatusCode == http.StatusOK {
-				t.Fatal("not OK")
+			if resp.StatusCode != http.StatusInternalServerError {
+				t.Fatal("not StatusInternalServerError:", resp.StatusCode)
 			}
 		})
 		t.Run("good", func(t *testing.T) {
@@ -248,7 +248,7 @@ func TestServer(t *testing.T) {
 			}
 			defer resp.Body.Close()
 			if resp.StatusCode != http.StatusOK {
-				t.Fatal("not OK")
+				t.Fatal("not OK:", resp.StatusCode)
 			}
 			buf := &bytes.Buffer{}
 			io.Copy(buf, resp.Body)
@@ -270,7 +270,7 @@ func TestServer(t *testing.T) {
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
-			t.Fatal("not OK")
+			t.Fatal("not OK:", resp.StatusCode)
 		}
 		respBuf := &bytes.Buffer{}
 		io.Copy(respBuf, resp.Body)
@@ -291,7 +291,7 @@ func TestServer(t *testing.T) {
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
-			t.Fatal("not OK")
+			t.Fatal("not OK:", resp.StatusCode)
 		}
 		respBuf := &bytes.Buffer{}
 		io.Copy(respBuf, resp.Body)
