@@ -30,7 +30,7 @@ func (c *commands) listBookmarks() cli.Command {
 		Description: "list all bookmarks",
 		Action: func(ctx *cli.Context) error {
 			repository := sqliterepo.New(c.db)
-			bookmarks, err := bookmarks.New(repository).All()
+			bookmarks, err := bookmarks.New(repository, nil).All()
 			if err != nil {
 				return cliError(fmt.Errorf("cannot load bookmarks: %w", err))
 			}

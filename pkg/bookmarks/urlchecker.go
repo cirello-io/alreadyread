@@ -15,6 +15,8 @@
 package bookmarks
 
 //go:generate moq -out urlchecker_mocks_test.go . URLChecker
+//go:generate moq -pkg web -out ../web/urlchecker_mocks_test.go . URLChecker
 type URLChecker interface {
 	Check(url, originalTitle string) (title string, when int64, code int64, reason string)
+	Title(url string) (title string)
 }

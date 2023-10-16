@@ -22,11 +22,13 @@ import (
 
 type Bookmarks struct {
 	repository Repository
+	urlChecker URLChecker
 }
 
-func New(repository Repository) *Bookmarks {
+func New(repository Repository, urlChecker URLChecker) *Bookmarks {
 	return &Bookmarks{
 		repository: repository,
+		urlChecker: urlChecker,
 	}
 }
 
@@ -38,6 +40,9 @@ var (
 func (b *Bookmarks) isSetup() error {
 	if b.repository == nil {
 		return errBookmarksRepositoryNotSet
+	}
+	if b.urlChecker == nil {
+		return errBookmarksURLCheckerNotSet
 	}
 	return nil
 }
@@ -63,12 +68,9 @@ func (b BadURLError) Is(target error) bool {
 	return errors.As(target, &errBadURL)
 }
 
-func (b *Bookmarks) Insert(bookmark *Bookmark, urlChecker URLChecker) error {
+func (b *Bookmarks) Insert(bookmark *Bookmark) error {
 	if err := b.isSetup(); err != nil {
 		return fmt.Errorf("cannot begin inserting bookmark: %w", err)
-	}
-	if urlChecker == nil {
-		return errBookmarksURLCheckerNotSet
 	}
 	if bookmark == nil {
 		return errNilBookmark
@@ -76,7 +78,7 @@ func (b *Bookmarks) Insert(bookmark *Bookmark, urlChecker URLChecker) error {
 	if _, err := url.Parse(bookmark.URL); err != nil {
 		return &BadURLError{cause: err}
 	}
-	bookmark.Title, bookmark.LastStatusCheck, bookmark.LastStatusCode, bookmark.LastStatusReason = urlChecker.Check(bookmark.URL, bookmark.Title)
+	bookmark.Title, bookmark.LastStatusCheck, bookmark.LastStatusCode, bookmark.LastStatusReason = b.urlChecker.Check(bookmark.URL, bookmark.Title)
 	if err := b.repository.Insert(bookmark); err != nil {
 		return fmt.Errorf("cannot insert bookmark: %w", err)
 	}

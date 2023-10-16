@@ -89,7 +89,6 @@ func TestCheckLink(t *testing.T) {
 			if gotReason != tt.wantReason {
 				t.Errorf("%s CheckLink().Reason = %v, want %v", tt.name, gotReason, tt.wantReason)
 			}
-
 		})
 	}
 }

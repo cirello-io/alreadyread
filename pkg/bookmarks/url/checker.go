@@ -55,3 +55,8 @@ func (u *Checker) Check(url, originalTitle string) (title string, when int64, co
 	}
 	return title, u.timeNow().Unix(), int64(res.StatusCode), ""
 }
+
+func (u *Checker) Title(url string) string {
+	title, _, _, _ := u.Check(url, "")
+	return title
+}

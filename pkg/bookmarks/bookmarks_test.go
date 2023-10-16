@@ -80,8 +80,8 @@ func TestBookmarks_Insert(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			b := New(tt.fields.repository)
-			if err := b.Insert(tt.args.bookmark, tt.fields.urlChecker); (err != nil) && !errors.Is(err, tt.expectedError) {
+			b := New(tt.fields.repository, tt.fields.urlChecker)
+			if err := b.Insert(tt.args.bookmark); (err != nil) && !errors.Is(err, tt.expectedError) {
 				t.Errorf("Bookmarks.Insert() error = %v, wantErr %v", err, tt.expectedError)
 				return
 			}
@@ -124,7 +124,7 @@ func TestBookmarks_DeleteByID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := New(tt.args.repository).DeleteByID(tt.args.id); (err != nil) != tt.wantErr {
+			if err := New(tt.args.repository, nil).DeleteByID(tt.args.id); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteByID() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

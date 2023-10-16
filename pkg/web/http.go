@@ -27,24 +27,31 @@ import (
 
 	"cirello.io/alreadyread/frontend"
 	"cirello.io/alreadyread/pkg/bookmarks"
-	"cirello.io/alreadyread/pkg/bookmarks/url"
 	"github.com/rs/cors"
 )
+
+//go:generate moq -out urltitleloader_mocks_test.go . URLTitleLoader
+type URLTitleLoader interface {
+	Title(url string) string
+}
 
 // Server implements the web interface.
 type Server struct {
 	bookmarks *bookmarks.Bookmarks
 	cors      *cors.Cors
 	handler   http.Handler
+
+	titleLoader URLTitleLoader
 }
 
 // New creates a web interface handler.
-func New(bookmarks *bookmarks.Bookmarks, allowedOrigins []string) *Server {
+func New(bookmarks *bookmarks.Bookmarks, titleLoader URLTitleLoader, allowedOrigins []string) *Server {
 	s := &Server{
 		bookmarks: bookmarks,
 		cors: cors.New(cors.Options{
 			AllowedOrigins: allowedOrigins,
 		}),
+		titleLoader: titleLoader,
 	}
 	s.registerRoutes()
 	return s
@@ -69,29 +76,20 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) post(w http.ResponseWriter, r *http.Request) {
-	title, _, _, _ := url.NewChecker().Check(r.URL.Query().Get("url"), "")
+	url := r.URL.Query().Get("url")
 	bookmark := &bookmarks.Bookmark{
-		URL:   r.URL.Query().Get("url"),
-		Title: title,
+		URL:   url,
+		Title: s.titleLoader.Title(url),
 	}
 	var out io.Writer = w
 	if r.Header.Get("HX-Request") != "true" {
 		buf := &bytes.Buffer{}
 		out = buf
 		defer func() {
-			err := frontend.Index.Execute(w, struct{ Container template.HTML }{template.HTML(buf.String())})
-			if err != nil {
-				log.Println("cannot render new bookmark form page:", err)
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			}
+			_ = frontend.Index.Execute(w, struct{ Container template.HTML }{template.HTML(buf.String())})
 		}()
 	}
-	if err := frontend.LinkTable.ExecuteTemplate(out, "newLink", bookmark); err != nil {
-		log.Println("cannot render new bookmark form:", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
+	_ = frontend.LinkTable.ExecuteTemplate(out, "newLink", bookmark)
 }
 
 func (s *Server) inbox(w http.ResponseWriter, _ *http.Request) {
@@ -143,7 +141,7 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 	id, err := extractID("/bookmarks", r.URL.String())
 	if err != nil {
 		log.Println("cannot parse bookmark ID:", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 	switch r.Method {
@@ -157,8 +155,7 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 		return
 	case http.MethodPatch:
 		if inbox := r.FormValue("inbox"); inbox != "" {
-			err := s.bookmarks.UpdateInbox(id, inbox)
-			if err != nil {
+			if err := s.bookmarks.UpdateInbox(id, inbox); err != nil {
 				log.Println("cannot update bookmark:", err)
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return
@@ -166,14 +163,19 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	case http.MethodPost:
+		title, url := r.FormValue("title"), r.FormValue("url")
+		if url == "" {
+			log.Println("malformed bookmardk")
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
 		err := s.bookmarks.Insert(&bookmarks.Bookmark{
-			Title: r.FormValue("title"),
-			URL:   r.FormValue("url"),
-		}, url.NewChecker())
+			Title: title,
+			URL:   url,
+		})
 		if err != nil {
 			log.Println("cannot store new bookmark:", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError),
-				http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 		w.Header().Add("HX-Location", "/")
