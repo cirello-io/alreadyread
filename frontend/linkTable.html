@@ -4,10 +4,10 @@
 		<button class="btn btn-link" data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="read">📤</button>
 		<button class="btn btn-link" data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="postponed">💤</button>
 		<button class="btn btn-link" data-hx-target="#bookmark-{{.ID}}" data-hx-delete="/bookmarks/{{.ID}}">🗑</button>
-		<a href="{{.URL}}" target="_blank">{{ .Title }}</a>
+		<a href="{{.URL}}" target="_blank" rel="noopener noreferrer">{{ .Title }}</a>
 	</td>
 	<td>
-		<a href="{{.URL}}" target="_blank">{{ .URL }}</a>
+		<a href="{{.URL}}" target="_blank" rel="noopener noreferrer">{{ .URL }}</a>
 	</td>
 </tr>
 {{ end }}
