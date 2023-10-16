@@ -22,20 +22,27 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+//go:generate moq -out httpGetter_mocks_test.go . httpGetter
+type httpGetter interface {
+	Get(url string) (resp *http.Response, err error)
+}
+
 type Checker struct {
-	timeNow func() time.Time
+	timeNow    func() time.Time
+	httpClient httpGetter
 }
 
 func NewChecker() *Checker {
 	return &Checker{
-		timeNow: time.Now,
+		timeNow:    time.Now,
+		httpClient: http.DefaultClient,
 	}
 }
 
 // Check dials bookmark URL and updates its state with the errors if any.
 func (u *Checker) Check(url, originalTitle string) (title string, when int64, code int64, reason string) {
 	title = originalTitle
-	res, err := http.Get(url)
+	res, err := u.httpClient.Get(url)
 	if err != nil {
 		return "", u.timeNow().Unix(), 0, err.Error()
 	}
