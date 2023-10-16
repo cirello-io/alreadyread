@@ -9,7 +9,7 @@ linux:
 		/bin/bash -c 'go build -o alreadyread.linux'
 
 test:
-	GOEXPERIMENT=loopvar go test -coverprofile=coverage.out -v
+	GOEXPERIMENT=loopvar go test -coverprofile=coverage.out -v ./...
 	go tool cover -html=coverage.out -o coverage.html
 
 linters:
