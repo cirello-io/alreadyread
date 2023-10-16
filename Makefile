@@ -1,15 +1,15 @@
 all: darwin
 
 darwin:
-	go build -o alreadyread ./cmd/alreadyread
+	go build -o alreadyread
 
 linux:
 	docker run -ti --rm -v $(PWD)/../:/go/src/cirello.io/ \
 		-w /go/src/cirello.io/alreadyread golang \
-		/bin/bash -c 'go build -o alreadyread.linux ./cmd/alreadyread'
+		/bin/bash -c 'go build -o alreadyread.linux'
 
 test:
-	GOEXPERIMENT=loopvar go test -coverprofile=coverage.out -v ./...
+	GOEXPERIMENT=loopvar go test -coverprofile=coverage.out -v
 	go tool cover -html=coverage.out -o coverage.html
 
 linters:

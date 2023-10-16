@@ -5,14 +5,11 @@ require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/rs/cors v1.10.1
-	github.com/urfave/cli v1.22.5
 	golang.org/x/sync v0.4.0
 )
 
 require (
 	github.com/andybalholm/cascadia v1.3.2 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
-	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
 )
 
