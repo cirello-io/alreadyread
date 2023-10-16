@@ -16,10 +16,12 @@ package sqliterepo
 
 import (
 	"database/sql"
+	"errors"
 	"testing"
 
 	"cirello.io/alreadyread/pkg/bookmarks"
 	"cirello.io/alreadyread/pkg/db"
+	"github.com/DATA-DOG/go-sqlmock"
 )
 
 func newConn(t *testing.T) *sql.DB {
@@ -33,13 +35,27 @@ func newConn(t *testing.T) *sql.DB {
 }
 
 func TestRepository_Bootstrap(t *testing.T) {
-	b := New(newConn(t))
-	if err := b.Bootstrap(); err != nil {
-		t.Error("unexpected error found:", err)
-	}
-	if err := b.Bootstrap(); err != nil {
-		t.Error("unexpected error found (bootstrap should be idempotent):", err)
-	}
+	t.Run("badDB", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errDB := errors.New("bad DB")
+		mock.ExpectExec("create table").WillReturnError(errDB)
+		b := New(db)
+		if err := b.Bootstrap(); !errors.Is(err, errDB) {
+			t.Error("expected error missing: ", err)
+		}
+	})
+	t.Run("good", func(t *testing.T) {
+		b := New(newConn(t))
+		if err := b.Bootstrap(); err != nil {
+			t.Error("unexpected error found:", err)
+		}
+		if err := b.Bootstrap(); err != nil {
+			t.Error("unexpected error found (bootstrap should be idempotent):", err)
+		}
+	})
 }
 
 func TestRepository_basicCycle(t *testing.T) {
