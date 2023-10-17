@@ -23,13 +23,13 @@ import (
 	"time"
 
 	"cirello.io/alreadyread/pkg/bookmarks"
-	"cirello.io/alreadyread/pkg/db"
 	"github.com/DATA-DOG/go-sqlmock"
+	_ "github.com/mattn/go-sqlite3" // SQLite3 driver
 )
 
 func newConn(t *testing.T) *sql.DB {
 	t.Helper()
-	conn, err := db.Connect(db.Config{Filename: "file::memory:?cache=shared"})
+	conn, err := sql.Open("sqlite3", "file::memory:?cache=shared")
 	if err != nil {
 		t.Fatal("cannot create in memory SQLite:", err)
 	}

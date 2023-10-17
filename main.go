@@ -16,6 +16,7 @@ package main // import "cirello.io/alreadyread"
 
 import (
 	"context"
+	"database/sql"
 	"flag"
 	"fmt"
 	"log"
@@ -29,9 +30,9 @@ import (
 	"cirello.io/alreadyread/pkg/bookmarks"
 	"cirello.io/alreadyread/pkg/bookmarks/sqliterepo"
 	"cirello.io/alreadyread/pkg/bookmarks/url"
-	"cirello.io/alreadyread/pkg/db"
 	"cirello.io/alreadyread/pkg/web"
 	"cirello.io/oversight"
+	_ "github.com/mattn/go-sqlite3" // SQLite3 driver
 )
 
 var (
@@ -53,7 +54,7 @@ func main() {
 		oversight.NeverHalt(),
 	)
 
-	db, err := db.Connect(db.Config{Filename: *dbFN})
+	db, err := sql.Open("sqlite3", *dbFN)
 	if err != nil {
 		log.Fatal(err)
 	}
