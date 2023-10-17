@@ -303,18 +303,26 @@ func TestRepository_Dead(t *testing.T) {
 	})
 	t.Run("good", func(t *testing.T) {
 		repository := setup(t)
-		bookmark := &bookmarks.Bookmark{URL: "http://example.com", LastStatusCode: 500}
-		if err := repository.Insert(bookmark); err != nil {
-			t.Fatal("could not insert bookmark:", err)
+		bookmarks := []*bookmarks.Bookmark{
+			{URL: "http://example.com", LastStatusCode: 400},
+			{URL: "http://example.com", LastStatusCode: 500},
+		}
+		for _, bookmark := range bookmarks {
+			if err := repository.Insert(bookmark); err != nil {
+				t.Fatal("could not insert bookmark:", err)
+			}
 		}
 		found, err := repository.Dead()
 		if err != nil {
 			t.Fatal("cannot list bookmarks:", err)
 		}
-		if l := len(found); l != 1 {
+		if len(found) != len(bookmarks) {
 			t.Fatal("unexpected bookmark count")
 		}
-		if found[0].ID != bookmark.ID {
+		if found[0].ID != bookmarks[1].ID {
+			t.Fatal("did not find expected bookmark")
+		}
+		if found[1].ID != bookmarks[0].ID {
 			t.Fatal("did not find expected bookmark")
 		}
 	})
