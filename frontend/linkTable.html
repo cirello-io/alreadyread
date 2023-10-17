@@ -1,9 +1,9 @@
 {{ define "link" }}
 <tr id="bookmark-{{.ID}}">
 	<td class="text-nowrap align-top">
-		<button class="btn btn-link text-reset text-decoration-none" data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="read">📤</button>
-		<button class="btn btn-link text-reset text-decoration-none" data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="postponed">💤</button>
 		<button class="btn btn-link text-reset text-decoration-none" data-hx-target="#bookmark-{{.ID}}" data-hx-delete="/bookmarks/{{.ID}}">🗑</button>
+		<button class="btn btn-link text-reset text-decoration-none" data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="postponed">💤</button>
+		<button class="btn btn-link text-reset text-decoration-none" data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="read">📤</button>
 	</td>
 	<td style="padding-top: 15px;">
 		<a href="{{.URL}}" title="{{ .Title }}" target="_blank" rel="noopener noreferrer" class="text-reset text-decoration-none">{{ .Title }}</a>
