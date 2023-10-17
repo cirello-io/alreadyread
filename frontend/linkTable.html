@@ -12,6 +12,7 @@
 	</td>
 </tr>
 {{ end }}
+{{ with . }}
 <div class="card-body">
 	<div class="table-responsive table mt-2" id="dataTable-1" role="grid" aria-describedby="dataTable_info">
 	    <table class="table my-0" id="dataTable">
@@ -23,3 +24,6 @@
 	    </table>
 	</div>
 </div>
+{{ else }}
+<div class="card-body">no links</div>
+{{ end }}
