@@ -579,7 +579,7 @@ func TestServer(t *testing.T) {
 		respBuf := &bytes.Buffer{}
 		_, _ = io.Copy(respBuf, resp.Body)
 		tplBuf := &bytes.Buffer{}
-		_ = frontend.Index.Execute(tplBuf, nil)
+		frontend.RenderIndex(tplBuf, "")
 		if tplBuf.String() != respBuf.String() {
 			t.Fatal("index page not rendering correctly")
 		}

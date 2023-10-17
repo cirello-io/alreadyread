@@ -81,15 +81,14 @@ func (s *Server) post(w http.ResponseWriter, r *http.Request) {
 		URL:   url,
 		Title: s.titleLoader.Title(url),
 	}
-	var out io.Writer = w
+	buf := &bytes.Buffer{}
+	frontend.RenderNewLink(buf, bookmark)
 	if r.Header.Get("HX-Request") != "true" {
-		buf := &bytes.Buffer{}
-		out = buf
-		defer func() {
-			_ = frontend.Index.Execute(w, struct{ Container template.HTML }{template.HTML(buf.String())})
-		}()
+		indexBuf := &bytes.Buffer{}
+		frontend.RenderIndex(indexBuf, template.HTML(buf.String()))
+		buf = indexBuf
 	}
-	_ = frontend.LinkTable.ExecuteTemplate(out, "newLink", bookmark)
+	io.Copy(w, buf)
 }
 
 func (s *Server) inbox(w http.ResponseWriter, _ *http.Request) {
@@ -99,7 +98,7 @@ func (s *Server) inbox(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, list)
+	frontend.RenderLinkTable(w, list)
 }
 
 func (s *Server) duplicated(w http.ResponseWriter, _ *http.Request) {
@@ -109,7 +108,7 @@ func (s *Server) duplicated(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, list)
+	frontend.RenderLinkTable(w, list)
 }
 
 func (s *Server) all(w http.ResponseWriter, _ *http.Request) {
@@ -119,7 +118,7 @@ func (s *Server) all(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, list)
+	frontend.RenderLinkTable(w, list)
 }
 
 func (s *Server) search(w http.ResponseWriter, r *http.Request) {
@@ -129,11 +128,7 @@ func (s *Server) search(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, list)
-}
-
-func (s *Server) renderList(w io.Writer, list []*bookmarks.Bookmark) {
-	_ = frontend.LinkTable.Execute(w, list)
+	frontend.RenderLinkTable(w, list)
 }
 
 func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
@@ -190,7 +185,7 @@ func (s *Server) index(rootHandler http.Handler) func(w http.ResponseWriter, r *
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.String() == "/" {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			_ = frontend.Index.Execute(w, nil)
+			frontend.RenderIndex(w, frontend.EmptyContainer)
 			return
 		}
 		rootHandler.ServeHTTP(w, r)

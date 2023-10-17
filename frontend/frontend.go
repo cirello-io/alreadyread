@@ -17,19 +17,55 @@ package frontend
 import (
 	"embed"
 	"html/template"
+	"io"
+	"net/http"
+
+	"cirello.io/alreadyread/pkg/bookmarks"
 )
 
 //go:embed assets
 var Content embed.FS
 
 var (
+	//go:embed newLink.html
+	newLinkTPL string
+	newLink    = template.Must(template.New("newLink").Parse(newLinkTPL))
+)
+
+func RenderNewLink(w io.Writer, bookmark *bookmarks.Bookmark) {
+	if err := newLink.Execute(w, bookmark); err != nil {
+		if rw, ok := w.(http.ResponseWriter); ok {
+			http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+	}
+}
+
+var (
 	//go:embed linkTable.html
 	linkTableTPL string
-	LinkTable    = template.Must(template.New("linkTable").Parse(linkTableTPL))
+	linkTable    = template.Must(template.New("linkTable").Parse(linkTableTPL))
 )
+
+func RenderLinkTable(w io.Writer, list []*bookmarks.Bookmark) {
+	if err := linkTable.Execute(w, list); err != nil {
+		if rw, ok := w.(http.ResponseWriter); ok {
+			http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+	}
+}
 
 var (
 	//go:embed index.html
 	indexTPL string
-	Index    = template.Must(template.New("index").Parse(indexTPL))
+	index    = template.Must(template.New("index").Parse(indexTPL))
 )
+
+const EmptyContainer template.HTML = ""
+
+func RenderIndex(w io.Writer, container template.HTML) {
+	if err := index.Execute(w, struct{ Container template.HTML }{container}); err != nil {
+		if rw, ok := w.(http.ResponseWriter); ok {
+			http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+	}
+}
