@@ -1,6 +1,6 @@
 {{ define "link" }}
 <tr id="bookmark-{{.ID}}">
-	<td class="text-nowrap align-top">
+	<td class="text-nowrap align-top" style="width: 150px;">
 		<button class="btn btn-link text-reset text-decoration-none" data-hx-target="#bookmark-{{.ID}}" data-hx-delete="/bookmarks/{{.ID}}">🗑</button>
 		<button class="btn btn-link text-reset text-decoration-none" data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="postponed">💤</button>
 		<button class="btn btn-link text-reset text-decoration-none" data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="read">📤</button>
@@ -9,6 +9,7 @@
 		<a href="{{.URL}}" title="{{ .Title }}" target="_blank" rel="noopener noreferrer" class="text-reset text-decoration-none">{{ .Title }}</a>
 		&nbsp;&nbsp;<i class="small">{{ .CreatedAt | prettyTime}}</i><br/>
 		<a href="{{.URL}}" target="_blank" rel="noopener noreferrer" class="small">{{ .URL }}</a>
+		{{ if not (or (eq .LastStatusCode 200) (eq .LastStatusCode 0)) }}<span class="small">⚠️ {{.LastStatusCode}} {{.LastStatusCode | httpStatusCode}}</span>{{ end }}
 	</td>
 </tr>
 {{ end }}

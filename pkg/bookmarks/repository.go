@@ -23,6 +23,9 @@ type Repository interface {
 	// Bootstrap creates table if missing.
 	Bootstrap() error
 
+	// Dead returns bookmarks that are not OK.
+	Dead() ([]*Bookmark, error)
+
 	// DeleteByID excludes the bookmark from the repository.
 	DeleteByID(id int64) error
 

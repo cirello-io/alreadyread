@@ -22,6 +22,7 @@
                         <div class="btn-group btn-group-sm" role="group" id="filter-group">
                             <button class="btn btn-secondary active" id="inbox-btn"      type="button" data-hx-on::before-request="resetButtons(this)" data-hx-get="/inbox"      data-hx-target="#container">Inbox</button>
                             <button class="btn btn-secondary"        id="duplicated-btn" type="button" data-hx-on::before-request="resetButtons(this)" data-hx-get="/duplicated" data-hx-target="#container">Duplicated</button>
+                            <button class="btn btn-secondary"        id="stale-btn"      type="button" data-hx-on::before-request="resetButtons(this)" data-hx-get="/dead"      data-hx-target="#container">Dead</button>
                             <button class="btn btn-secondary"        id="all-btn"        type="button" data-hx-on::before-request="resetButtons(this)" data-hx-get="/all"        data-hx-target="#container">All</button>
 
                         </div>

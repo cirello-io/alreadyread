@@ -289,6 +289,37 @@ func TestRepository_Duplicated(t *testing.T) {
 	})
 }
 
+func TestRepository_Dead(t *testing.T) {
+	t.Run("badDB", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errDB := errors.New("bad DB")
+		mock.ExpectQuery("SELECT").WillReturnError(errDB)
+		if _, err := New(db).Dead(); !errors.Is(err, errDB) {
+			t.Error("expected error missing: ", err)
+		}
+	})
+	t.Run("good", func(t *testing.T) {
+		repository := setup(t)
+		bookmark := &bookmarks.Bookmark{URL: "http://example.com", LastStatusCode: 500}
+		if err := repository.Insert(bookmark); err != nil {
+			t.Fatal("could not insert bookmark:", err)
+		}
+		found, err := repository.Dead()
+		if err != nil {
+			t.Fatal("cannot list bookmarks:", err)
+		}
+		if l := len(found); l != 1 {
+			t.Fatal("unexpected bookmark count")
+		}
+		if found[0].ID != bookmark.ID {
+			t.Fatal("did not find expected bookmark")
+		}
+	})
+}
+
 func TestRepository_All(t *testing.T) {
 	t.Run("badDB", func(t *testing.T) {
 		db, mock, err := sqlmock.New()

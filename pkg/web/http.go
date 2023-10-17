@@ -64,6 +64,7 @@ func (s *Server) registerRoutes() {
 	router.HandleFunc("/post", s.post)
 	router.HandleFunc("/inbox", s.inbox)
 	router.HandleFunc("/duplicated", s.duplicated)
+	router.HandleFunc("/dead", s.dead)
 	router.HandleFunc("/all", s.all)
 	router.HandleFunc("/search", s.search)
 	router.HandleFunc("/bookmarks/", s.bookmarkOperations)
@@ -105,6 +106,16 @@ func (s *Server) duplicated(w http.ResponseWriter, _ *http.Request) {
 	list, err := s.bookmarks.Duplicated()
 	if err != nil {
 		log.Println("cannot load duplicated bookmarks:", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	frontend.RenderLinkTable(w, list)
+}
+
+func (s *Server) dead(w http.ResponseWriter, _ *http.Request) {
+	list, err := s.bookmarks.Dead()
+	if err != nil {
+		log.Println("cannot load dead bookmarks:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}

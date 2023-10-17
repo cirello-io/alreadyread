@@ -82,6 +82,31 @@ func TestRenderLinkTable(t *testing.T) {
 			t.Error("cannot find title pattern")
 		}
 	})
+	t.Run("badStatusCode", func(t *testing.T) {
+		const (
+			expectedURL   = "%FIND-URL%"
+			expectedTitle = "%FIND-TITLE%"
+		)
+		rw := httptest.NewRecorder()
+		RenderLinkTable(rw, []*bookmarks.Bookmark{
+			{
+				ID:             1,
+				URL:            expectedURL,
+				Title:          expectedTitle,
+				LastStatusCode: http.StatusInternalServerError,
+			},
+		})
+		body := rw.Body.String()
+		if !strings.Contains(body, expectedURL) {
+			t.Error("cannot find URL pattern")
+		}
+		if !strings.Contains(body, expectedTitle) {
+			t.Error("cannot find title pattern")
+		}
+		if !strings.Contains(body, http.StatusText(http.StatusInternalServerError)) {
+			t.Error("cannot find HTTP status")
+		}
+	})
 }
 
 func TestRenderIndex(t *testing.T) {

@@ -104,6 +104,14 @@ func (b *Repository) Duplicated() ([]*bookmarks.Bookmark, error) {
 	return b.scanRows(rows)
 }
 
+func (b *Repository) Dead() ([]*bookmarks.Bookmark, error) {
+	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox FROM bookmarks WHERE NOT (last_status_code == 200 OR last_status_code == 0) ORDER BY created_at DESC, id DESC`)
+	if err != nil {
+		return nil, err
+	}
+	return b.scanRows(rows)
+}
+
 func (b *Repository) All() ([]*bookmarks.Bookmark, error) {
 	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox FROM bookmarks ORDER BY CASE WHEN last_status_code = 0 THEN 999 ELSE last_status_code END ASC, created_at DESC, id DESC`)
 	if err != nil {

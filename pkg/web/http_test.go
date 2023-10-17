@@ -192,6 +192,56 @@ func TestServer(t *testing.T) {
 			}
 		})
 	})
+	t.Run("dead", func(t *testing.T) {
+		t.Run("badDB", func(t *testing.T) {
+			errDB := errors.New("bad DB")
+			repository := &RepositoryMock{
+				DeadFunc: func() ([]*bookmarks.Bookmark, error) {
+					return nil, errDB
+				},
+			}
+			root := bookmarks.New(repository, nil)
+			ts := httptest.NewServer(New(root, nil, []string{"localhost"}))
+			defer ts.Close()
+			resp, err := ts.Client().Get(ts.URL + "/dead")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != http.StatusInternalServerError {
+				t.Fatal("not StatusInternalServerError:", resp.StatusCode)
+			}
+		})
+		t.Run("good", func(t *testing.T) {
+			foundBookmark := &bookmarks.Bookmark{ID: 1, Title: "%FIND-TITLE%", URL: "https://%FIND-%URL.com"}
+			repository := &RepositoryMock{
+				DeadFunc: func() ([]*bookmarks.Bookmark, error) {
+					return []*bookmarks.Bookmark{
+						foundBookmark,
+					}, nil
+				},
+			}
+			root := bookmarks.New(repository, nil)
+			ts := httptest.NewServer(New(root, nil, []string{"localhost"}))
+			defer ts.Close()
+			resp, err := ts.Client().Get(ts.URL + "/dead")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != http.StatusOK {
+				t.Fatal("not OK:", resp.StatusCode)
+			}
+			buf := &bytes.Buffer{}
+			_, _ = io.Copy(buf, resp.Body)
+			if !strings.Contains(buf.String(), foundBookmark.Title) {
+				t.Error("cannot find expected bookmark title")
+			}
+			if !strings.Contains(buf.String(), foundBookmark.URL) {
+				t.Error("cannot find expected bookmark URL")
+			}
+		})
+	})
 	t.Run("all", func(t *testing.T) {
 		t.Run("badDB", func(t *testing.T) {
 			errDB := errors.New("bad DB")

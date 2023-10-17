@@ -23,6 +23,9 @@ var _ Repository = &RepositoryMock{}
 //			BootstrapFunc: func() error {
 //				panic("mock out the Bootstrap method")
 //			},
+//			DeadFunc: func() ([]*Bookmark, error) {
+//				panic("mock out the Dead method")
+//			},
 //			DeleteByIDFunc: func(id int64) error {
 //				panic("mock out the DeleteByID method")
 //			},
@@ -63,6 +66,9 @@ type RepositoryMock struct {
 	// BootstrapFunc mocks the Bootstrap method.
 	BootstrapFunc func() error
 
+	// DeadFunc mocks the Dead method.
+	DeadFunc func() ([]*Bookmark, error)
+
 	// DeleteByIDFunc mocks the DeleteByID method.
 	DeleteByIDFunc func(id int64) error
 
@@ -97,6 +103,9 @@ type RepositoryMock struct {
 		}
 		// Bootstrap holds details about calls to the Bootstrap method.
 		Bootstrap []struct {
+		}
+		// Dead holds details about calls to the Dead method.
+		Dead []struct {
 		}
 		// DeleteByID holds details about calls to the DeleteByID method.
 		DeleteByID []struct {
@@ -138,6 +147,7 @@ type RepositoryMock struct {
 	}
 	lockAll        sync.RWMutex
 	lockBootstrap  sync.RWMutex
+	lockDead       sync.RWMutex
 	lockDeleteByID sync.RWMutex
 	lockDuplicated sync.RWMutex
 	lockExpired    sync.RWMutex
@@ -200,6 +210,33 @@ func (mock *RepositoryMock) BootstrapCalls() []struct {
 	mock.lockBootstrap.RLock()
 	calls = mock.calls.Bootstrap
 	mock.lockBootstrap.RUnlock()
+	return calls
+}
+
+// Dead calls DeadFunc.
+func (mock *RepositoryMock) Dead() ([]*Bookmark, error) {
+	if mock.DeadFunc == nil {
+		panic("RepositoryMock.DeadFunc: method is nil but Repository.Dead was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockDead.Lock()
+	mock.calls.Dead = append(mock.calls.Dead, callInfo)
+	mock.lockDead.Unlock()
+	return mock.DeadFunc()
+}
+
+// DeadCalls gets all the calls that were made to Dead.
+// Check the length with:
+//
+//	len(mockedRepository.DeadCalls())
+func (mock *RepositoryMock) DeadCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockDead.RLock()
+	calls = mock.calls.Dead
+	mock.lockDead.RUnlock()
 	return calls
 }
 

@@ -127,6 +127,14 @@ func (b *Bookmarks) Duplicated() ([]*Bookmark, error) {
 	return list, nil
 }
 
+func (b *Bookmarks) Dead() ([]*Bookmark, error) {
+	list, err := b.repository.Dead()
+	if err != nil {
+		return nil, fmt.Errorf("cannot load dead bookmarks: %w", err)
+	}
+	return list, nil
+}
+
 func (b *Bookmarks) All() ([]*Bookmark, error) {
 	list, err := b.repository.All()
 	if err != nil {
