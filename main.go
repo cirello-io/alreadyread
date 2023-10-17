@@ -68,6 +68,9 @@ func main() {
 	}()
 
 	repository := sqliterepo.New(db)
+	if err := repository.Bootstrap(); err != nil {
+		log.Fatalf("cannot bootstrap database: %v", err)
+	}
 	svr.Add(oversight.ChildProcessSpecification{
 		Name:    "sqliteVacuum",
 		Restart: oversight.Permanent(),
