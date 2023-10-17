@@ -1,25 +1,20 @@
 {{ define "link" }}
 <tr id="bookmark-{{.ID}}">
-	<td>
+	<td class="text-nowrap align-top">
 		<button class="btn btn-link" data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="read">📤</button>
 		<button class="btn btn-link" data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}" name="inbox" value="postponed">💤</button>
 		<button class="btn btn-link" data-hx-target="#bookmark-{{.ID}}" data-hx-delete="/bookmarks/{{.ID}}">🗑</button>
-		<a href="{{.URL}}" target="_blank" rel="noopener noreferrer">{{ .Title }}</a>
 	</td>
-	<td>
-		<a href="{{.URL}}" target="_blank" rel="noopener noreferrer">{{ .URL }}</a>
+	<td style="padding-top: 15px;">
+		<a href="{{.URL}}" title="{{ .Title }}" target="_blank" rel="noopener noreferrer" class="text-reset text-decoration-none">{{ .Title }}</a>
+		&nbsp;&nbsp;<i class="small">{{ .CreatedAt | prettyTime}}</i><br/>
+		<a href="{{.URL}}" target="_blank" rel="noopener noreferrer" class="small">{{ .URL }}</a>
 	</td>
 </tr>
 {{ end }}
 <div class="card-body">
 	<div class="table-responsive table mt-2" id="dataTable-1" role="grid" aria-describedby="dataTable_info">
 	    <table class="table my-0" id="dataTable">
-		<thead>
-		    <tr>
-			<th>Title</th>
-			<th>URL</th>
-		    </tr>
-		</thead>
 		<tbody>
 			{{ range . }}
 			{{ template "link" . }}

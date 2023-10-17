@@ -19,6 +19,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"time"
 
 	"cirello.io/alreadyread/pkg/bookmarks"
 )
@@ -43,7 +44,7 @@ func RenderNewLink(w io.Writer, bookmark *bookmarks.Bookmark) {
 var (
 	//go:embed linkTable.html
 	linkTableTPL string
-	linkTable    = template.Must(template.New("linkTable").Parse(linkTableTPL))
+	linkTable    = template.Must(template.New("linkTable").Funcs(template.FuncMap{"prettyTime": func(t time.Time) string { return t.Format("Jan _2 2006") }}).Parse(linkTableTPL))
 )
 
 func RenderLinkTable(w io.Writer, list []*bookmarks.Bookmark) {
