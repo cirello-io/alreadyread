@@ -20,6 +20,3 @@ github.com/rs/cors
 ## explicit; go 1.17
 golang.org/x/net/html
 golang.org/x/net/html/atom
-# golang.org/x/sync v0.4.0
-## explicit; go 1.17
-golang.org/x/sync/singleflight

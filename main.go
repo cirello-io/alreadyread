@@ -16,7 +16,6 @@ package main // import "cirello.io/alreadyread"
 
 import (
 	"context"
-	"database/sql"
 	"flag"
 	"fmt"
 	"log"
@@ -25,12 +24,12 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"time"
 
 	"cirello.io/alreadyread/pkg/bookmarks"
 	"cirello.io/alreadyread/pkg/bookmarks/sqliterepo"
 	"cirello.io/alreadyread/pkg/bookmarks/url"
 	"cirello.io/alreadyread/pkg/db"
-	"cirello.io/alreadyread/pkg/tasks"
 	"cirello.io/alreadyread/pkg/web"
 	"cirello.io/oversight"
 )
@@ -47,6 +46,13 @@ func main() {
 	flag.Parse()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
+
+	svr := oversight.New(
+		oversight.WithLogger(log.Default()),
+		oversight.WithRestartStrategy(oversight.OneForAll()),
+		oversight.NeverHalt(),
+	)
+
 	db, err := db.Connect(db.Config{Filename: *dbFN})
 	if err != nil {
 		log.Fatal(err)
@@ -59,30 +65,55 @@ func main() {
 		<-ctx.Done()
 		lHTTP.Close()
 	}()
-	svr := oversight.New(
-		oversight.WithLogger(log.Default()),
-		oversight.WithRestartStrategy(oversight.OneForAll()),
-		oversight.NeverHalt(),
-	)
-	svr.Add(tasks.Run(db))
-	svr.Add(webserver(lHTTP, db))
-	svr.Start(ctx)
-}
 
-func webserver(listener net.Listener, db *sql.DB) oversight.ChildProcessSpecification {
-	bookmarks := bookmarks.New(sqliterepo.New(db), url.NewChecker())
-	srv := web.New(bookmarks, url.NewChecker(), strings.Split(*allowedOrigins, ","))
-	return oversight.ChildProcessSpecification{
+	repository := sqliterepo.New(db)
+	svr.Add(oversight.ChildProcessSpecification{
+		Name:    "sqliteVacuum",
+		Restart: oversight.Permanent(),
+		Start: func(ctx context.Context) error {
+			err := repository.Vacuum(ctx)
+			time.Sleep(6 * time.Hour)
+			return err
+		},
+		Shutdown: oversight.Infinity(),
+	})
+	svr.Add(oversight.ChildProcessSpecification{
+		Name:    "sqliteRestorePostponedLinks",
+		Restart: oversight.Permanent(),
+		Start: func(ctx context.Context) error {
+			err := repository.RestorePostponedLinks(ctx)
+			time.Sleep(6 * time.Hour)
+			return err
+		},
+		Shutdown: oversight.Infinity(),
+	})
+
+	bookmarks := bookmarks.New(repository, url.NewChecker())
+	svr.Add(oversight.ChildProcessSpecification{
+		Name:    "refreshExpiredLinks",
+		Restart: oversight.Permanent(),
+		Start: func(ctx context.Context) error {
+			err := bookmarks.RefreshExpiredLinks(ctx)
+			time.Sleep(6 * time.Hour)
+			return err
+		},
+		Shutdown: oversight.Infinity(),
+	})
+
+	webserver := web.New(bookmarks, url.NewChecker(), strings.Split(*allowedOrigins, ","))
+	svr.Add(oversight.ChildProcessSpecification{
 		Name:    "HTTP",
 		Restart: oversight.Permanent(),
 		Start: func(ctx context.Context) error {
-			if err := http.Serve(listener, srv); err != nil {
+			if err := http.Serve(lHTTP, webserver); err != nil {
 				return fmt.Errorf("HTTP server error: %w", err)
 			}
 			return nil
 		},
 		Shutdown: oversight.Infinity(),
-	}
+	})
+
+	svr.Start(ctx)
 }
 
 func envOrDefault(name string, defaultValue string) string {

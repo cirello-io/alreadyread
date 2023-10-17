@@ -15,9 +15,12 @@
 package bookmarks
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/url"
+	"sync"
 )
 
 type Bookmarks struct {
@@ -138,4 +141,43 @@ func (b *Bookmarks) Search(term string) ([]*Bookmark, error) {
 		return nil, fmt.Errorf("cannot search bookmarks: %w", err)
 	}
 	return list, nil
+}
+
+func (b *Bookmarks) RefreshExpiredLinks(ctx context.Context) error {
+	expiredBookmarks, err := b.repository.Expired()
+	if err != nil {
+		return fmt.Errorf("cannot load expired bookmarks: %w", err)
+	}
+
+	bookmarkCh := make(chan *Bookmark)
+	var (
+		wg        sync.WaitGroup
+		muAllErrs sync.Mutex
+		allErrs   error
+	)
+	for i := 0; i < 4; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for bookmark := range bookmarkCh {
+				log.Println("linkHealth:", bookmark.ID, bookmark.URL)
+				bookmark.Title, bookmark.LastStatusCheck, bookmark.LastStatusCode, bookmark.LastStatusReason = b.urlChecker.Check(bookmark.URL, bookmark.Title)
+				if err := b.repository.Update(bookmark); err != nil {
+					muAllErrs.Lock()
+					allErrs = errors.Join(allErrs, err)
+					muAllErrs.Unlock()
+				}
+			}
+		}()
+	}
+	for _, bookmark := range expiredBookmarks {
+		if ctx.Err() != nil {
+			break
+		}
+		bookmarkCh <- bookmark
+	}
+	close(bookmarkCh)
+	wg.Wait()
+
+	return allErrs
 }

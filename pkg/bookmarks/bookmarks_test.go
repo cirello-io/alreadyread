@@ -15,6 +15,7 @@
 package bookmarks
 
 import (
+	"context"
 	"errors"
 	"reflect"
 	"testing"
@@ -319,4 +320,91 @@ func TestBookmarks_Search(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBookmarks_RefreshExpiredLinks(t *testing.T) {
+	t.Run("badDB/expiration", func(t *testing.T) {
+		errDB := errors.New("bad DB")
+		repository := &RepositoryMock{
+			ExpiredFunc: func() ([]*Bookmark, error) {
+				return nil, errDB
+			},
+		}
+		urlchecker := &URLCheckerMock{}
+		b := New(repository, urlchecker)
+		err := b.RefreshExpiredLinks(context.TODO())
+		if !errors.Is(err, errDB) {
+			t.Fatal("unexpected error:", err)
+		}
+	})
+	t.Run("badDB/update", func(t *testing.T) {
+		errDB := errors.New("bad DB")
+		foundBookmarks := []*Bookmark{{ID: 1, URL: "https://example.com"}}
+		repository := &RepositoryMock{
+			ExpiredFunc: func() ([]*Bookmark, error) {
+				return foundBookmarks, nil
+			},
+			UpdateFunc: func(bookmark *Bookmark) error {
+				return errDB
+			},
+		}
+		const expectedTitle = "title"
+		urlchecker := &URLCheckerMock{
+			CheckFunc: func(url, originalTitle string) (string, int64, int64, string) {
+				return expectedTitle, 0, 0, ""
+			},
+		}
+		b := New(repository, urlchecker)
+		err := b.RefreshExpiredLinks(context.TODO())
+		if !errors.Is(err, errDB) {
+			t.Fatal("unexpected error:", err)
+		}
+	})
+	t.Run("canceled", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.TODO())
+		foundBookmarks := []*Bookmark{{ID: 1, URL: "https://example.com"}}
+		repository := &RepositoryMock{
+			ExpiredFunc: func() ([]*Bookmark, error) {
+				cancel()
+				return foundBookmarks, nil
+			},
+			UpdateFunc: func(bookmark *Bookmark) error {
+				t.Fatal("unexpected update")
+				return nil
+			},
+		}
+		const expectedTitle = "title"
+		urlchecker := &URLCheckerMock{
+			CheckFunc: func(url, originalTitle string) (string, int64, int64, string) {
+				return expectedTitle, 0, 0, ""
+			},
+		}
+		b := New(repository, urlchecker)
+		err := b.RefreshExpiredLinks(ctx)
+		if err != nil {
+			t.Fatal("unexpected error:", err)
+		}
+	})
+	t.Run("good", func(t *testing.T) {
+		foundBookmarks := []*Bookmark{{ID: 1, URL: "https://example.com"}}
+		repository := &RepositoryMock{
+			ExpiredFunc: func() ([]*Bookmark, error) {
+				return foundBookmarks, nil
+			},
+			UpdateFunc: func(bookmark *Bookmark) error {
+				return nil
+			},
+		}
+		const expectedTitle = "title"
+		urlchecker := &URLCheckerMock{
+			CheckFunc: func(url, originalTitle string) (string, int64, int64, string) {
+				return expectedTitle, 0, 0, ""
+			},
+		}
+		b := New(repository, urlchecker)
+		err := b.RefreshExpiredLinks(context.TODO())
+		if err != nil {
+			t.Fatal("unexpected error:", err)
+		}
+	})
 }

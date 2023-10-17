@@ -15,6 +15,7 @@
 package sqliterepo
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"net/url"
@@ -205,4 +206,18 @@ func (b *Repository) Search(term string) ([]*bookmarks.Bookmark, error) {
 		return nil, err
 	}
 	return b.scanRows(rows)
+}
+
+func (b *Repository) Vacuum(ctx context.Context) error {
+	if _, err := b.db.ExecContext(ctx, "VACUUM"); err != nil {
+		return fmt.Errorf("cannot run vacuum: %w", err)
+	}
+	return nil
+}
+
+func (b *Repository) RestorePostponedLinks(ctx context.Context) error {
+	if _, err := b.db.ExecContext(ctx, "UPDATE bookmarks SET inbox = 1 WHERE inbox = 2"); err != nil {
+		return fmt.Errorf("cannot run restore rescheduled links: %w", err)
+	}
+	return nil
 }
