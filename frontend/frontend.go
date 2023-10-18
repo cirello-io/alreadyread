@@ -15,7 +15,6 @@
 package frontend
 
 import (
-	"bytes"
 	"embed"
 	"html/template"
 	"io"
@@ -69,8 +68,7 @@ var (
 const EmptyContainer template.HTML = ""
 
 func RenderIndex(w io.Writer, container template.HTML) {
-	buf := new(bytes.Buffer)
-	err := index.Execute(buf, struct{ Container template.HTML }{container})
+	err := index.Execute(w, struct{ Container template.HTML }{container})
 	if err != nil {
 		log.Println("cannot render index:", err)
 		if rw, ok := w.(http.ResponseWriter); ok {
@@ -78,5 +76,4 @@ func RenderIndex(w io.Writer, container template.HTML) {
 		}
 		return
 	}
-	io.Copy(w, buf)
 }
