@@ -4,7 +4,6 @@ on:
   push:
     branches: [ master ]
   pull_request:
-    branches: [ master ]
   schedule:
     - cron: '0 0 * * *'
 
@@ -23,7 +22,7 @@ jobs:
 
     - name: Test
       run: |
-        make test
+        make linters test
 
     - name: Upload coverage
       uses: actions/upload-artifact@v3

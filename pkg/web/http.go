@@ -89,7 +89,7 @@ func (s *Server) post(w http.ResponseWriter, r *http.Request) {
 		frontend.RenderIndex(indexBuf, template.HTML(buf.String()))
 		buf = indexBuf
 	}
-	io.Copy(w, buf)
+	_, _ = io.Copy(w, buf)
 }
 
 func (s *Server) inbox(w http.ResponseWriter, _ *http.Request) {
