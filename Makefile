@@ -17,7 +17,7 @@ test:
 
 linters:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
-	golangci-lint -j 1 run --disable-all \
+	golangci-lint -j 1 run --timeout 5m --modules-download-mode=vendor --disable-all \
 		-E "errcheck" \
 		-E "errname" \
 		-E "errorlint" \
