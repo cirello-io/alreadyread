@@ -48,19 +48,15 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	svr := oversight.New(
-		oversight.WithLogger(log.Default()),
-		oversight.WithRestartStrategy(oversight.OneForAll()),
-		oversight.NeverHalt(),
-	)
-
 	db, err := sql.Open("sqlite3", *dbFN)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	lHTTP, err := net.Listen("tcp", *bind)
 	if err != nil {
-		log.Fatal(fmt.Errorf("cannot bind port: %w", err))
+		log.Println("cannot bind port:", err)
+		return
 	}
 	go func() {
 		<-ctx.Done()
@@ -69,55 +65,65 @@ func main() {
 
 	repository := sqliterepo.New(db)
 	if err := repository.Bootstrap(); err != nil {
-		log.Fatalf("cannot bootstrap database: %v", err)
+		log.Println("cannot bootstrap database:", err)
+		return
 	}
-	svr.Add(oversight.ChildProcessSpecification{
-		Name:    "sqliteVacuum",
-		Restart: oversight.Permanent(),
-		Start: func(ctx context.Context) error {
-			err := repository.Vacuum(ctx)
-			time.Sleep(6 * time.Hour)
-			return err
-		},
-		Shutdown: oversight.Infinity(),
-	})
-	svr.Add(oversight.ChildProcessSpecification{
-		Name:    "sqliteRestorePostponedLinks",
-		Restart: oversight.Permanent(),
-		Start: func(ctx context.Context) error {
-			err := repository.RestorePostponedLinks(ctx)
-			time.Sleep(6 * time.Hour)
-			return err
-		},
-		Shutdown: oversight.Infinity(),
-	})
-
 	bookmarks := bookmarks.New(repository, url.NewChecker())
-	svr.Add(oversight.ChildProcessSpecification{
-		Name:    "refreshExpiredLinks",
-		Restart: oversight.Permanent(),
-		Start: func(ctx context.Context) error {
-			err := bookmarks.RefreshExpiredLinks(ctx)
-			time.Sleep(6 * time.Hour)
-			return err
-		},
-		Shutdown: oversight.Infinity(),
-	})
-
 	webserver := web.New(bookmarks, url.NewChecker(), strings.Split(*allowedOrigins, ","))
-	svr.Add(oversight.ChildProcessSpecification{
-		Name:    "HTTP",
-		Restart: oversight.Permanent(),
-		Start: func(ctx context.Context) error {
-			if err := http.Serve(lHTTP, webserver); err != nil {
-				return fmt.Errorf("HTTP server error: %w", err)
-			}
-			return nil
-		},
-		Shutdown: oversight.Infinity(),
-	})
 
-	svr.Start(ctx)
+	svr := oversight.New(
+		oversight.WithLogger(log.Default()),
+		oversight.WithRestartStrategy(oversight.OneForAll()),
+		oversight.NeverHalt(),
+		oversight.Process(
+			oversight.ChildProcessSpecification{
+				Name:    "sqliteVacuum",
+				Restart: oversight.Permanent(),
+				Start: func(ctx context.Context) error {
+					err := repository.Vacuum(ctx)
+					time.Sleep(6 * time.Hour)
+					return err
+				},
+				Shutdown: oversight.Infinity(),
+			},
+			oversight.ChildProcessSpecification{
+				Name:    "sqliteRestorePostponedLinks",
+				Restart: oversight.Permanent(),
+				Start: func(ctx context.Context) error {
+					err := repository.RestorePostponedLinks(ctx)
+					time.Sleep(6 * time.Hour)
+					return err
+				},
+				Shutdown: oversight.Infinity(),
+			},
+			oversight.ChildProcessSpecification{
+				Name:    "refreshExpiredLinks",
+				Restart: oversight.Permanent(),
+				Start: func(ctx context.Context) error {
+					err := bookmarks.RefreshExpiredLinks(ctx)
+					time.Sleep(6 * time.Hour)
+					return err
+				},
+				Shutdown: oversight.Infinity(),
+			},
+			oversight.ChildProcessSpecification{
+				Name:    "HTTP",
+				Restart: oversight.Permanent(),
+				Start: func(ctx context.Context) error {
+					if err := http.Serve(lHTTP, webserver); err != nil {
+						return fmt.Errorf("HTTP server error: %w", err)
+					}
+					return nil
+				},
+				Shutdown: oversight.Infinity(),
+			},
+		),
+	)
+
+	if err := svr.Start(ctx); err != nil {
+		log.Println("oversight tree error:", err)
+		return
+	}
 }
 
 func envOrDefault(name string, defaultValue string) string {
