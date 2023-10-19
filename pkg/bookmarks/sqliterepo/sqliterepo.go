@@ -123,7 +123,7 @@ func (b *Repository) All() ([]*bookmarks.Bookmark, error) {
 func (b *Repository) Expired() ([]*bookmarks.Bookmark, error) {
 	const week = 7 * 24 * time.Hour
 	deadline := time.Now().Add(-week).Unix()
-	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox FROM bookmarks WHERE last_status_code = 200 AND last_status_check <= $1`, deadline)
+	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox FROM bookmarks WHERE last_status_code IN (200,0) AND last_status_check <= $1`, deadline)
 	if err != nil {
 		return nil, err
 	}

@@ -95,7 +95,7 @@ func TestCheckLink(t *testing.T) {
 			httpGetter: http.DefaultClient,
 			wantURL:    "invalid-url",
 			wantTitle:  "",
-			wantCode:   0,
+			wantCode:   http.StatusServiceUnavailable,
 			wantWhen:   now().Unix(),
 			wantReason: "Get \"invalid-url\": unsupported protocol scheme \"\"",
 		},
