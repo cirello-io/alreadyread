@@ -44,15 +44,15 @@ func (u *Checker) Check(url, originalTitle string) (title string, when int64, co
 	title = originalTitle
 	res, err := u.httpClient.Get(url)
 	if err != nil {
-		return "", u.timeNow().Unix(), http.StatusServiceUnavailable, err.Error()
+		return originalTitle, u.timeNow().Unix(), http.StatusServiceUnavailable, err.Error()
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		return "", u.timeNow().Unix(), int64(res.StatusCode), http.StatusText(res.StatusCode)
+		return originalTitle, u.timeNow().Unix(), int64(res.StatusCode), http.StatusText(res.StatusCode)
 	}
 	isHTML := strings.Contains(res.Header.Get("Content-Type"), "text/html")
-	if title != "" || !isHTML {
-		return title, u.timeNow().Unix(), int64(res.StatusCode), http.StatusText(res.StatusCode)
+	if originalTitle != "" || !isHTML {
+		return originalTitle, u.timeNow().Unix(), int64(res.StatusCode), http.StatusText(res.StatusCode)
 	}
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err == nil {

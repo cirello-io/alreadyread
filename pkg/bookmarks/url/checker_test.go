@@ -85,9 +85,24 @@ func TestCheckLink(t *testing.T) {
 			}},
 			wantURL:    "http://example.com/",
 			wantTitle:  "Custom Title",
-			wantCode:   200,
+			wantCode:   http.StatusOK,
 			wantWhen:   now().Unix(),
 			wantReason: "OK",
+		},
+		{
+			name:  "Custom Title Bad Link",
+			url:   "http://example.com/",
+			title: "Custom Title",
+			httpGetter: &httpGetterMock{GetFunc: func(url string) (*http.Response, error) {
+				return &http.Response{
+					StatusCode: http.StatusInternalServerError,
+					Body:       io.NopCloser(strings.NewReader(""))}, nil
+			}},
+			wantURL:    "http://example.com/",
+			wantTitle:  "Custom Title",
+			wantCode:   http.StatusInternalServerError,
+			wantWhen:   now().Unix(),
+			wantReason: "Internal Server Error",
 		},
 		{
 			name:       "invalid URL",
