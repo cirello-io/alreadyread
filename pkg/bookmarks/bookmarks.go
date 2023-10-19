@@ -21,6 +21,7 @@ import (
 	"log"
 	"net/url"
 	"sync"
+	"time"
 )
 
 type Bookmarks struct {
@@ -175,6 +176,7 @@ func (b *Bookmarks) RefreshExpiredLinks(ctx context.Context) error {
 					allErrs = errors.Join(allErrs, err)
 					muAllErrs.Unlock()
 				}
+				time.Sleep(1 * time.Second)
 			}
 		}()
 	}
