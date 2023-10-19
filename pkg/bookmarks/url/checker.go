@@ -44,7 +44,7 @@ func (u *Checker) Check(url, originalTitle string) (title string, when int64, co
 	title = originalTitle
 	res, err := u.httpClient.Get(url)
 	if err != nil {
-		return "", u.timeNow().Unix(), 0, err.Error()
+		return "", u.timeNow().Unix(), http.StatusServiceUnavailable, err.Error()
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
