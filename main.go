@@ -73,7 +73,7 @@ func main() {
 
 	svr := oversight.New(
 		oversight.WithLogger(log.Default()),
-		oversight.WithRestartStrategy(oversight.OneForAll()),
+		oversight.WithRestartStrategy(oversight.OneForOne()),
 		oversight.NeverHalt(),
 		oversight.Process(
 			oversight.ChildProcessSpecification{
