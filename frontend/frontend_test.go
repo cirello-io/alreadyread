@@ -63,15 +63,17 @@ func TestRenderLinkTable(t *testing.T) {
 	})
 	t.Run("good", func(t *testing.T) {
 		const (
-			expectedURL   = "%FIND-URL%"
-			expectedTitle = "%FIND-TITLE%"
+			expectedURL    = "%FIND-URL%"
+			expectedTitle  = "%FIND-TITLE%"
+			expectedReason = "%FIND-REASON%"
 		)
 		rw := httptest.NewRecorder()
 		RenderLinkTable(rw, []*bookmarks.Bookmark{
 			{
-				ID:    1,
-				URL:   expectedURL,
-				Title: expectedTitle,
+				ID:               1,
+				URL:              expectedURL,
+				Title:            expectedTitle,
+				LastStatusReason: expectedReason,
 			},
 		})
 		body := rw.Body.String()
@@ -80,6 +82,9 @@ func TestRenderLinkTable(t *testing.T) {
 		}
 		if !strings.Contains(body, expectedTitle) {
 			t.Error("cannot find title pattern")
+		}
+		if !strings.Contains(body, expectedReason) {
+			t.Error("cannot find last status reason pattern")
 		}
 	})
 	t.Run("badStatusCode", func(t *testing.T) {
