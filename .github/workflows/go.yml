@@ -21,6 +21,12 @@ jobs:
       with:
         go-version: 'stable'
 
+    - name: golangci-lint cache
+      uses: actions/cache@v3
+      with:
+        path: ~/go/bin/golangci-lint
+        key: ${{ runner.os }}-golangci-lint-v1.54.2
+
     - name: Test
       run: |
         make linters test
