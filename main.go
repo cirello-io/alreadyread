@@ -96,7 +96,7 @@ func main() {
 				Name:    "sqliteRestorePostponedLinks",
 				Restart: oversight.Permanent(),
 				Start: func(ctx context.Context) error {
-					err := repository.RestorePostponedLinks(ctx)
+					err := bookmarks.RestorePostponedLinks(ctx)
 					t, _ := gronx.NextTickAfter("15 */6 * * *", time.Now(), false)
 					select {
 					case <-time.After(time.Until(t)):

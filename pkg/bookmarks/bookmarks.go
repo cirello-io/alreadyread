@@ -152,6 +152,14 @@ func (b *Bookmarks) Search(term string) ([]*Bookmark, error) {
 	return list, nil
 }
 
+func (b *Bookmarks) RestorePostponedLinks(ctx context.Context) error {
+	err := b.repository.RestorePostponedLinks(ctx)
+	if err != nil {
+		return fmt.Errorf("cannot restore postponed links: %w", err)
+	}
+	return nil
+}
+
 func (b *Bookmarks) RefreshExpiredLinks(ctx context.Context) error {
 	expiredBookmarks, err := b.repository.Expired()
 	if err != nil {
