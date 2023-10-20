@@ -32,6 +32,7 @@ import (
 	"cirello.io/alreadyread/pkg/bookmarks/url"
 	"cirello.io/alreadyread/pkg/web"
 	"cirello.io/oversight"
+	"github.com/adhocore/gronx"
 	_ "github.com/mattn/go-sqlite3" // SQLite3 driver
 )
 
@@ -81,8 +82,13 @@ func main() {
 				Restart: oversight.Permanent(),
 				Start: func(ctx context.Context) error {
 					err := repository.Vacuum(ctx)
-					time.Sleep(6 * time.Hour)
-					return err
+					t, _ := gronx.NextTickAfter("0 */6 * * *", time.Now(), false)
+					select {
+					case <-time.After(time.Until(t)):
+						return err
+					case <-ctx.Done():
+						return ctx.Err()
+					}
 				},
 				Shutdown: oversight.Infinity(),
 			},
@@ -91,8 +97,13 @@ func main() {
 				Restart: oversight.Permanent(),
 				Start: func(ctx context.Context) error {
 					err := repository.RestorePostponedLinks(ctx)
-					time.Sleep(6 * time.Hour)
-					return err
+					t, _ := gronx.NextTickAfter("15 */6 * * *", time.Now(), false)
+					select {
+					case <-time.After(time.Until(t)):
+						return err
+					case <-ctx.Done():
+						return ctx.Err()
+					}
 				},
 				Shutdown: oversight.Infinity(),
 			},
@@ -101,8 +112,13 @@ func main() {
 				Restart: oversight.Permanent(),
 				Start: func(ctx context.Context) error {
 					err := bookmarks.RefreshExpiredLinks(ctx)
-					time.Sleep(6 * time.Hour)
-					return err
+					t, _ := gronx.NextTickAfter("30 */6 * * *", time.Now(), false)
+					select {
+					case <-time.After(time.Until(t)):
+						return err
+					case <-ctx.Done():
+						return ctx.Err()
+					}
 				},
 				Shutdown: oversight.Infinity(),
 			},
