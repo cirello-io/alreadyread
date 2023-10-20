@@ -90,7 +90,7 @@ func main() {
 				Name:    "sqliteRestorePostponedLinks",
 				Restart: oversight.Permanent(),
 				Start: func(ctx context.Context) error {
-					err := repository.RestorePostponedLinks(ctx)
+					err := bookmarks.RestorePostponedLinks(ctx)
 					time.Sleep(6 * time.Hour)
 					return err
 				},

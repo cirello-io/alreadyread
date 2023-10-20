@@ -357,6 +357,33 @@ func TestBookmarks_Search(t *testing.T) {
 	}
 }
 
+func TestBookmarks_RestorePostponedLinks(t *testing.T) {
+	errDB := errors.New("DB error")
+	type fields struct {
+		repository Repository
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{"badDB", fields{repository: &RepositoryMock{RestorePostponedLinksFunc: func(context.Context) error { return errDB }}}, true},
+		{"good", fields{repository: &RepositoryMock{RestorePostponedLinksFunc: func(context.Context) error { return nil }}}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &Bookmarks{
+				repository: tt.fields.repository,
+			}
+			err := b.RestorePostponedLinks(context.Background())
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Bookmarks.Dead() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
 func TestBookmarks_RefreshExpiredLinks(t *testing.T) {
 	t.Run("badDB/expiration", func(t *testing.T) {
 		errDB := errors.New("bad DB")
