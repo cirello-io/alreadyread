@@ -1,4 +1,4 @@
-workdir: $GOPATH/src/cirello.io/alreadyread
+workdir: .
 observe: *.go frontend/*
 ignore: /vendor
 build-backend: make darwin
