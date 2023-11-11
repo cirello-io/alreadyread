@@ -65,7 +65,7 @@ func TestCheckLink(t *testing.T) {
 					Header: http.Header{
 						"Content-Type": {"text/html"},
 					},
-					Body: io.NopCloser(strings.NewReader("<html><head><title>Example Domain</title></head></html>")),
+					Body: io.NopCloser(strings.NewReader("<html><head><title>      Example Domain	</title></head></html>")),
 				}, nil
 			}},
 			wantURL:    "http://example.com/",
