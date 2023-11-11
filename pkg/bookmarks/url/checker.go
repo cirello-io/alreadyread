@@ -57,7 +57,7 @@ func (u *Checker) Check(url, originalTitle string) (title string, when int64, co
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err == nil {
 		doc.Find("HEAD>TITLE").Each(func(i int, s *goquery.Selection) {
-			title = s.Text()
+			title = strings.TrimSpace(s.Text())
 		})
 	}
 	return title, u.timeNow().Unix(), int64(res.StatusCode), ""
