@@ -92,44 +92,44 @@ func (s *Server) post(w http.ResponseWriter, r *http.Request) {
 	_, _ = io.Copy(w, buf)
 }
 
-func (s *Server) inbox(w http.ResponseWriter, _ *http.Request) {
+func (s *Server) inbox(w http.ResponseWriter, r *http.Request) {
 	list, err := s.bookmarks.Inbox()
 	if err != nil {
 		log.Println("cannot load bookmarks for inbox:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	frontend.RenderLinkTable(w, list)
+	s.renderList(w, r, list)
 }
 
-func (s *Server) duplicated(w http.ResponseWriter, _ *http.Request) {
+func (s *Server) duplicated(w http.ResponseWriter, r *http.Request) {
 	list, err := s.bookmarks.Duplicated()
 	if err != nil {
 		log.Println("cannot load duplicated bookmarks:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	frontend.RenderLinkTable(w, list)
+	s.renderList(w, r, list)
 }
 
-func (s *Server) dead(w http.ResponseWriter, _ *http.Request) {
+func (s *Server) dead(w http.ResponseWriter, r *http.Request) {
 	list, err := s.bookmarks.Dead()
 	if err != nil {
 		log.Println("cannot load dead bookmarks:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	frontend.RenderLinkTable(w, list)
+	s.renderList(w, r, list)
 }
 
-func (s *Server) all(w http.ResponseWriter, _ *http.Request) {
+func (s *Server) all(w http.ResponseWriter, r *http.Request) {
 	list, err := s.bookmarks.All()
 	if err != nil {
 		log.Println("cannot load all bookmarks:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	frontend.RenderLinkTable(w, list)
+	s.renderList(w, r, list)
 }
 
 func (s *Server) search(w http.ResponseWriter, r *http.Request) {
@@ -139,11 +139,21 @@ func (s *Server) search(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	frontend.RenderLinkTable(w, list)
+	s.renderList(w, r, list)
+}
+
+func (s *Server) renderList(w http.ResponseWriter, r *http.Request, list []*bookmarks.Bookmark) {
+	buf := &bytes.Buffer{}
+	frontend.RenderLinkTable(buf, list)
+	if r.Header.Get("HX-Request") != "true" {
+		indexBuf := &bytes.Buffer{}
+		frontend.RenderIndex(indexBuf, template.HTML(buf.String()))
+		buf = indexBuf
+	}
+	_, _ = io.Copy(w, buf)
 }
 
 func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
-
 	id, err := extractID("/bookmarks", r.URL.String())
 	if err != nil {
 		log.Println("cannot parse bookmark ID:", err)
