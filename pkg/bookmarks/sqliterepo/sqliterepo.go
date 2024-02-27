@@ -204,13 +204,15 @@ func (b *Repository) Search(term string) ([]*bookmarks.Bookmark, error) {
 			url LIKE $1 COLLATE NOCASE
 		ORDER BY
 			CASE
-				WHEN title = $2 THEN 2
-				WHEN title LIKE $3 THEN 1
+				WHEN title = $2 THEN 3
+				WHEN title LIKE $3 THEN 2
+				WHEN title LIKE $4 THEN 1
+				WHEN title LIKE $5 THEN 1
 				ELSE 0
 			END DESC,
 			created_at DESC,
 			id DESC
-	`, explodedTerm, term, term+"%")
+	`, explodedTerm, term, term+"%", "%"+term+"%", "%"+term)
 	if err != nil {
 		return nil, err
 	}
