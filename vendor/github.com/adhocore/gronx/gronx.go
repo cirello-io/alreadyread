@@ -29,6 +29,22 @@ var expressions = map[string]string{
 	"@everysecond": "* * * * * *",
 }
 
+func AddTag(tag, expr string) error {
+	_, ok := expressions[tag]
+	if ok {
+		return errors.New("conflict tag")
+	}
+
+	segs, err := Segments(expr)
+	if err != nil {
+		return err
+	}
+	expr = strings.Join(segs, " ")
+
+	expressions[tag] = expr
+	return nil
+}
+
 // SpaceRe is regex for whitespace.
 var SpaceRe = regexp.MustCompile(`\s+`)
 var yearRe = regexp.MustCompile(`\d{4}`)
