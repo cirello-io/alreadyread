@@ -7,7 +7,7 @@ linux:
 	GOOS=linux go build -o alreadyread.linux
 
 linux-docker:
-	docker run -ti --rm -v $(PWD)/../:/go/src/cirello.io/ \
+	docker run --rm -v $(PWD)/../:/go/src/cirello.io/ \
 		-w /go/src/cirello.io/alreadyread golang \
 		/bin/bash -c 'go build -o alreadyread.linux'
 
