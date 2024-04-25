@@ -6,7 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.9.1
 	github.com/adhocore/gronx v1.8.1
 	github.com/mattn/go-sqlite3 v1.14.22
-	github.com/rs/cors v1.10.1
+	github.com/rs/cors v1.11.0
 )
 
 require (
