@@ -1,5 +1,5 @@
-cirello.io/oversight v1.3.0 h1:TPypf9AAw/CmDsBN4u5rfza3RwEd9a/LpoApgXJ3+so=
-cirello.io/oversight v1.3.0/go.mod h1:Rdj5qP4E3yk0/L/gXpElXtYZECfPgPFY+4pBhOmx9vE=
+cirello.io/oversight v1.3.1 h1:wrp6OydadQK5H8Cil1a06DToQr/mjRjhI4b/vuoUCLE=
+cirello.io/oversight v1.3.1/go.mod h1:Rdj5qP4E3yk0/L/gXpElXtYZECfPgPFY+4pBhOmx9vE=
 github.com/DATA-DOG/go-sqlmock v1.5.2 h1:OcvFkGmslmlZibjAjaHm3L//6LiuBgolP7OputlJIzU=
 github.com/DATA-DOG/go-sqlmock v1.5.2/go.mod h1:88MAG/4G7SMwSE3CeA0ZKzrT5CiOU3OJ+JlNzwDqpNU=
 github.com/PuerkitoBio/goquery v1.9.2 h1:4/wZksC3KgkQw7SQgkKotmKljk0M6V8TUvA8Wb4yPeE=
