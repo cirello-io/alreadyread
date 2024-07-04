@@ -216,6 +216,8 @@ func (b *Repository) Search(term string) ([]*bookmarks.Bookmark, error) {
 			title LIKE $1 COLLATE NOCASE
 			OR
 			url LIKE $1 COLLATE NOCASE
+			OR
+			description LIKE $1 COLLATE NOCASE
 		ORDER BY
 			CASE
 				WHEN title = $2 THEN 3
