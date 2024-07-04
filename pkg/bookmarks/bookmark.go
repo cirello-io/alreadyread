@@ -29,6 +29,7 @@ type Bookmark struct {
 	Title            string    `db:"title" json:"title"`
 	CreatedAt        time.Time `db:"created_at" json:"created_at"`
 	Inbox            Inbox     `db:"inbox" json:"inbox"`
+	Description      string    `db:"description" json:"description"`
 
 	Host string `db:"-" json:"host"`
 }

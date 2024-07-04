@@ -15,6 +15,7 @@
 		<span class="d-none d-md-inline"><i class="small">{{ .CreatedAt | prettyTime}}</i><br/></span>
 		<div class="d-md-none"><i class="small">{{ .CreatedAt | prettyTime}}</i></div>
 		<a href="{{.URL}}" target="_blank" rel="noopener noreferrer" class="small" style="word-break: break-all;">{{ .URL }}</a>
+		<div><em>{{ .Description }}</em></div>
 		{{ if not (or (eq .LastStatusCode 200)) }}<span class="small">⚠️ {{.LastStatusCode}} {{.LastStatusCode | httpStatusCode}} - {{ .LastStatusReason }}</span>{{ end }}
 	</td>
 </tr>

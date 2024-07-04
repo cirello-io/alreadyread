@@ -4,18 +4,23 @@
 		<div class="table-responsive table mt-2" id="dataTable" role="grid" aria-describedby="dataTable_info">
 			<form>
 			<table class="table my-0" id="dataTable">
-			<thead>
-				<tr>
-				<th>URL</th>
-				<th>Title</th>
-				<th></th>
-				</tr>
-			</thead>
 			<tbody>
 				<tr>
-				<td><input type="url"  placeholder="URL"        name="url"   id="new-link-URL"   data-hx-get="/post"        data-hx-target="#container"           data-hx-trigger="keyup changed delay:500ms"        value="{{- .URL -}}"  ></td>
-				<td><input type="text" placeholder="Site Title" name="title" id="new-link-title"                                                                                                                     value="{{- .Title -}}"></td>
-				<td><button class="btn btn-primary"                                              data-hx-post="/bookmarks/" data-hx-target="#container"                                                                                    >add</button></td>
+				<td><input type="url"  placeholder="URL" name="url" id="new-link-URL" data-hx-get="/post" data-hx-target="#container" data-hx-trigger="keyup changed delay:500ms" value="{{- .URL -}}"></td>
+				</tr>
+
+				<tr>
+				<td><input type="text" placeholder="Site Title" name="title" id="new-link-title" value="{{- .Title -}}"></td>
+				</tr>
+
+				<tr>
+				<td>
+				<textarea placeholder="Description" name="description" id="new-link-description">{{- .Description -}}</textarea>
+				</td>
+				</tr>
+
+				<tr>
+				<td colspan="2"><button class="btn btn-primary" data-hx-post="/bookmarks/" data-hx-target="#container">add</button></td>
 				</tr>
 			</tbody>
 			</table>

@@ -179,15 +179,16 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	case http.MethodPost:
-		title, url := r.FormValue("title"), r.FormValue("url")
+		title, url, description := r.FormValue("title"), r.FormValue("url"), r.FormValue("description")
 		if url == "" {
 			log.Println("malformed bookmardk")
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 		err := s.bookmarks.Insert(&bookmarks.Bookmark{
-			Title: title,
-			URL:   url,
+			Title:       title,
+			URL:         url,
+			Description: description,
 		})
 		if err != nil {
 			log.Println("cannot store new bookmark:", err)
