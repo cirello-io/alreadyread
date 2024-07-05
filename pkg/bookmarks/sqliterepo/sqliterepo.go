@@ -53,12 +53,15 @@ func (b *Repository) Bootstrap() error {
 		`create index if not exists bookmarks_inbox on bookmarks (inbox)`,
 		`alter table bookmarks add column description bigtext not null default ''`,
 	}
+	var version int
+	row := b.db.QueryRow("PRAGMA user_version;")
+	if err := row.Scan(&version); err != nil {
+		return err
+	}
+	if version == 0 {
+		version = -1
+	}
 	for stmt, cmd := range cmds {
-		var version int
-		row := b.db.QueryRow("PRAGMA user_version;")
-		if err := row.Scan(&version); err != nil {
-			return err
-		}
 		if version >= stmt {
 			continue
 		}
