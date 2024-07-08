@@ -1,5 +1,5 @@
-# cirello.io/oversight v1.3.1
-## explicit; go 1.12
+# cirello.io/oversight v1.4.0
+## explicit; go 1.22
 cirello.io/oversight
 # github.com/DATA-DOG/go-sqlmock v1.5.2
 ## explicit; go 1.15
