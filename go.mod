@@ -11,8 +11,8 @@ require (
 
 require (
 	github.com/andybalholm/cascadia v1.3.2 // indirect
-	golang.org/x/net v0.27.0 // indirect
+	golang.org/x/net v0.28.0 // indirect
 )
 
 go 1.21
-toolchain go1.22.4
+toolchain go1.22.5
