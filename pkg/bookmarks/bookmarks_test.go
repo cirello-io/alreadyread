@@ -77,8 +77,8 @@ func TestBookmarks_Insert(t *testing.T) {
 		{"badSetup/missingURLChecker", fields{&RepositoryMock{}, nil}, args{&Bookmark{}}, errBookmarksURLCheckerNotSet},
 		{"missingBookmark", fields{&RepositoryMock{}, &URLCheckerMock{}}, args{nil}, errNilBookmark},
 		{"badURL", fields{&RepositoryMock{}, &URLCheckerMock{}}, args{&Bookmark{URL: "://"}}, &BadURLError{}},
-		{"badDB", fields{&RepositoryMock{InsertFunc: func(bookmark *Bookmark) error { return errExpectedDBError }}, &URLCheckerMock{CheckFunc: func(url, originalTitle string) (string, int64, int64, string) { return "", 0, 0, "" }}}, args{&Bookmark{URL: "http://example.org"}}, errExpectedDBError},
-		{"good", fields{&RepositoryMock{InsertFunc: func(bookmark *Bookmark) error { return nil }}, &URLCheckerMock{CheckFunc: func(url, originalTitle string) (string, int64, int64, string) { return "", 0, 0, "" }}}, args{&Bookmark{URL: "http://example.org"}}, nil},
+		{"badDB", fields{&RepositoryMock{InsertFunc: func(*Bookmark) error { return errExpectedDBError }}, &URLCheckerMock{CheckFunc: func(_, _ string) (string, int64, int64, string) { return "", 0, 0, "" }}}, args{&Bookmark{URL: "http://example.org"}}, errExpectedDBError},
+		{"good", fields{&RepositoryMock{InsertFunc: func(*Bookmark) error { return nil }}, &URLCheckerMock{CheckFunc: func(_, _ string) (string, int64, int64, string) { return "", 0, 0, "" }}}, args{&Bookmark{URL: "http://example.org"}}, nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -105,7 +105,7 @@ func TestBookmarks_DeleteByID(t *testing.T) {
 			"badDelete",
 			args{
 				repository: &RepositoryMock{
-					DeleteByIDFunc: func(id int64) error {
+					DeleteByIDFunc: func(int64) error {
 						return errors.New("mocked error")
 					},
 				},
@@ -116,7 +116,7 @@ func TestBookmarks_DeleteByID(t *testing.T) {
 			"goodDelete",
 			args{
 				repository: &RepositoryMock{
-					DeleteByIDFunc: func(id int64) error {
+					DeleteByIDFunc: func(int64) error {
 						return nil
 					},
 				},
@@ -150,13 +150,13 @@ func TestBookmarks_UpdateInbox(t *testing.T) {
 		wantErr bool
 	}{
 		{"badInbox", fields{}, args{0, "bad"}, true},
-		{"badDB/Get", fields{repository: &RepositoryMock{GetByIDFunc: func(id int64) (*Bookmark, error) { return nil, errDB }}}, args{0, "new"}, true},
-		{"badDB/Update", fields{repository: &RepositoryMock{GetByIDFunc: func(id int64) (*Bookmark, error) { return foundBookmark, nil }, UpdateFunc: func(bookmark *Bookmark) error { return errDB }}}, args{foundBookmark.ID, "new"}, true},
+		{"badDB/Get", fields{repository: &RepositoryMock{GetByIDFunc: func(int64) (*Bookmark, error) { return nil, errDB }}}, args{0, "new"}, true},
+		{"badDB/Update", fields{repository: &RepositoryMock{GetByIDFunc: func(int64) (*Bookmark, error) { return foundBookmark, nil }, UpdateFunc: func(*Bookmark) error { return errDB }}}, args{foundBookmark.ID, "new"}, true},
 		{
 			"done",
 			fields{
 				repository: &RepositoryMock{
-					GetByIDFunc: func(id int64) (*Bookmark, error) {
+					GetByIDFunc: func(int64) (*Bookmark, error) {
 						return foundBookmark, nil
 					},
 					UpdateFunc: func(bookmark *Bookmark) error {
@@ -335,10 +335,10 @@ func TestBookmarks_Search(t *testing.T) {
 		want    []*Bookmark
 		wantErr bool
 	}{
-		{"badDB", fields{repository: &RepositoryMock{SearchFunc: func(term string) ([]*Bookmark, error) { return nil, errDB }}}, args{}, nil, true},
-		{"nilResult", fields{repository: &RepositoryMock{SearchFunc: func(term string) ([]*Bookmark, error) { return nil, nil }}}, args{}, nil, false},
-		{"emptyResult", fields{repository: &RepositoryMock{SearchFunc: func(term string) ([]*Bookmark, error) { return []*Bookmark{}, nil }}}, args{}, []*Bookmark{}, false},
-		{"good", fields{repository: &RepositoryMock{SearchFunc: func(term string) ([]*Bookmark, error) { return []*Bookmark{foundBookmark}, nil }}}, args{}, []*Bookmark{foundBookmark}, false},
+		{"badDB", fields{repository: &RepositoryMock{SearchFunc: func(string) ([]*Bookmark, error) { return nil, errDB }}}, args{}, nil, true},
+		{"nilResult", fields{repository: &RepositoryMock{SearchFunc: func(string) ([]*Bookmark, error) { return nil, nil }}}, args{}, nil, false},
+		{"emptyResult", fields{repository: &RepositoryMock{SearchFunc: func(string) ([]*Bookmark, error) { return []*Bookmark{}, nil }}}, args{}, []*Bookmark{}, false},
+		{"good", fields{repository: &RepositoryMock{SearchFunc: func(string) ([]*Bookmark, error) { return []*Bookmark{foundBookmark}, nil }}}, args{}, []*Bookmark{foundBookmark}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -406,13 +406,13 @@ func TestBookmarks_RefreshExpiredLinks(t *testing.T) {
 			ExpiredFunc: func() ([]*Bookmark, error) {
 				return foundBookmarks, nil
 			},
-			UpdateFunc: func(bookmark *Bookmark) error {
+			UpdateFunc: func(*Bookmark) error {
 				return errDB
 			},
 		}
 		const expectedTitle = "title"
 		urlchecker := &URLCheckerMock{
-			CheckFunc: func(url, originalTitle string) (string, int64, int64, string) {
+			CheckFunc: func(_, _ string) (string, int64, int64, string) {
 				return expectedTitle, 0, 0, ""
 			},
 		}
@@ -430,14 +430,14 @@ func TestBookmarks_RefreshExpiredLinks(t *testing.T) {
 				cancel()
 				return foundBookmarks, nil
 			},
-			UpdateFunc: func(bookmark *Bookmark) error {
+			UpdateFunc: func(*Bookmark) error {
 				t.Fatal("unexpected update")
 				return nil
 			},
 		}
 		const expectedTitle = "title"
 		urlchecker := &URLCheckerMock{
-			CheckFunc: func(url, originalTitle string) (string, int64, int64, string) {
+			CheckFunc: func(_, _ string) (string, int64, int64, string) {
 				return expectedTitle, 0, 0, ""
 			},
 		}
@@ -453,13 +453,13 @@ func TestBookmarks_RefreshExpiredLinks(t *testing.T) {
 			ExpiredFunc: func() ([]*Bookmark, error) {
 				return foundBookmarks, nil
 			},
-			UpdateFunc: func(bookmark *Bookmark) error {
+			UpdateFunc: func(*Bookmark) error {
 				return nil
 			},
 		}
 		const expectedTitle = "title"
 		urlchecker := &URLCheckerMock{
-			CheckFunc: func(url, originalTitle string) (string, int64, int64, string) {
+			CheckFunc: func(_, _ string) (string, int64, int64, string) {
 				return expectedTitle, 0, 0, ""
 			},
 		}

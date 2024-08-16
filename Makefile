@@ -15,11 +15,11 @@ linux-docker:
 		/bin/bash -c 'go build -o alreadyread.linux'
 
 test:
-	GOEXPERIMENT=loopvar go test -coverprofile=coverage.out -v ./...
+	go test -coverprofile=coverage.out -v ./...
 	go tool cover -html=coverage.out -o coverage.html
 
 linters:
-	which golangci-lint || go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
+	which golangci-lint || go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	golangci-lint run --timeout 5m --modules-download-mode=vendor --disable-all \
 		-E "errcheck" \
 		-E "errname" \

@@ -126,7 +126,17 @@ func main() {
 				Name:    "HTTP",
 				Restart: oversight.Permanent(),
 				Start: func(ctx context.Context) error {
-					if err := http.Serve(lHTTP, webserver); err != nil {
+					srv := &http.Server{
+						Handler: webserver,
+					}
+					go func() {
+						<-ctx.Done()
+						err := srv.Shutdown(context.Background())
+						if err != nil {
+							log.Println("HTTP server shutdown error:", err)
+						}
+					}()
+					if err := srv.Serve(lHTTP); err != nil {
 						return fmt.Errorf("HTTP server error: %w", err)
 					}
 					return nil

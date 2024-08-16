@@ -43,7 +43,7 @@ func TestCheckLink(t *testing.T) {
 		{
 			name: "404",
 			url:  "http://example.com/404",
-			httpGetter: &httpGetterMock{GetFunc: func(url string) (*http.Response, error) {
+			httpGetter: &httpGetterMock{GetFunc: func(string) (*http.Response, error) {
 				return &http.Response{
 					StatusCode: http.StatusNotFound,
 					Body:       io.NopCloser(strings.NewReader("")),
@@ -58,7 +58,7 @@ func TestCheckLink(t *testing.T) {
 		{
 			name: "200",
 			url:  "http://example.com/",
-			httpGetter: &httpGetterMock{GetFunc: func(url string) (*http.Response, error) {
+			httpGetter: &httpGetterMock{GetFunc: func(string) (*http.Response, error) {
 				return &http.Response{
 					StatusCode: http.StatusOK,
 					Status:     http.StatusText(http.StatusOK),
@@ -78,7 +78,7 @@ func TestCheckLink(t *testing.T) {
 			name:  "Custom Title",
 			url:   "http://example.com/",
 			title: "Custom Title",
-			httpGetter: &httpGetterMock{GetFunc: func(url string) (*http.Response, error) {
+			httpGetter: &httpGetterMock{GetFunc: func(string) (*http.Response, error) {
 				return &http.Response{
 					StatusCode: http.StatusOK,
 					Body:       io.NopCloser(strings.NewReader("<html><head><title>Example Domain</title></head></html>"))}, nil
@@ -93,7 +93,7 @@ func TestCheckLink(t *testing.T) {
 			name:  "Custom Title Bad Link",
 			url:   "http://example.com/",
 			title: "Custom Title",
-			httpGetter: &httpGetterMock{GetFunc: func(url string) (*http.Response, error) {
+			httpGetter: &httpGetterMock{GetFunc: func(string) (*http.Response, error) {
 				return &http.Response{
 					StatusCode: http.StatusInternalServerError,
 					Body:       io.NopCloser(strings.NewReader(""))}, nil
@@ -151,7 +151,7 @@ func TestTitle(t *testing.T) {
 		{
 			name: "404",
 			url:  "http://example.com/404",
-			httpGetter: &httpGetterMock{GetFunc: func(url string) (*http.Response, error) {
+			httpGetter: &httpGetterMock{GetFunc: func(string) (*http.Response, error) {
 				return &http.Response{
 					StatusCode: http.StatusNotFound,
 					Body:       io.NopCloser(strings.NewReader("")),
@@ -162,7 +162,7 @@ func TestTitle(t *testing.T) {
 		{
 			name: "200",
 			url:  "http://example.com/",
-			httpGetter: &httpGetterMock{GetFunc: func(url string) (*http.Response, error) {
+			httpGetter: &httpGetterMock{GetFunc: func(string) (*http.Response, error) {
 				return &http.Response{
 					StatusCode: http.StatusOK,
 					Status:     http.StatusText(http.StatusOK),

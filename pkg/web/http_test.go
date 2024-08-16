@@ -68,7 +68,7 @@ func TestServer(t *testing.T) {
 			root := bookmarks.New(repository, nil)
 
 			ts := httptest.NewServer(New(root, &URLCheckerMock{
-				TitleFunc: func(url string) string {
+				TitleFunc: func(string) string {
 					return "example-title"
 				},
 			}, []string{"localhost"}))
@@ -296,7 +296,7 @@ func TestServer(t *testing.T) {
 		t.Run("badDB", func(t *testing.T) {
 			errDB := errors.New("bad DB")
 			repository := &RepositoryMock{
-				SearchFunc: func(term string) ([]*bookmarks.Bookmark, error) {
+				SearchFunc: func(string) ([]*bookmarks.Bookmark, error) {
 					return nil, errDB
 				},
 			}
@@ -377,7 +377,7 @@ func TestServer(t *testing.T) {
 			t.Run("badDB", func(t *testing.T) {
 				errDB := errors.New("bad DB")
 				repository := &RepositoryMock{
-					DeleteByIDFunc: func(id int64) error {
+					DeleteByIDFunc: func(int64) error {
 						return errDB
 					},
 				}
@@ -399,7 +399,7 @@ func TestServer(t *testing.T) {
 			})
 			t.Run("good", func(t *testing.T) {
 				repository := &RepositoryMock{
-					DeleteByIDFunc: func(id int64) error {
+					DeleteByIDFunc: func(int64) error {
 						return nil
 					},
 				}
@@ -443,7 +443,7 @@ func TestServer(t *testing.T) {
 			t.Run("badDB/GetByID", func(t *testing.T) {
 				errDB := errors.New("bad DB")
 				repository := &RepositoryMock{
-					GetByIDFunc: func(id int64) (*bookmarks.Bookmark, error) { return nil, errDB },
+					GetByIDFunc: func(int64) (*bookmarks.Bookmark, error) { return nil, errDB },
 				}
 				root := bookmarks.New(repository, nil)
 				ts := httptest.NewServer(New(root, nil, []string{"localhost"}))
@@ -470,8 +470,8 @@ func TestServer(t *testing.T) {
 					Title: "title",
 				}
 				repository := &RepositoryMock{
-					GetByIDFunc: func(id int64) (*bookmarks.Bookmark, error) { return foundBookmark, nil },
-					UpdateFunc:  func(bookmark *bookmarks.Bookmark) error { return errDB },
+					GetByIDFunc: func(int64) (*bookmarks.Bookmark, error) { return foundBookmark, nil },
+					UpdateFunc:  func(*bookmarks.Bookmark) error { return errDB },
 				}
 				root := bookmarks.New(repository, nil)
 				ts := httptest.NewServer(New(root, nil, []string{"localhost"}))
@@ -497,8 +497,8 @@ func TestServer(t *testing.T) {
 					Title: "title",
 				}
 				repository := &RepositoryMock{
-					GetByIDFunc: func(id int64) (*bookmarks.Bookmark, error) { return foundBookmark, nil },
-					UpdateFunc: func(bookmark *bookmarks.Bookmark) error {
+					GetByIDFunc: func(int64) (*bookmarks.Bookmark, error) { return foundBookmark, nil },
+					UpdateFunc: func(*bookmarks.Bookmark) error {
 						return nil
 					},
 				}
@@ -550,12 +550,12 @@ func TestServer(t *testing.T) {
 			t.Run("badDB/Insert", func(t *testing.T) {
 				errDB := errors.New("bad DB")
 				repository := &RepositoryMock{
-					InsertFunc: func(bookmark *bookmarks.Bookmark) error {
+					InsertFunc: func(*bookmarks.Bookmark) error {
 						return errDB
 					},
 				}
 				urlChecker := &URLCheckerMock{
-					CheckFunc: func(url, originalTitle string) (string, int64, int64, string) {
+					CheckFunc: func(_, _ string) (string, int64, int64, string) {
 						return "title", 0, 0, ""
 					},
 				}
@@ -582,12 +582,12 @@ func TestServer(t *testing.T) {
 			})
 			t.Run("good", func(t *testing.T) {
 				repository := &RepositoryMock{
-					InsertFunc: func(bookmark *bookmarks.Bookmark) error {
+					InsertFunc: func(*bookmarks.Bookmark) error {
 						return nil
 					},
 				}
 				urlChecker := &URLCheckerMock{
-					CheckFunc: func(url, originalTitle string) (string, int64, int64, string) {
+					CheckFunc: func(_, _ string) (string, int64, int64, string) {
 						return "title", 0, 0, ""
 					},
 				}
