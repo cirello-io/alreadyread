@@ -33,7 +33,7 @@ import (
 	"cirello.io/alreadyread/pkg/web"
 	"cirello.io/oversight"
 	"github.com/adhocore/gronx"
-	_ "github.com/mattn/go-sqlite3" // SQLite3 driver
+	_ "modernc.org/sqlite" // SQLite3 driver
 )
 
 var (
@@ -49,7 +49,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	db, err := sql.Open("sqlite3", *dbFN)
+	db, err := sql.Open("sqlite", *dbFN)
 	if err != nil {
 		log.Println(err)
 		return
