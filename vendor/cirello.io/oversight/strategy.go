@@ -14,19 +14,20 @@
 
 package oversight
 
+import "slices"
+
 // Strategy defines how the supervisor handles individual failures and tree
 // shutdowns (best effort). The shutdown is initiated in the reverse order of
 // the start of the child processes. The Go scheduler implementation makes it
 // impossible to guarantee any order regarding shutdown completion.
-type Strategy func(t *Tree, failedChildID int)
+type Strategy func(t *Tree, childProcess *childProcess)
 
 // OneForOne ensures that if a child process terminates, only that process is
 // restarted.
 func OneForOne() Strategy {
-	return func(t *Tree, failedChildID int) {
-		procName := t.childrenOrder[failedChildID]
-		t.children[procName].state.setFailed()
-		t.children[procName].state.stop()
+	return func(t *Tree, childProcess *childProcess) {
+		childProcess.state.setFailed()
+		childProcess.state.stop()
 	}
 }
 
@@ -34,11 +35,11 @@ func OneForOne() Strategy {
 // processes are terminated, and then all child processes, including the
 // terminated one, are restarted.
 func OneForAll() Strategy {
-	return func(t *Tree, failedChildID int) {
+	return func(t *Tree, _ *childProcess) {
 		for i := len(t.childrenOrder) - 1; i >= 0; i-- {
-			procName := t.childrenOrder[i]
-			t.children[procName].state.setFailed()
-			t.children[procName].state.stop()
+			proc := t.childrenOrder[i]
+			proc.state.setFailed()
+			proc.state.stop()
 		}
 	}
 }
@@ -48,11 +49,17 @@ func OneForAll() Strategy {
 // order) are terminated. Then the terminated child process and the rest of the
 // child processes are restarted.
 func RestForOne() Strategy {
-	return func(t *Tree, failedChildID int) {
-		for i := len(t.childrenOrder) - 1; i >= failedChildID; i-- {
-			procName := t.childrenOrder[i]
-			t.children[procName].state.setFailed()
-			t.children[procName].state.stop()
+	return func(t *Tree, childProcess *childProcess) {
+		failedChildID := slices.Index(t.childrenOrder, childProcess)
+		if failedChildID == -1 {
+			return
+		}
+		i := len(t.childrenOrder) - 1
+		for i >= failedChildID {
+			proc := t.childrenOrder[i]
+			proc.state.setFailed()
+			proc.state.stop()
+			i--
 		}
 	}
 }
@@ -60,11 +67,10 @@ func RestForOne() Strategy {
 // SimpleOneForOne behaves similarly to OneForOne but it runs the stop calls
 // asynchronously.
 func SimpleOneForOne() Strategy {
-	return func(t *Tree, failedChildID int) {
-		procName := t.childrenOrder[failedChildID]
-		t.children[procName].state.setFailed()
+	return func(t *Tree, childProcess *childProcess) {
+		childProcess.state.setFailed()
 		// avoid dereferencing the stop pointer after the t.semaphore is released.
-		stop := t.children[procName].state.stop
+		stop := childProcess.state.stop
 		go stop()
 	}
 }
