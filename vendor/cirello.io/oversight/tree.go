@@ -19,6 +19,7 @@ import (
 	"errors"
 	"io"
 	"log"
+	"slices"
 	"sync"
 	"time"
 )
@@ -64,16 +65,17 @@ type childProcess struct {
 type Tree struct {
 	initializeOnce sync.Once
 	stopped        chan struct{}
+	processChanged chan struct{} // indicates that some change to process slice has been made
 
 	// semaphore must be held when adding/deleting dynamic processes
-	semaphore         sync.Mutex
-	strategy          Strategy
-	maxR              int
-	maxT              time.Duration
-	children          map[string]childProcess // map of children name to child process
-	childrenOrder     []string
+	semaphore sync.Mutex
+	strategy  Strategy
+	maxR      int
+	maxT      time.Duration
+
 	childrenWaitGroup sync.WaitGroup
-	processChanged    chan struct{} // indicates that some change to process slice has been made
+	children          map[string]*childProcess // map of children name to child process
+	childrenOrder     []*childProcess
 
 	logger Logger
 
@@ -116,7 +118,7 @@ func (t *Tree) init() {
 		if t.logger == nil {
 			t.logger = log.New(io.Discard, "", 0)
 		}
-		t.children = make(map[string]childProcess)
+		t.children = make(map[string]*childProcess)
 		t.stopped = make(chan struct{})
 		t.failure = make(chan string)
 		t.restarter = &restart{
@@ -283,9 +285,9 @@ func (t *Tree) drain() error {
 	t.logger.Printf("draining")
 	t.semaphore.Lock()
 	for i := len(t.childrenOrder) - 1; i >= 0; i-- {
-		procName := t.childrenOrder[i]
-		t.children[procName].state.setFailed()
-		t.children[procName].state.stop()
+		proc := t.childrenOrder[i]
+		proc.state.setFailed()
+		proc.state.stop()
 	}
 	t.semaphore.Unlock()
 	for {
@@ -301,8 +303,7 @@ func (t *Tree) startChildProcesses(ctx context.Context, cancel context.CancelFun
 	t.semaphore.Lock()
 	anyRunningProcess := false
 	startSemaphore := make(chan struct{})
-	for i, procName := range t.childrenOrder {
-		childProc := t.children[procName]
+	for _, childProc := range t.childrenOrder {
 		running := childProc.state.currentChildProcessState()
 		switch running {
 		case Running:
@@ -314,7 +315,7 @@ func (t *Tree) startChildProcesses(ctx context.Context, cancel context.CancelFun
 			anyRunningProcess = true
 			t.anyStartedProcessEver = true
 			t.logger.Printf("starting %v", childProc.spec.Name)
-			t.startChildProcess(ctx, i, childProc.spec, startSemaphore)
+			t.startChildProcess(ctx, childProc.spec, startSemaphore)
 		}
 	}
 	close(startSemaphore)
@@ -333,28 +334,25 @@ func (t *Tree) handleTreeChanges(ctx context.Context, cancel context.CancelFunc)
 		t.logger.Println("detected change in child processes list")
 	case failedChildName := <-t.failure:
 		t.semaphore.Lock()
-		for failedChildID, procName := range t.childrenOrder {
-			childProc := t.children[procName]
-			if failedChildName == childProc.spec.Name {
-				t.logger.Printf("child process failure detected (%v)", childProc.spec.Name)
-				t.strategy(t, failedChildID)
-				break
-			}
+		if childProc, ok := t.children[failedChildName]; ok {
+			t.logger.Printf("child process failure detected (%v)", childProc.spec.Name)
+			t.strategy(t, childProc)
 		}
 		t.semaphore.Unlock()
-		if t.restarter.terminate(time.Now()) {
-			t.logger.Printf("too many failures detected:")
-			for _, restart := range t.restarter.restarts {
-				t.logger.Println("-", restart)
-			}
-			t.setErr(ErrTooManyFailures)
-			cancel()
+		if !t.restarter.shouldTerminate(time.Now()) {
+			return
 		}
+		t.logger.Printf("too many failures detected:")
+		for _, restart := range t.restarter.restarts {
+			t.logger.Println("-", restart)
+		}
+		t.setErr(ErrTooManyFailures)
+		cancel()
 	}
 }
 
-func (t *Tree) startChildProcess(ctx context.Context, processID int, p *ChildProcessSpecification, startSemaphore <-chan struct{}) {
-	childCtx, childWg, procState := t.plugStop(ctx, processID, p)
+func (t *Tree) startChildProcess(ctx context.Context, p *ChildProcessSpecification, startSemaphore <-chan struct{}) {
+	childCtx, childWg, procState := t.plugStop(ctx, p)
 	detachable := childCtx.Value(detachableContext) == true
 	if !detachable {
 		t.childrenWaitGroup.Add(1)
@@ -382,7 +380,7 @@ func (t *Tree) startChildProcess(ctx context.Context, processID int, p *ChildPro
 
 type oversightValue string
 
-func (t *Tree) plugStop(ctx context.Context, processID int, p *ChildProcessSpecification) (context.Context, *sync.WaitGroup, *state) {
+func (t *Tree) plugStop(ctx context.Context, p *ChildProcessSpecification) (context.Context, *sync.WaitGroup, *state) {
 	stopCtx, stopCancel := p.Shutdown()
 	baseCtx := ctx
 	baseCtx = context.WithValue(baseCtx, oversightValue("name"), p.Name)
@@ -470,12 +468,9 @@ func (t *Tree) Delete(name string) error {
 	}
 	t.semaphore.Lock()
 	defer t.semaphore.Unlock()
-	for id, childName := range t.childrenOrder {
-		if childName == name {
-			t.childrenOrder = append(t.childrenOrder[:id], t.childrenOrder[id+1:]...)
-			break
-		}
-	}
+	t.childrenOrder = slices.DeleteFunc(t.childrenOrder, func(cp *childProcess) bool {
+		return cp.spec.Name == name
+	})
 	return nil
 }
 
@@ -485,15 +480,16 @@ func (t *Tree) Children() []State {
 	t.semaphore.Lock()
 	defer t.semaphore.Unlock()
 	ret := []State{}
-	for _, procName := range t.childrenOrder {
-		childProc := t.children[procName].state
-		childProc.mu.Lock()
+	for _, childProc := range t.childrenOrder {
+		childProcName := childProc.spec.Name
+		childProcState := childProc.state
+		childProcState.mu.Lock()
 		ret = append(ret, State{
-			Name:  string(procName),
-			State: childProc.state,
-			Stop:  childProc.stop,
+			Name:  string(childProcName),
+			State: childProcState.state,
+			Stop:  childProcState.stop,
 		})
-		childProc.mu.Unlock()
+		childProcState.mu.Unlock()
 	}
 	return ret
 }
@@ -526,9 +522,9 @@ func (t *Tree) GracefulShutdown(ctx context.Context) error {
 			if ctx.Err() != nil {
 				break
 			}
-			procName := t.childrenOrder[i]
-			t.children[procName].state.setFailed()
-			t.children[procName].state.stop()
+			proc := t.childrenOrder[i]
+			proc.state.setFailed()
+			proc.state.stop()
 		}
 	}()
 	select {
