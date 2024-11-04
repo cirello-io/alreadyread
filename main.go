@@ -75,7 +75,8 @@ func main() {
 	if *scanDeadLinks {
 		err := bookmarks.RefreshExpiredLinks(ctx)
 		if err != nil {
-			log.Fatal(err)
+			log.Println("error refreshing expired links:", err)
+			return
 		}
 		log.Println("done")
 		return
