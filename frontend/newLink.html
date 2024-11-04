@@ -6,11 +6,14 @@
 			<table class="table my-0" id="dataTable">
 			<tbody>
 				<tr>
-				<td><input type="url"  placeholder="URL" name="url" id="new-link-URL" data-hx-get="/post" data-hx-target="#container" data-hx-trigger="keyup changed delay:500ms" value="{{- .URL -}}"></td>
+				<td><input type="url" placeholder="URL" name="url" id="new-link-URL" value="{{- .URL -}}"></td>
 				</tr>
 
 				<tr>
-				<td><input type="text" placeholder="Site Title" name="title" id="new-link-title" value="{{- .Title -}}"></td>
+				<td>
+					<input type="text" placeholder="Site Title" name="title" id="new-link-title" value="{{- .Title -}}">
+					<button class="btn btn-primary" data-hx-get="/post" data-hx-include="[name='url']" data-hx-target="#container">fetch title</button>
+				</td>
 				</tr>
 
 				<tr>
