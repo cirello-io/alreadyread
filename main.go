@@ -40,6 +40,7 @@ var (
 	dbFN           = flag.String("db", envOrDefault("ALREADYREAD_DB", "bookmarks.db"), "database filename")
 	bind           = flag.String("bind", envOrDefault("ALREADYREAD_LISTEN", ":8080"), "bind address for the server")
 	allowedOrigins = flag.String("allowedOrigins", envOrDefault("ALREADYREAD_ALLOWEDORIGINS", "localhost:8080"), "comma-separated value for allowed origins")
+	scanDeadLinks  = flag.Bool("scanDeadLinks", false, "scan dead links")
 )
 
 func main() {
@@ -69,7 +70,17 @@ func main() {
 		log.Println("cannot bootstrap database:", err)
 		return
 	}
+
 	bookmarks := bookmarks.New(repository, url.NewChecker())
+	if *scanDeadLinks {
+		err := bookmarks.RefreshExpiredLinks(ctx)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("done")
+		return
+	}
+
 	webserver := web.New(bookmarks, url.NewChecker(), strings.Split(*allowedOrigins, ","))
 
 	svr := oversight.New(
@@ -98,21 +109,6 @@ func main() {
 				Start: func(ctx context.Context) error {
 					err := bookmarks.RestorePostponedLinks(ctx)
 					t, _ := gronx.NextTickAfter("15 */6 * * *", time.Now(), false)
-					select {
-					case <-time.After(time.Until(t)):
-						return err
-					case <-ctx.Done():
-						return ctx.Err()
-					}
-				},
-				Shutdown: oversight.Infinity(),
-			},
-			oversight.ChildProcessSpecification{
-				Name:    "refreshExpiredLinks",
-				Restart: oversight.Permanent(),
-				Start: func(ctx context.Context) error {
-					err := bookmarks.RefreshExpiredLinks(ctx)
-					t, _ := gronx.NextTickAfter("30 */6 * * *", time.Now(), false)
 					select {
 					case <-time.After(time.Until(t)):
 						return err
