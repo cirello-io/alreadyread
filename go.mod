@@ -4,7 +4,7 @@ require (
 	cirello.io/oversight v1.6.0
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/PuerkitoBio/goquery v1.10.0
-	github.com/adhocore/gronx v1.19.3
+	github.com/adhocore/gronx v1.19.4
 	github.com/rs/cors v1.11.1
 	modernc.org/sqlite v1.33.1
 )
