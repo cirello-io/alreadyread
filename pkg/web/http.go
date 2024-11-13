@@ -78,7 +78,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) post(w http.ResponseWriter, r *http.Request) {
 	url := r.URL.Query().Get("url")
-	loadTitle := r.URL.Query().Get("title") == "true"
+	loadTitle := r.URL.Query().Get("loadTitle") == "true"
 	bookmark := &bookmarks.Bookmark{
 		URL: url,
 	}
