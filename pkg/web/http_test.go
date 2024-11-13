@@ -73,7 +73,7 @@ func TestServer(t *testing.T) {
 				},
 			}, []string{"localhost"}))
 			defer ts.Close()
-			resp, err := ts.Client().Post(ts.URL+"/post?url="+url.QueryEscape("https://example.com"), "", nil)
+			resp, err := ts.Client().Post(ts.URL+"/post?title=true&url="+url.QueryEscape("https://example.com"), "", nil)
 			if err != nil {
 				t.Fatal(err)
 			}
