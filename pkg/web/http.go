@@ -78,9 +78,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) post(w http.ResponseWriter, r *http.Request) {
 	url := r.URL.Query().Get("url")
+	loadTitle := r.URL.Query().Get("title") == "true"
 	bookmark := &bookmarks.Bookmark{
-		URL:   url,
-		Title: s.titleLoader.Title(url),
+		URL: url,
+	}
+	if loadTitle {
+		bookmark.Title = s.titleLoader.Title(url)
 	}
 	buf := &bytes.Buffer{}
 	frontend.RenderNewLink(buf, bookmark)
