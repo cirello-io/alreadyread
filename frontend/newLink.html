@@ -13,7 +13,7 @@
 				<tr>
 				<td>
 					<input type="text" placeholder="Site Title" name="title" id="new-link-title" value="{{- .Title -}}">
-					<button class="btn btn-primary" data-hx-get="/post" data-hx-include="[name='url'],[name='loadTitle']" data-hx-target="#container">fetch title</button>
+					<button type="button" class="btn btn-primary" data-hx-get="/post" data-hx-include="[name='url'],[name='loadTitle']" data-hx-target="#container">fetch title</button>
 				</td>
 				</tr>
 
@@ -24,7 +24,7 @@
 				</tr>
 
 				<tr>
-				<td colspan="2"><button class="btn btn-primary" data-hx-post="/bookmarks/" hx-include="[name='url'],[name='title'],[name='description']" data-hx-target="#container">add</button></td>
+				<td colspan="2"><button type="submit" class="btn btn-primary" data-hx-post="/bookmarks/" hx-include="[name='url'],[name='title'],[name='description']" data-hx-target="#container">add</button></td>
 				</tr>
 			</tbody>
 			</table>
