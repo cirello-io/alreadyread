@@ -221,7 +221,7 @@ func Xfree(t *TLS, p uintptr) {
 
 	defer allocatorMu.Unlock()
 
-	sz := memory.UintptrUsableSize(p)
+	sz := UsableSize(p)
 	if memAuditEnabled {
 		pc, _, _, ok := runtime.Caller(1)
 		if !ok {
