@@ -55,6 +55,7 @@ func main() {
 		log.Println(err)
 		return
 	}
+	db.SetMaxOpenConns(1)
 	lHTTP, err := net.Listen("tcp", *bind)
 	if err != nil {
 		log.Println("cannot bind port:", err)
