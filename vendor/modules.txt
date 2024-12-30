@@ -79,7 +79,7 @@ modernc.org/libc/utime
 modernc.org/libc/uuid
 modernc.org/libc/uuid/uuid
 modernc.org/libc/wctype
-# modernc.org/mathutil v1.7.0
+# modernc.org/mathutil v1.7.1
 ## explicit; go 1.21
 modernc.org/mathutil
 # modernc.org/memory v1.8.0
@@ -89,8 +89,8 @@ modernc.org/memory
 ## explicit; go 1.20
 modernc.org/sqlite
 modernc.org/sqlite/lib
-# modernc.org/strutil v1.2.0
-## explicit; go 1.18
+# modernc.org/strutil v1.2.1
+## explicit; go 1.21
 modernc.org/strutil
 # modernc.org/token v1.1.0
 ## explicit
