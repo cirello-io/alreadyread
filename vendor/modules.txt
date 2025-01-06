@@ -82,8 +82,8 @@ modernc.org/libc/wctype
 # modernc.org/mathutil v1.7.1
 ## explicit; go 1.21
 modernc.org/mathutil
-# modernc.org/memory v1.8.0
-## explicit; go 1.18
+# modernc.org/memory v1.8.1
+## explicit; go 1.21
 modernc.org/memory
 # modernc.org/sqlite v1.33.1
 ## explicit; go 1.20
