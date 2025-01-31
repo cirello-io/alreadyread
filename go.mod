@@ -1,7 +1,7 @@
 module cirello.io/alreadyread
 
 require (
-	cirello.io/oversight v1.6.0
+	cirello.io/oversight v1.7.0
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/PuerkitoBio/goquery v1.10.1
 	github.com/adhocore/gronx v1.19.5
