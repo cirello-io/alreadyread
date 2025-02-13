@@ -25,7 +25,6 @@ linters:
 		-E "errname" \
 		-E "errorlint" \
 		-E "exhaustive" \
-		-E "exportloopref" \
 		-E "gci" \
 		-E "gocritic" \
 		-E "godot" \
