@@ -19,7 +19,7 @@ test:
 	go tool cover -html=coverage.out -o coverage.html
 
 linters:
-	go tool github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout 5m --modules-download-mode=vendor --disable-all \
+	GOTOOLCHAIN=go1.24.0 go run -mod=readonly github.com/golangci/golangci-lint/cmd/golangci-lint@latest run --disable-all \
 		-E "errcheck" \
 		-E "errname" \
 		-E "errorlint" \
