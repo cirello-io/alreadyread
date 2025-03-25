@@ -6,7 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.10.2
 	github.com/adhocore/gronx v1.19.5
 	github.com/rs/cors v1.11.1
-	modernc.org/sqlite v1.36.1
+	modernc.org/sqlite v1.36.2
 )
 
 require (
