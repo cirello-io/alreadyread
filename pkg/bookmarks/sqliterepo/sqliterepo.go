@@ -77,8 +77,12 @@ func (b *Repository) Bootstrap() error {
 	return nil
 }
 
-func (b *Repository) scanRows(rows *sql.Rows) ([]*bookmarks.Bookmark, error) {
-	var list []*bookmarks.Bookmark
+func (b *Repository) scanRows(rows *sql.Rows) (list []*bookmarks.Bookmark, errOut error) {
+	defer func() {
+		if err := rows.Close(); errOut == nil && err != nil {
+			errOut = err
+		}
+	}()
 	for rows.Next() {
 		bookmark, err := b.scanRow(rows)
 		if err != nil {

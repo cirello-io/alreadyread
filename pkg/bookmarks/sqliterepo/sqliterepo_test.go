@@ -236,6 +236,19 @@ func TestRepository_Inbox(t *testing.T) {
 			t.Error("expected error missing: ", err)
 		}
 	})
+	t.Run("badRows", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errRows := errors.New("bad rows")
+		mock.ExpectQuery("SELECT").WillReturnRows(
+			sqlmock.NewRows([]string{"id", "url", "last_status_code", "last_status_check", "last_status_reason", "title", "created_at", "inbox", "description"}).CloseError(errRows),
+		)
+		if _, err := New(db).Inbox(); !errors.Is(err, errRows) {
+			t.Error("expected rows close error")
+		}
+	})
 	t.Run("good", func(t *testing.T) {
 		repository := setup(t)
 		bookmark := &bookmarks.Bookmark{URL: "http://example.com", Inbox: bookmarks.NewLink}
@@ -265,6 +278,19 @@ func TestRepository_Duplicated(t *testing.T) {
 		mock.ExpectQuery("SELECT").WillReturnError(errDB)
 		if _, err := New(db).Duplicated(); !errors.Is(err, errDB) {
 			t.Error("expected error missing: ", err)
+		}
+	})
+	t.Run("badRows", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errRows := errors.New("bad rows")
+		mock.ExpectQuery("SELECT").WillReturnRows(
+			sqlmock.NewRows([]string{"id", "url", "last_status_code", "last_status_check", "last_status_reason", "title", "created_at", "inbox", "description"}).CloseError(errRows),
+		)
+		if _, err := New(db).Duplicated(); !errors.Is(err, errRows) {
+			t.Error("expected rows close error")
 		}
 	})
 	t.Run("good", func(t *testing.T) {
@@ -299,6 +325,19 @@ func TestRepository_Dead(t *testing.T) {
 		mock.ExpectQuery("SELECT").WillReturnError(errDB)
 		if _, err := New(db).Dead(); !errors.Is(err, errDB) {
 			t.Error("expected error missing: ", err)
+		}
+	})
+	t.Run("badRows", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errRows := errors.New("bad rows")
+		mock.ExpectQuery("SELECT").WillReturnRows(
+			sqlmock.NewRows([]string{"id", "url", "last_status_code", "last_status_check", "last_status_reason", "title", "created_at", "inbox", "description"}).CloseError(errRows),
+		)
+		if _, err := New(db).Dead(); !errors.Is(err, errRows) {
+			t.Error("expected rows close error")
 		}
 	})
 	t.Run("good", func(t *testing.T) {
@@ -340,6 +379,19 @@ func TestRepository_All(t *testing.T) {
 			t.Error("expected error missing: ", err)
 		}
 	})
+	t.Run("badRows", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errRows := errors.New("bad rows")
+		mock.ExpectQuery("SELECT").WillReturnRows(
+			sqlmock.NewRows([]string{"id", "url", "last_status_code", "last_status_check", "last_status_reason", "title", "created_at", "inbox", "description"}).CloseError(errRows),
+		)
+		if _, err := New(db).All(); !errors.Is(err, errRows) {
+			t.Error("expected rows close error")
+		}
+	})
 	t.Run("good", func(t *testing.T) {
 		repository := setup(t)
 		bookmark := &bookmarks.Bookmark{URL: "http://example.com"}
@@ -374,6 +426,19 @@ func TestRepository_Expired(t *testing.T) {
 			t.Error("expected error missing: ", err)
 		}
 	})
+	t.Run("badRows", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errRows := errors.New("bad rows")
+		mock.ExpectQuery("SELECT").WithArgs(sqlmock.AnyArg()).WillReturnRows(
+			sqlmock.NewRows([]string{"id", "url", "last_status_code", "last_status_check", "last_status_reason", "title", "created_at", "inbox", "description"}).CloseError(errRows),
+		)
+		if _, err := New(db).Expired(); !errors.Is(err, errRows) {
+			t.Error("expected rows close error")
+		}
+	})
 	t.Run("good", func(t *testing.T) {
 		repository := setup(t)
 		bookmark := &bookmarks.Bookmark{URL: "http://example.com", LastStatusCode: http.StatusOK, LastStatusCheck: time.Now().Add(-30 * 24 * time.Hour).Unix()}
@@ -405,6 +470,19 @@ func TestRepository_Invalid(t *testing.T) {
 			t.Error("expected error missing: ", err)
 		}
 	})
+	t.Run("badRows", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errRows := errors.New("bad rows")
+		mock.ExpectQuery("SELECT").WillReturnRows(
+			sqlmock.NewRows([]string{"id", "url", "last_status_code", "last_status_check", "last_status_reason", "title", "created_at", "inbox", "description"}).CloseError(errRows),
+		)
+		if _, err := New(db).Invalid(); !errors.Is(err, errRows) {
+			t.Error("expected rows close error")
+		}
+	})
 	t.Run("good", func(t *testing.T) {
 		repository := setup(t)
 		bookmark := &bookmarks.Bookmark{URL: "http://example.com", LastStatusCode: http.StatusInternalServerError, LastStatusCheck: time.Now().Add(-30 * 24 * time.Hour).Unix()}
@@ -434,6 +512,19 @@ func TestRepository_Search(t *testing.T) {
 		mock.ExpectQuery("SELECT").WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).WillReturnError(errDB)
 		if _, err := New(db).Search(""); !errors.Is(err, errDB) {
 			t.Error("expected error missing: ", err)
+		}
+	})
+	t.Run("badRows", func(t *testing.T) {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatal("cannot create mock:", err)
+		}
+		errRows := errors.New("bad rows")
+		mock.ExpectQuery("SELECT").WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).WillReturnRows(
+			sqlmock.NewRows([]string{"id", "url", "last_status_code", "last_status_check", "last_status_reason", "title", "created_at", "inbox", "description"}).CloseError(errRows),
+		)
+		if _, err := New(db).Search(""); !errors.Is(err, errRows) {
+			t.Error("expected rows close error")
 		}
 	})
 	t.Run("good", func(t *testing.T) {
