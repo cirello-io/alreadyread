@@ -1,34 +1,21 @@
-<div class="card" id="new-link-card">
-	<div class="card-header"><span>Insert New Bookmark</span></div>
-	<div class="card-body">
-		<div class="table-responsive table mt-2" id="dataTable" role="grid" aria-describedby="dataTable_info">
-			<form>
-			<input type="hidden" name="loadTitle" value="true">
-			<table class="table my-0" id="dataTable">
-			<tbody>
-				<tr>
-				<td><input type="url" placeholder="URL" name="url" id="new-link-URL" value="{{- .URL -}}"></td>
-				</tr>
-
-				<tr>
-				<td>
-					<input type="text" placeholder="Site Title" name="title" id="new-link-title" value="{{- .Title -}}">
-					<button type="button" class="btn btn-primary" data-hx-get="/post" data-hx-include="[name='url'],[name='loadTitle']" data-hx-target="#container">fetch title</button>
-				</td>
-				</tr>
-
-				<tr>
-				<td>
-				<textarea placeholder="Description" name="description" id="new-link-description">{{- .Description -}}</textarea>
-				</td>
-				</tr>
-
-				<tr>
-				<td colspan="2"><button type="submit" class="btn btn-primary" data-hx-post="/bookmarks/" hx-include="[name='url'],[name='title'],[name='description']" data-hx-target="#container">add</button></td>
-				</tr>
-			</tbody>
-			</table>
-			</form>
-		</div>
-	</div>
+<div id="new-link-card">
+	<form>
+		<input type="hidden" name="loadTitle" value="true">
+		<fieldset>
+			<input type="url" placeholder="URL" name="url" id="new-link-URL" value="{{- .URL -}}">
+		</fieldset>
+		<fieldset role="group">
+			<input type="text" placeholder="Site Title" name="title" id="new-link-title"
+				value="{{- .Title -}}">
+			<button type="button" data-hx-get="/post" data-hx-include="[name='url'],[name='loadTitle']"
+				data-hx-target="#container">fetch&nbsp;title</button>
+		</fieldset>
+		<fieldset>
+			<textarea placeholder="Description" name="description"
+				id="new-link-description">{{- .Description -}}</textarea>
+		</fieldset>
+		<button type="submit" data-hx-post="/bookmarks/"
+			hx-include="[name='url'],[name='title'],[name='description']"
+			data-hx-target="#container">add</button>
+	</form>
 </div>

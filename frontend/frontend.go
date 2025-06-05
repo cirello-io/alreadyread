@@ -15,7 +15,7 @@
 package frontend
 
 import (
-	"embed"
+	_ "embed"
 	"html/template"
 	"io"
 	"log"
@@ -24,9 +24,6 @@ import (
 
 	"cirello.io/alreadyread/pkg/bookmarks"
 )
-
-//go:embed assets
-var Content embed.FS
 
 var (
 	//go:embed newLink.html
@@ -67,8 +64,11 @@ var (
 
 const EmptyContainer template.HTML = ""
 
-func RenderIndex(w io.Writer, container template.HTML) {
-	err := index.Execute(w, struct{ Container template.HTML }{container})
+func RenderIndex(w io.Writer, path string, container template.HTML) {
+	err := index.Execute(w, struct {
+		Path      string
+		Container template.HTML
+	}{Path: path, Container: container})
 	if err != nil {
 		log.Println("cannot render index:", err)
 		if rw, ok := w.(http.ResponseWriter); ok {

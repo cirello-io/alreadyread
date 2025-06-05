@@ -585,6 +585,11 @@ func TestServer(t *testing.T) {
 					InsertFunc: func(*bookmarks.Bookmark) error {
 						return nil
 					},
+					InboxFunc: func() ([]*bookmarks.Bookmark, error) {
+						return []*bookmarks.Bookmark{
+							{ID: 1, Title: "title", URL: "https://example.com"},
+						}, nil
+					},
 				}
 				urlChecker := &URLCheckerMock{
 					CheckFunc: func(_, _ string) (string, int64, int64, string) {
@@ -629,35 +634,9 @@ func TestServer(t *testing.T) {
 		respBuf := &bytes.Buffer{}
 		_, _ = io.Copy(respBuf, resp.Body)
 		tplBuf := &bytes.Buffer{}
-		frontend.RenderIndex(tplBuf, "")
+		frontend.RenderIndex(tplBuf, "/inbox", "")
 		if tplBuf.String() != respBuf.String() {
 			t.Fatal("index page not rendering correctly")
-		}
-	})
-	t.Run("assets", func(t *testing.T) {
-		const targetAsset = "assets/bootstrap/css/bootstrap.min.css"
-		root := bookmarks.New(nil, nil)
-		ts := httptest.NewServer(New(root, nil, []string{"localhost"}))
-		defer ts.Close()
-		resp, err := ts.Client().Get(ts.URL + "/" + targetAsset)
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			t.Fatal("not OK:", resp.StatusCode)
-		}
-		respBuf := &bytes.Buffer{}
-		_, _ = io.Copy(respBuf, resp.Body)
-
-		css, err := frontend.Content.ReadFile(targetAsset)
-		if err != nil {
-			t.Fatal("cannot read embedded FS:", err)
-		}
-		if bytes.NewBuffer(css).String() != respBuf.String() {
-			t.Log(bytes.NewBuffer(css).String())
-			t.Log(respBuf.String())
-			t.Fatal("cannot load assets")
 		}
 	})
 }

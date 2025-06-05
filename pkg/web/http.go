@@ -17,6 +17,7 @@ package web // import "cirello.io/alreadyread/pkg/web"
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -58,7 +59,6 @@ func New(bookmarks *bookmarks.Bookmarks, titleLoader URLTitleLoader, allowedOrig
 }
 
 func (s *Server) registerRoutes() {
-	rootHandler := http.FileServer(http.FS(frontend.Content))
 	router := http.NewServeMux()
 
 	router.HandleFunc("/post", s.post)
@@ -68,7 +68,7 @@ func (s *Server) registerRoutes() {
 	router.HandleFunc("/all", s.all)
 	router.HandleFunc("/search", s.search)
 	router.HandleFunc("/bookmarks/", s.bookmarkOperations)
-	router.HandleFunc("/", s.index(rootHandler))
+	router.HandleFunc("/", s.index())
 	s.handler = s.cors.Handler(router)
 }
 
@@ -89,7 +89,7 @@ func (s *Server) post(w http.ResponseWriter, r *http.Request) {
 	frontend.RenderNewLink(buf, bookmark)
 	if r.Header.Get("HX-Request") != "true" {
 		indexBuf := &bytes.Buffer{}
-		frontend.RenderIndex(indexBuf, template.HTML(buf.String()))
+		frontend.RenderIndex(indexBuf, r.URL.Path, template.HTML(buf.String()))
 		buf = indexBuf
 	}
 	_, _ = io.Copy(w, buf)
@@ -102,7 +102,7 @@ func (s *Server) inbox(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, list)
+	s.renderList(w, r, "Inbox", list)
 }
 
 func (s *Server) duplicated(w http.ResponseWriter, r *http.Request) {
@@ -112,7 +112,7 @@ func (s *Server) duplicated(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, list)
+	s.renderList(w, r, "Duplicated", list)
 }
 
 func (s *Server) dead(w http.ResponseWriter, r *http.Request) {
@@ -122,7 +122,7 @@ func (s *Server) dead(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, list)
+	s.renderList(w, r, "Dead", list)
 }
 
 func (s *Server) all(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +132,7 @@ func (s *Server) all(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, list)
+	s.renderList(w, r, "All", list)
 }
 
 func (s *Server) search(w http.ResponseWriter, r *http.Request) {
@@ -142,16 +142,18 @@ func (s *Server) search(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, list)
+	s.renderList(w, r, "Search", list)
 }
 
-func (s *Server) renderList(w http.ResponseWriter, r *http.Request, list []*bookmarks.Bookmark) {
+func (s *Server) renderList(w http.ResponseWriter, r *http.Request, title string, list []*bookmarks.Bookmark) {
 	buf := &bytes.Buffer{}
 	frontend.RenderLinkTable(buf, list)
 	if r.Header.Get("HX-Request") != "true" {
 		indexBuf := &bytes.Buffer{}
-		frontend.RenderIndex(indexBuf, template.HTML(buf.String()))
+		frontend.RenderIndex(indexBuf, r.URL.Path, template.HTML(buf.String()))
 		buf = indexBuf
+	} else {
+		fmt.Fprintln(buf, "<h2 id=\"header-page-name\" hx-swap-oob=\"true\">", title, "</h2>")
 	}
 	_, _ = io.Copy(w, buf)
 }
@@ -198,7 +200,7 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
-		w.Header().Add("HX-Location", "/")
+		s.inbox(w, r)
 		return
 	default:
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
@@ -206,14 +208,14 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (s *Server) index(rootHandler http.Handler) func(w http.ResponseWriter, r *http.Request) {
+func (s *Server) index() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.String() == "/" {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			frontend.RenderIndex(w, frontend.EmptyContainer)
+			frontend.RenderIndex(w, r.URL.Path, frontend.EmptyContainer)
 			return
 		}
-		rootHandler.ServeHTTP(w, r)
+		http.NotFound(w, r)
 	}
 }
 
