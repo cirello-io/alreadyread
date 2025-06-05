@@ -50,6 +50,7 @@ var (
 
 func RenderLinkTable(w io.Writer, list []*bookmarks.Bookmark) {
 	if err := linkTable.Execute(w, list); err != nil {
+		log.Println("cannot render link table:", err)
 		if rw, ok := w.(http.ResponseWriter); ok {
 			http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
