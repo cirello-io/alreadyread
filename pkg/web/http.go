@@ -159,7 +159,7 @@ func (s *Server) renderList(w http.ResponseWriter, r *http.Request, title string
 }
 
 func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
-	id, err := extractID("/bookmarks", r.URL.String())
+	id, err := extractID("/bookmarks", r.URL.Path)
 	if err != nil {
 		log.Println("cannot parse bookmark ID:", err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -175,7 +175,7 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	case http.MethodPatch:
-		if inbox := r.FormValue("inbox"); inbox != "" {
+		if inbox := r.URL.Query().Get("inbox"); inbox != "" {
 			if err := s.bookmarks.UpdateInbox(id, inbox); err != nil {
 				log.Println("cannot update bookmark:", err)
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
