@@ -65,11 +65,14 @@ var (
 
 const EmptyContainer template.HTML = ""
 
-func RenderIndex(w io.Writer, path string, container template.HTML) {
+const NoTitle = ""
+
+func RenderIndex(w io.Writer, path string, headerPageName string, container template.HTML) {
 	err := index.Execute(w, struct {
-		Path      string
-		Container template.HTML
-	}{Path: path, Container: container})
+		Path           string
+		HeaderPageName string
+		Container      template.HTML
+	}{Path: path, HeaderPageName: headerPageName, Container: container})
 	if err != nil {
 		log.Println("cannot render index:", err)
 		if rw, ok := w.(http.ResponseWriter); ok {

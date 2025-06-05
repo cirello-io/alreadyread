@@ -630,7 +630,7 @@ func TestServer(t *testing.T) {
 		respBuf := &bytes.Buffer{}
 		_, _ = io.Copy(respBuf, resp.Body)
 		tplBuf := &bytes.Buffer{}
-		frontend.RenderIndex(tplBuf, "/inbox", "")
+		frontend.RenderIndex(tplBuf, "/inbox", frontend.NoTitle, "")
 		if tplBuf.String() != respBuf.String() {
 			t.Fatal("index page not rendering correctly")
 		}

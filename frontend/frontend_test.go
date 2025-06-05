@@ -117,7 +117,7 @@ func TestRenderLinkTable(t *testing.T) {
 func TestRenderIndex(t *testing.T) {
 	t.Run("badWriter", func(t *testing.T) {
 		brw := &badResponseWriter{}
-		RenderIndex(brw, "/", "")
+		RenderIndex(brw, "/", "", "")
 		if brw.recordedStatusCode != http.StatusInternalServerError {
 			t.Fatal("unexpected status code:", brw.recordedStatusCode)
 		}
@@ -125,7 +125,7 @@ func TestRenderIndex(t *testing.T) {
 	t.Run("good", func(t *testing.T) {
 		const expectedPattern = "%FIND-ME%"
 		rw := httptest.NewRecorder()
-		RenderIndex(rw, "/", expectedPattern)
+		RenderIndex(rw, "/", "", expectedPattern)
 		body := rw.Body.String()
 		if !strings.Contains(body, expectedPattern) {
 			t.Error("cannot find pattern")

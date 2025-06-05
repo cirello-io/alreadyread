@@ -89,7 +89,7 @@ func (s *Server) post(w http.ResponseWriter, r *http.Request) {
 	frontend.RenderNewLink(buf, bookmark)
 	if r.Header.Get("HX-Request") != "true" {
 		indexBuf := &bytes.Buffer{}
-		frontend.RenderIndex(indexBuf, r.URL.Path, template.HTML(buf.String()))
+		frontend.RenderIndex(indexBuf, r.URL.Path, frontend.NoTitle, template.HTML(buf.String()))
 		buf = indexBuf
 	}
 	_, _ = io.Copy(w, buf)
@@ -150,7 +150,7 @@ func (s *Server) renderList(w http.ResponseWriter, r *http.Request, title string
 	frontend.RenderLinkTable(buf, list)
 	if r.Header.Get("HX-Request") != "true" {
 		indexBuf := &bytes.Buffer{}
-		frontend.RenderIndex(indexBuf, r.URL.Path, template.HTML(buf.String()))
+		frontend.RenderIndex(indexBuf, r.URL.Path, title, template.HTML(buf.String()))
 		buf = indexBuf
 	} else {
 		fmt.Fprintln(buf, "<h2 id=\"header-page-name\" hx-swap-oob=\"true\">", title, "</h2>")
@@ -212,7 +212,7 @@ func (s *Server) index() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.String() == "/" {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			frontend.RenderIndex(w, r.URL.Path, frontend.EmptyContainer)
+			frontend.RenderIndex(w, r.URL.Path, frontend.NoTitle, frontend.EmptyContainer)
 			return
 		}
 		http.NotFound(w, r)
