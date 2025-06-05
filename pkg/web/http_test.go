@@ -425,8 +425,7 @@ func TestServer(t *testing.T) {
 				root := bookmarks.New(nil, nil)
 				ts := httptest.NewServer(New(root, nil, []string{"localhost"}))
 				defer ts.Close()
-				form := url.Values{"inbox": {"banana"}}
-				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/", strings.NewReader(form.Encode()))
+				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/?inbox=banana", nil)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -448,8 +447,7 @@ func TestServer(t *testing.T) {
 				root := bookmarks.New(repository, nil)
 				ts := httptest.NewServer(New(root, nil, []string{"localhost"}))
 				defer ts.Close()
-				form := url.Values{"inbox": {"read"}}
-				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/", strings.NewReader(form.Encode()))
+				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/?inbox=read", nil)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -476,8 +474,7 @@ func TestServer(t *testing.T) {
 				root := bookmarks.New(repository, nil)
 				ts := httptest.NewServer(New(root, nil, []string{"localhost"}))
 				defer ts.Close()
-				form := url.Values{"inbox": {"read"}}
-				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/", strings.NewReader(form.Encode()))
+				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/?inbox=read", nil)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -505,8 +502,7 @@ func TestServer(t *testing.T) {
 				root := bookmarks.New(repository, nil)
 				ts := httptest.NewServer(New(root, nil, []string{"localhost"}))
 				defer ts.Close()
-				form := url.Values{"inbox": {"postponed"}}
-				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/", strings.NewReader(form.Encode()))
+				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/?inbox=postponed", nil)
 				if err != nil {
 					t.Fatal(err)
 				}
