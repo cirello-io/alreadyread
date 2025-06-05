@@ -6,6 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>alreadyread</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.blue.min.css">
+    <style>
+        .htmx-indicator {
+            opacity: 0;
+            transition: opacity 500ms ease-in;
+        }
+
+        .htmx-request .htmx-indicator {
+            opacity: 1;
+        }
+
+        .htmx-request.htmx-indicator {
+            opacity: 1;
+        }
+    </style>
 </head>
 
 <body class="container">
@@ -20,27 +34,28 @@
                 </li>
             </ul>
             <ul>
-                <li><a href="javascript: void();" data-hx-get="/inbox" data-hx-push-url="true"
+                <li><a href="javascript: void();" hx-indicator="#spinner" data-hx-get="/inbox" data-hx-push-url="true"
                         data-hx-target="#container">Inbox</a></li>
-                <li><a href="javascript: void();" data-hx-get="/duplicated" data-hx-push-url="true"
-                        data-hx-target="#container">Duplicated</a></li>
-                <li><a href="javascript: void();" data-hx-get="/dead" data-hx-push-url="true"
+                <li><a href="javascript: void();" hx-indicator="#spinner" data-hx-get="/duplicated"
+                        data-hx-push-url="true" data-hx-target="#container">Duplicated</a></li>
+                <li><a href="javascript: void();" hx-indicator="#spinner" data-hx-get="/dead" data-hx-push-url="true"
                         data-hx-target="#container">Dead</a></li>
-                <li><a href="javascript: void();" data-hx-get="/all" data-hx-push-url="true"
+                <li><a href="javascript: void();" hx-indicator="#spinner" data-hx-get="/all" data-hx-push-url="true"
                         data-hx-target="#container">All</a></li>
-                <li><a data-hx-get="/post" data-hx-push-url="true"
-                        data-hx-target="#container">Add Link</a></li>
+                <li><a data-hx-get="/post" data-hx-push-url="true" data-hx-target="#container">Add Link</a></li>
             </ul>
             <ul>
                 <li>
                     <input type="search" name="term" id="search" placeholder="Search" data-hx-get="/search"
-                        data-hx-target="#container" data-hx-push-url="true" data-hx-trigger="keyup changed delay:500ms">
+                        hx-indicator="#spinner" data-hx-target="#container" data-hx-push-url="true"
+                        data-hx-trigger="keyup changed delay:500ms">
                 </li>
 
             </ul>
         </nav>
     </header>
     <main>
+        <span id="spinner" class="htmx-indicator" aria-busy="true">loading...</span>
         <div id="container" {{- if not .Container }} data-hx-get="/inbox" data-hx-trigger="load" {{ end -}}>
             {{ .Container }}
         </div>
