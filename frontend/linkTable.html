@@ -9,17 +9,25 @@
 	</div>
 </div>
 {{ end }}
-{{ with . }}
+{{ with .Links }}
 <div>
-	{{ $lastGroupedDate := "" }}
-	{{- range . }}
-		{{ $prettyTime := .CreatedAt | prettyTime }}
-		{{- if ne $lastGroupedDate $prettyTime }}
+	{{- range $prettyDate, $links := . }}
+		<div hx-trigger="from:next" hx-on::trigger="javascript: (function(_this) {
+			setTimeout(function() {
+				if (htmx.findAll(_this, 'div[id^=\'bookmark-\']').length<=1) {
+					htmx.remove(_this);
+				}
+				if (htmx.findAll('div[id^=\'bookmark-\']').length<=1) {
+					location.reload();
+				}
+			}, 0);
+		})(this)">
 			<hr/>
-			<div>{{ $prettyTime }}</div>
-			{{ $lastGroupedDate = $prettyTime }}
-		{{- end }}
-		{{ template "link" . }}
+			<div>{{ $prettyDate }}</div>
+			{{ range $links }}
+			{{ template "link" . }}
+			{{ end }}
+		</div>
 	{{- end }}
 </div>
 {{ else }}

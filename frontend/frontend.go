@@ -49,7 +49,17 @@ var (
 )
 
 func RenderLinkTable(w io.Writer, list []*bookmarks.Bookmark) {
-	if err := linkTable.Execute(w, list); err != nil {
+	type payload struct {
+		Links map[string][]*bookmarks.Bookmark
+	}
+	p := payload{
+		Links: make(map[string][]*bookmarks.Bookmark),
+	}
+	for _, b := range list {
+		date := b.CreatedAt.Format("Jan _2 2006")
+		p.Links[date] = append(p.Links[date], b)
+	}
+	if err := linkTable.Execute(w, p); err != nil {
 		log.Println("cannot render link table:", err)
 		if rw, ok := w.(http.ResponseWriter); ok {
 			http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
