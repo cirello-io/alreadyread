@@ -11,20 +11,11 @@
 {{ end }}
 {{ with .Links }}
 <div>
-	{{- range $prettyDate, $links := . }}
-		<div hx-trigger="from:next" hx-on::trigger="javascript: (function(_this) {
-			setTimeout(function() {
-				if (htmx.findAll(_this, 'div[id^=\'bookmark-\']').length<=1) {
-					htmx.remove(_this);
-				}
-				if (htmx.findAll('div[id^=\'bookmark-\']').length<=1) {
-					location.reload();
-				}
-			}, 0);
-		})(this)">
+	{{- range $_, $links := . }}
+		<div class="dategroup">
 			<hr/>
-			<div>{{ $prettyDate }}</div>
-			{{ range $links }}
+			<div>{{ .Date }}</div>
+			{{ range .Links }}
 			{{ template "link" . }}
 			{{ end }}
 		</div>
