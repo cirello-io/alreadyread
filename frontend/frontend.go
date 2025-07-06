@@ -20,6 +20,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"cirello.io/alreadyread/pkg/bookmarks"
@@ -45,10 +46,18 @@ var (
 	linkTable    = template.Must(template.New("linkTable").Funcs(template.FuncMap{
 		"prettyTime":     func(t time.Time) string { return t.Format("Jan _2 2006") },
 		"httpStatusCode": func(code int64) string { return http.StatusText(int(code)) },
+		"slugify": func(s string) string {
+			s = strings.TrimSpace(s)
+			s = strings.ToLower(s)
+			s = strings.ReplaceAll(s, " ", "-")
+			s = strings.ReplaceAll(s, "/", "-")
+			s = strings.ReplaceAll(s, "_", "-")
+			return s
+		},
 	}).Parse(linkTableTPL))
 )
 
-func RenderLinkTable(w io.Writer, list []*bookmarks.Bookmark) {
+func RenderLinkTable(w io.Writer, list []*bookmarks.Bookmark, page int) {
 	type dateGroup struct {
 		Date  string
 		Links []*bookmarks.Bookmark
@@ -57,7 +66,8 @@ func RenderLinkTable(w io.Writer, list []*bookmarks.Bookmark) {
 		idx    = make(map[string]*dateGroup)
 		groups = make([]string, 0)
 		p      struct {
-			Links []*dateGroup
+			NextPage int
+			Links    []*dateGroup
 		}
 	)
 	for _, b := range list {
@@ -74,6 +84,7 @@ func RenderLinkTable(w io.Writer, list []*bookmarks.Bookmark) {
 	for _, g := range groups {
 		p.Links = append(p.Links, idx[g])
 	}
+	p.NextPage = page + 1
 	if err := linkTable.Execute(w, p); err != nil {
 		log.Println("cannot render link table:", err)
 		if rw, ok := w.(http.ResponseWriter); ok {

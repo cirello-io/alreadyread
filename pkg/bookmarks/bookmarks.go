@@ -136,8 +136,8 @@ func (b *Bookmarks) Dead() ([]*Bookmark, error) {
 	return list, nil
 }
 
-func (b *Bookmarks) All() ([]*Bookmark, error) {
-	list, err := b.repository.All()
+func (b *Bookmarks) All(page int) ([]*Bookmark, error) {
+	list, err := b.repository.All(page)
 	if err != nil {
 		return nil, fmt.Errorf("cannot load all bookmarks: %w", err)
 	}

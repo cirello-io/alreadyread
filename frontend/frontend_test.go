@@ -56,7 +56,7 @@ func TestRenderNewLink(t *testing.T) {
 func TestRenderLinkTable(t *testing.T) {
 	t.Run("badWriter", func(t *testing.T) {
 		brw := &badResponseWriter{}
-		RenderLinkTable(brw, nil)
+		RenderLinkTable(brw, nil, -1)
 		if brw.recordedStatusCode != http.StatusInternalServerError {
 			t.Fatal("unexpected status code:", brw.recordedStatusCode)
 		}
@@ -75,7 +75,7 @@ func TestRenderLinkTable(t *testing.T) {
 				Title:            expectedTitle,
 				LastStatusReason: expectedReason,
 			},
-		})
+		}, -1)
 		body := rw.Body.String()
 		if !strings.Contains(body, expectedURL) {
 			t.Error("cannot find URL pattern")
@@ -100,7 +100,7 @@ func TestRenderLinkTable(t *testing.T) {
 				Title:          expectedTitle,
 				LastStatusCode: http.StatusInternalServerError,
 			},
-		})
+		}, -1)
 		body := rw.Body.String()
 		if !strings.Contains(body, expectedURL) {
 			t.Error("cannot find URL pattern")

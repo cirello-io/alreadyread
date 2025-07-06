@@ -246,7 +246,7 @@ func TestServer(t *testing.T) {
 		t.Run("badDB", func(t *testing.T) {
 			errDB := errors.New("bad DB")
 			repository := &RepositoryMock{
-				AllFunc: func() ([]*bookmarks.Bookmark, error) {
+				AllFunc: func(int) ([]*bookmarks.Bookmark, error) {
 					return nil, errDB
 				},
 			}
@@ -265,7 +265,7 @@ func TestServer(t *testing.T) {
 		t.Run("good", func(t *testing.T) {
 			foundBookmark := &bookmarks.Bookmark{ID: 1, Title: "%FIND-TITLE%", URL: "https://%FIND-%URL.com"}
 			repository := &RepositoryMock{
-				AllFunc: func() ([]*bookmarks.Bookmark, error) {
+				AllFunc: func(int) ([]*bookmarks.Bookmark, error) {
 					return []*bookmarks.Bookmark{
 						foundBookmark,
 					}, nil

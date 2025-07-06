@@ -119,7 +119,7 @@ func TestRepository_basicCycle(t *testing.T) {
 	if err := b.DeleteByID(inbox[0].ID); err != nil {
 		t.Fatal("cannot delete bookmark:", err)
 	}
-	all, err := b.All()
+	all, err := b.All(0)
 	if err != nil {
 		t.Fatal("cannot load all bookmarks:", err)
 	}
@@ -336,7 +336,7 @@ func TestRepository_All(t *testing.T) {
 		}
 		errDB := errors.New("bad DB")
 		mock.ExpectQuery("SELECT").WillReturnError(errDB)
-		if _, err := New(db).All(); !errors.Is(err, errDB) {
+		if _, err := New(db).All(0); !errors.Is(err, errDB) {
 			t.Error("expected error missing: ", err)
 		}
 	})
@@ -349,7 +349,7 @@ func TestRepository_All(t *testing.T) {
 		if err := repository.Insert(bookmark); err != nil {
 			t.Fatal("could not insert bookmark:", err)
 		}
-		found, err := repository.All()
+		found, err := repository.All(0)
 		if err != nil {
 			t.Fatal("cannot list bookmarks:", err)
 		}

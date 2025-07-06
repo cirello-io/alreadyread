@@ -18,7 +18,7 @@ var _ Repository = &RepositoryMock{}
 //
 //		// make and configure a mocked Repository
 //		mockedRepository := &RepositoryMock{
-//			AllFunc: func() ([]*Bookmark, error) {
+//			AllFunc: func(page int) ([]*Bookmark, error) {
 //				panic("mock out the All method")
 //			},
 //			BootstrapFunc: func() error {
@@ -65,7 +65,7 @@ var _ Repository = &RepositoryMock{}
 //	}
 type RepositoryMock struct {
 	// AllFunc mocks the All method.
-	AllFunc func() ([]*Bookmark, error)
+	AllFunc func(page int) ([]*Bookmark, error)
 
 	// BootstrapFunc mocks the Bootstrap method.
 	BootstrapFunc func() error
@@ -107,6 +107,8 @@ type RepositoryMock struct {
 	calls struct {
 		// All holds details about calls to the All method.
 		All []struct {
+			// Page is the page argument value.
+			Page int
 		}
 		// Bootstrap holds details about calls to the Bootstrap method.
 		Bootstrap []struct {
@@ -173,16 +175,19 @@ type RepositoryMock struct {
 }
 
 // All calls AllFunc.
-func (mock *RepositoryMock) All() ([]*Bookmark, error) {
+func (mock *RepositoryMock) All(page int) ([]*Bookmark, error) {
 	if mock.AllFunc == nil {
 		panic("RepositoryMock.AllFunc: method is nil but Repository.All was just called")
 	}
 	callInfo := struct {
-	}{}
+		Page int
+	}{
+		Page: page,
+	}
 	mock.lockAll.Lock()
 	mock.calls.All = append(mock.calls.All, callInfo)
 	mock.lockAll.Unlock()
-	return mock.AllFunc()
+	return mock.AllFunc(page)
 }
 
 // AllCalls gets all the calls that were made to All.
@@ -190,8 +195,10 @@ func (mock *RepositoryMock) All() ([]*Bookmark, error) {
 //
 //	len(mockedRepository.AllCalls())
 func (mock *RepositoryMock) AllCalls() []struct {
+	Page int
 } {
 	var calls []struct {
+		Page int
 	}
 	mock.lockAll.RLock()
 	calls = mock.calls.All

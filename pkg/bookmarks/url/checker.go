@@ -22,7 +22,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-//go:generate moq -out httpGetter_mocks_test.go . httpGetter
+//go:generate go tool moq -out httpGetter_mocks_test.go . httpGetter
 type httpGetter interface {
 	Get(url string) (resp *http.Response, err error)
 }

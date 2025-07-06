@@ -297,17 +297,17 @@ func TestBookmarks_All(t *testing.T) {
 		want    []*Bookmark
 		wantErr bool
 	}{
-		{"badDB", fields{repository: &RepositoryMock{AllFunc: func() ([]*Bookmark, error) { return nil, errDB }}}, nil, true},
-		{"nilResult", fields{repository: &RepositoryMock{AllFunc: func() ([]*Bookmark, error) { return nil, nil }}}, nil, false},
-		{"emptyResult", fields{repository: &RepositoryMock{AllFunc: func() ([]*Bookmark, error) { return []*Bookmark{}, nil }}}, []*Bookmark{}, false},
-		{"good", fields{repository: &RepositoryMock{AllFunc: func() ([]*Bookmark, error) { return []*Bookmark{foundBookmark}, nil }}}, []*Bookmark{foundBookmark}, false},
+		{"badDB", fields{repository: &RepositoryMock{AllFunc: func(int) ([]*Bookmark, error) { return nil, errDB }}}, nil, true},
+		{"nilResult", fields{repository: &RepositoryMock{AllFunc: func(int) ([]*Bookmark, error) { return nil, nil }}}, nil, false},
+		{"emptyResult", fields{repository: &RepositoryMock{AllFunc: func(int) ([]*Bookmark, error) { return []*Bookmark{}, nil }}}, []*Bookmark{}, false},
+		{"good", fields{repository: &RepositoryMock{AllFunc: func(int) ([]*Bookmark, error) { return []*Bookmark{foundBookmark}, nil }}}, []*Bookmark{foundBookmark}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			b := &Bookmarks{
 				repository: tt.fields.repository,
 			}
-			got, err := b.All()
+			got, err := b.All(0)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Bookmarks.All() error = %v, wantErr %v", err, tt.wantErr)
 				return

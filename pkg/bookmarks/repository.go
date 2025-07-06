@@ -16,11 +16,11 @@ package bookmarks
 
 import "context"
 
-//go:generate moq -out repository_mocks_test.go . Repository
-//go:generate moq -pkg web -out ../web/repository_mocks_test.go . Repository
+//go:generate go tool moq -out repository_mocks_test.go . Repository
+//go:generate go tool moq -pkg web -out ../web/repository_mocks_test.go . Repository
 type Repository interface {
 	// All returns all bookmarks.
-	All() ([]*Bookmark, error)
+	All(page int) ([]*Bookmark, error)
 
 	// Bootstrap creates table if missing.
 	Bootstrap() error

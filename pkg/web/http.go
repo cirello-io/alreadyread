@@ -31,7 +31,7 @@ import (
 	"github.com/rs/cors"
 )
 
-//go:generate moq -out urltitleloader_mocks_test.go . URLTitleLoader
+//go:generate go tool moq -out urltitleloader_mocks_test.go . URLTitleLoader
 type URLTitleLoader interface {
 	Title(url string) string
 }
@@ -102,7 +102,7 @@ func (s *Server) inbox(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, "Inbox", list)
+	s.renderList(w, r, "Inbox", list, -1)
 }
 
 func (s *Server) duplicated(w http.ResponseWriter, r *http.Request) {
@@ -112,7 +112,7 @@ func (s *Server) duplicated(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, "Duplicated", list)
+	s.renderList(w, r, "Duplicated", list, -1)
 }
 
 func (s *Server) dead(w http.ResponseWriter, r *http.Request) {
@@ -122,17 +122,21 @@ func (s *Server) dead(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, "Dead", list)
+	s.renderList(w, r, "Dead", list, -1)
 }
 
 func (s *Server) all(w http.ResponseWriter, r *http.Request) {
-	list, err := s.bookmarks.All()
+	page, err := strconv.Atoi(r.URL.Query().Get("page"))
+	if err != nil || page < 1 {
+		page = 0
+	}
+	list, err := s.bookmarks.All(page)
 	if err != nil {
 		log.Println("cannot load all bookmarks:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, "All", list)
+	s.renderList(w, r, "All", list, page)
 }
 
 func (s *Server) search(w http.ResponseWriter, r *http.Request) {
@@ -142,12 +146,12 @@ func (s *Server) search(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, "Search", list)
+	s.renderList(w, r, "Search", list, -1)
 }
 
-func (s *Server) renderList(w http.ResponseWriter, r *http.Request, title string, list []*bookmarks.Bookmark) {
+func (s *Server) renderList(w http.ResponseWriter, r *http.Request, title string, list []*bookmarks.Bookmark, page int) {
 	buf := &bytes.Buffer{}
-	frontend.RenderLinkTable(buf, list)
+	frontend.RenderLinkTable(buf, list, page)
 	if r.Header.Get("HX-Request") != "true" {
 		indexBuf := &bytes.Buffer{}
 		frontend.RenderIndex(indexBuf, r.URL.Path, title, template.HTML(buf.String()))

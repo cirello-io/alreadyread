@@ -128,8 +128,9 @@ func (b *Repository) Dead() ([]*bookmarks.Bookmark, error) {
 	return b.scanRows(rows)
 }
 
-func (b *Repository) All() ([]*bookmarks.Bookmark, error) {
-	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description FROM bookmarks ORDER BY id DESC`)
+func (b *Repository) All(page int) ([]*bookmarks.Bookmark, error) {
+	const pageSize = 1000
+	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description FROM bookmarks ORDER BY id DESC LIMIT $1 OFFSET $2`, pageSize, page*pageSize)
 	if err != nil {
 		return nil, err
 	}
