@@ -19,9 +19,7 @@ import (
 	"html/template"
 	"io"
 	"log"
-	"maps"
 	"net/http"
-	"slices"
 	"time"
 
 	"cirello.io/alreadyread/pkg/bookmarks"
@@ -55,14 +53,17 @@ func RenderLinkTable(w io.Writer, list []*bookmarks.Bookmark) {
 		Date  string
 		Links []*bookmarks.Bookmark
 	}
-	type payload struct {
-		Links []*dateGroup
-	}
-	idx := make(map[string]*dateGroup)
-	p := payload{}
+	var (
+		idx    = make(map[string]*dateGroup)
+		groups = make([]string, 0)
+		p      struct {
+			Links []*dateGroup
+		}
+	)
 	for _, b := range list {
 		date := b.CreatedAt.Format("Jan _2 2006")
 		if _, ok := idx[date]; !ok {
+			groups = append(groups, date)
 			idx[date] = &dateGroup{
 				Date:  date,
 				Links: []*bookmarks.Bookmark{},
@@ -70,10 +71,8 @@ func RenderLinkTable(w io.Writer, list []*bookmarks.Bookmark) {
 		}
 		idx[date].Links = append(idx[date].Links, b)
 	}
-	idxKeys := slices.Collect(maps.Keys(idx))
-	slices.Sort(idxKeys)
-	for _, k := range idxKeys {
-		p.Links = append(p.Links, idx[k])
+	for _, g := range groups {
+		p.Links = append(p.Links, idx[g])
 	}
 	if err := linkTable.Execute(w, p); err != nil {
 		log.Println("cannot render link table:", err)
