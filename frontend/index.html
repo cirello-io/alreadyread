@@ -23,6 +23,14 @@
         .dategroup:not(:has(> div[id^="bookmark-"]:not(.hidden))) {
             display: none;
         }
+
+        #no-links {
+            display: none;
+        }
+
+        body:not(:has(div[id^="bookmark-"])) #no-links {
+            display: block;
+        }
     </style>
 </head>
 
