@@ -202,7 +202,7 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
-		s.inbox(w, r)
+		w.Header().Set("HX-Redirect", "/inbox")
 		return
 	default:
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
