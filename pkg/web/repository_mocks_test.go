@@ -25,13 +25,13 @@ var _ bookmarks.Repository = &RepositoryMock{}
 //			BootstrapFunc: func() error {
 //				panic("mock out the Bootstrap method")
 //			},
-//			DeadFunc: func() ([]*bookmarks.Bookmark, error) {
+//			DeadFunc: func(page int) ([]*bookmarks.Bookmark, error) {
 //				panic("mock out the Dead method")
 //			},
 //			DeleteByIDFunc: func(id int64) error {
 //				panic("mock out the DeleteByID method")
 //			},
-//			DuplicatedFunc: func() ([]*bookmarks.Bookmark, error) {
+//			DuplicatedFunc: func(page int) ([]*bookmarks.Bookmark, error) {
 //				panic("mock out the Duplicated method")
 //			},
 //			ExpiredFunc: func() ([]*bookmarks.Bookmark, error) {
@@ -40,7 +40,7 @@ var _ bookmarks.Repository = &RepositoryMock{}
 //			GetByIDFunc: func(id int64) (*bookmarks.Bookmark, error) {
 //				panic("mock out the GetByID method")
 //			},
-//			InboxFunc: func() ([]*bookmarks.Bookmark, error) {
+//			InboxFunc: func(page int) ([]*bookmarks.Bookmark, error) {
 //				panic("mock out the Inbox method")
 //			},
 //			InsertFunc: func(bookmark *bookmarks.Bookmark) error {
@@ -72,13 +72,13 @@ type RepositoryMock struct {
 	BootstrapFunc func() error
 
 	// DeadFunc mocks the Dead method.
-	DeadFunc func() ([]*bookmarks.Bookmark, error)
+	DeadFunc func(page int) ([]*bookmarks.Bookmark, error)
 
 	// DeleteByIDFunc mocks the DeleteByID method.
 	DeleteByIDFunc func(id int64) error
 
 	// DuplicatedFunc mocks the Duplicated method.
-	DuplicatedFunc func() ([]*bookmarks.Bookmark, error)
+	DuplicatedFunc func(page int) ([]*bookmarks.Bookmark, error)
 
 	// ExpiredFunc mocks the Expired method.
 	ExpiredFunc func() ([]*bookmarks.Bookmark, error)
@@ -87,7 +87,7 @@ type RepositoryMock struct {
 	GetByIDFunc func(id int64) (*bookmarks.Bookmark, error)
 
 	// InboxFunc mocks the Inbox method.
-	InboxFunc func() ([]*bookmarks.Bookmark, error)
+	InboxFunc func(page int) ([]*bookmarks.Bookmark, error)
 
 	// InsertFunc mocks the Insert method.
 	InsertFunc func(bookmark *bookmarks.Bookmark) error
@@ -116,6 +116,8 @@ type RepositoryMock struct {
 		}
 		// Dead holds details about calls to the Dead method.
 		Dead []struct {
+			// Page is the page argument value.
+			Page int
 		}
 		// DeleteByID holds details about calls to the DeleteByID method.
 		DeleteByID []struct {
@@ -124,6 +126,8 @@ type RepositoryMock struct {
 		}
 		// Duplicated holds details about calls to the Duplicated method.
 		Duplicated []struct {
+			// Page is the page argument value.
+			Page int
 		}
 		// Expired holds details about calls to the Expired method.
 		Expired []struct {
@@ -135,6 +139,8 @@ type RepositoryMock struct {
 		}
 		// Inbox holds details about calls to the Inbox method.
 		Inbox []struct {
+			// Page is the page argument value.
+			Page int
 		}
 		// Insert holds details about calls to the Insert method.
 		Insert []struct {
@@ -235,16 +241,19 @@ func (mock *RepositoryMock) BootstrapCalls() []struct {
 }
 
 // Dead calls DeadFunc.
-func (mock *RepositoryMock) Dead() ([]*bookmarks.Bookmark, error) {
+func (mock *RepositoryMock) Dead(page int) ([]*bookmarks.Bookmark, error) {
 	if mock.DeadFunc == nil {
 		panic("RepositoryMock.DeadFunc: method is nil but Repository.Dead was just called")
 	}
 	callInfo := struct {
-	}{}
+		Page int
+	}{
+		Page: page,
+	}
 	mock.lockDead.Lock()
 	mock.calls.Dead = append(mock.calls.Dead, callInfo)
 	mock.lockDead.Unlock()
-	return mock.DeadFunc()
+	return mock.DeadFunc(page)
 }
 
 // DeadCalls gets all the calls that were made to Dead.
@@ -252,8 +261,10 @@ func (mock *RepositoryMock) Dead() ([]*bookmarks.Bookmark, error) {
 //
 //	len(mockedRepository.DeadCalls())
 func (mock *RepositoryMock) DeadCalls() []struct {
+	Page int
 } {
 	var calls []struct {
+		Page int
 	}
 	mock.lockDead.RLock()
 	calls = mock.calls.Dead
@@ -294,16 +305,19 @@ func (mock *RepositoryMock) DeleteByIDCalls() []struct {
 }
 
 // Duplicated calls DuplicatedFunc.
-func (mock *RepositoryMock) Duplicated() ([]*bookmarks.Bookmark, error) {
+func (mock *RepositoryMock) Duplicated(page int) ([]*bookmarks.Bookmark, error) {
 	if mock.DuplicatedFunc == nil {
 		panic("RepositoryMock.DuplicatedFunc: method is nil but Repository.Duplicated was just called")
 	}
 	callInfo := struct {
-	}{}
+		Page int
+	}{
+		Page: page,
+	}
 	mock.lockDuplicated.Lock()
 	mock.calls.Duplicated = append(mock.calls.Duplicated, callInfo)
 	mock.lockDuplicated.Unlock()
-	return mock.DuplicatedFunc()
+	return mock.DuplicatedFunc(page)
 }
 
 // DuplicatedCalls gets all the calls that were made to Duplicated.
@@ -311,8 +325,10 @@ func (mock *RepositoryMock) Duplicated() ([]*bookmarks.Bookmark, error) {
 //
 //	len(mockedRepository.DuplicatedCalls())
 func (mock *RepositoryMock) DuplicatedCalls() []struct {
+	Page int
 } {
 	var calls []struct {
+		Page int
 	}
 	mock.lockDuplicated.RLock()
 	calls = mock.calls.Duplicated
@@ -380,16 +396,19 @@ func (mock *RepositoryMock) GetByIDCalls() []struct {
 }
 
 // Inbox calls InboxFunc.
-func (mock *RepositoryMock) Inbox() ([]*bookmarks.Bookmark, error) {
+func (mock *RepositoryMock) Inbox(page int) ([]*bookmarks.Bookmark, error) {
 	if mock.InboxFunc == nil {
 		panic("RepositoryMock.InboxFunc: method is nil but Repository.Inbox was just called")
 	}
 	callInfo := struct {
-	}{}
+		Page int
+	}{
+		Page: page,
+	}
 	mock.lockInbox.Lock()
 	mock.calls.Inbox = append(mock.calls.Inbox, callInfo)
 	mock.lockInbox.Unlock()
-	return mock.InboxFunc()
+	return mock.InboxFunc(page)
 }
 
 // InboxCalls gets all the calls that were made to Inbox.
@@ -397,8 +416,10 @@ func (mock *RepositoryMock) Inbox() ([]*bookmarks.Bookmark, error) {
 //
 //	len(mockedRepository.InboxCalls())
 func (mock *RepositoryMock) InboxCalls() []struct {
+	Page int
 } {
 	var calls []struct {
+		Page int
 	}
 	mock.lockInbox.RLock()
 	calls = mock.calls.Inbox

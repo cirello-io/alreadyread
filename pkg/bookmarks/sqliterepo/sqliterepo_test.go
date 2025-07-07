@@ -103,7 +103,7 @@ func TestRepository_basicCycle(t *testing.T) {
 	if err := b.Update(updated); err != nil {
 		t.Fatal("cannot update bookmark:", err)
 	}
-	inbox, err := b.Inbox()
+	inbox, err := b.Inbox(0)
 	if err != nil {
 		t.Fatal("cannot load inbox bookmarks:", err)
 	}
@@ -232,7 +232,7 @@ func TestRepository_Inbox(t *testing.T) {
 		}
 		errDB := errors.New("bad DB")
 		mock.ExpectQuery("SELECT").WillReturnError(errDB)
-		if _, err := New(db).Inbox(); !errors.Is(err, errDB) {
+		if _, err := New(db).Inbox(0); !errors.Is(err, errDB) {
 			t.Error("expected error missing: ", err)
 		}
 	})
@@ -242,7 +242,7 @@ func TestRepository_Inbox(t *testing.T) {
 		if err := repository.Insert(bookmark); err != nil {
 			t.Fatal("could not insert bookmark:", err)
 		}
-		found, err := repository.Inbox()
+		found, err := repository.Inbox(0)
 		if err != nil {
 			t.Fatal("cannot list bookmarks:", err)
 		}
@@ -263,7 +263,7 @@ func TestRepository_Duplicated(t *testing.T) {
 		}
 		errDB := errors.New("bad DB")
 		mock.ExpectQuery("SELECT").WillReturnError(errDB)
-		if _, err := New(db).Duplicated(); !errors.Is(err, errDB) {
+		if _, err := New(db).Duplicated(0); !errors.Is(err, errDB) {
 			t.Error("expected error missing: ", err)
 		}
 	})
@@ -276,7 +276,7 @@ func TestRepository_Duplicated(t *testing.T) {
 		if err := repository.Insert(bookmark); err != nil {
 			t.Fatal("could not insert bookmark:", err)
 		}
-		found, err := repository.Duplicated()
+		found, err := repository.Duplicated(0)
 		if err != nil {
 			t.Fatal("cannot list bookmarks:", err)
 		}
@@ -297,7 +297,7 @@ func TestRepository_Dead(t *testing.T) {
 		}
 		errDB := errors.New("bad DB")
 		mock.ExpectQuery("SELECT").WillReturnError(errDB)
-		if _, err := New(db).Dead(); !errors.Is(err, errDB) {
+		if _, err := New(db).Dead(0); !errors.Is(err, errDB) {
 			t.Error("expected error missing: ", err)
 		}
 	})
@@ -312,7 +312,7 @@ func TestRepository_Dead(t *testing.T) {
 				t.Fatal("could not insert bookmark:", err)
 			}
 		}
-		found, err := repository.Dead()
+		found, err := repository.Dead(0)
 		if err != nil {
 			t.Fatal("cannot list bookmarks:", err)
 		}
@@ -500,7 +500,7 @@ func TestRepository_RestorePostponedLinks(t *testing.T) {
 		if err := repository.RestorePostponedLinks(context.TODO()); err != nil {
 			t.Fatal("cannot restore postponed bookmarks:", err)
 		}
-		found, err := repository.Inbox()
+		found, err := repository.Inbox(0)
 		if err != nil {
 			t.Fatal("cannot list bookmarks:", err)
 		}

@@ -96,33 +96,45 @@ func (s *Server) post(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) inbox(w http.ResponseWriter, r *http.Request) {
-	list, err := s.bookmarks.Inbox()
+	page, err := strconv.Atoi(r.URL.Query().Get("page"))
+	if err != nil || page < 1 {
+		page = 0
+	}
+	list, err := s.bookmarks.Inbox(page)
 	if err != nil {
 		log.Println("cannot load bookmarks for inbox:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, "Inbox", list, -1)
+	s.renderList(w, r, "Inbox", list, page)
 }
 
 func (s *Server) duplicated(w http.ResponseWriter, r *http.Request) {
-	list, err := s.bookmarks.Duplicated()
+	page, err := strconv.Atoi(r.URL.Query().Get("page"))
+	if err != nil || page < 1 {
+		page = 0
+	}
+	list, err := s.bookmarks.Duplicated(page)
 	if err != nil {
 		log.Println("cannot load duplicated bookmarks:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, "Duplicated", list, -1)
+	s.renderList(w, r, "Duplicated", list, page)
 }
 
 func (s *Server) dead(w http.ResponseWriter, r *http.Request) {
-	list, err := s.bookmarks.Dead()
+	page, err := strconv.Atoi(r.URL.Query().Get("page"))
+	if err != nil || page < 1 {
+		page = 0
+	}
+	list, err := s.bookmarks.Dead(page)
 	if err != nil {
 		log.Println("cannot load dead bookmarks:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, "Dead", list, -1)
+	s.renderList(w, r, "Dead", list, page)
 }
 
 func (s *Server) all(w http.ResponseWriter, r *http.Request) {

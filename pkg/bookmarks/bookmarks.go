@@ -112,24 +112,24 @@ func (b *Bookmarks) UpdateInbox(id int64, inbox string) error {
 	return nil
 }
 
-func (b *Bookmarks) Inbox() ([]*Bookmark, error) {
-	list, err := b.repository.Inbox()
+func (b *Bookmarks) Inbox(page int) ([]*Bookmark, error) {
+	list, err := b.repository.Inbox(page)
 	if err != nil {
 		return nil, fmt.Errorf("cannot load bookmarks inbox: %w", err)
 	}
 	return list, nil
 }
 
-func (b *Bookmarks) Duplicated() ([]*Bookmark, error) {
-	list, err := b.repository.Duplicated()
+func (b *Bookmarks) Duplicated(page int) ([]*Bookmark, error) {
+	list, err := b.repository.Duplicated(page)
 	if err != nil {
 		return nil, fmt.Errorf("cannot load duplicated bookmarks: %w", err)
 	}
 	return list, nil
 }
 
-func (b *Bookmarks) Dead() ([]*Bookmark, error) {
-	list, err := b.repository.Dead()
+func (b *Bookmarks) Dead(page int) ([]*Bookmark, error) {
+	list, err := b.repository.Dead(page)
 	if err != nil {
 		return nil, fmt.Errorf("cannot load dead bookmarks: %w", err)
 	}

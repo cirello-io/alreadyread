@@ -104,24 +104,26 @@ func (b *Repository) scanRow(row interface{ Scan(dest ...any) error }) (*bookmar
 	return bookmark, nil
 }
 
-func (b *Repository) Inbox() ([]*bookmarks.Bookmark, error) {
-	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description FROM bookmarks WHERE inbox = 1 ORDER BY created_at DESC, id DESC`)
+const pageSize = 1000
+
+func (b *Repository) Inbox(page int) ([]*bookmarks.Bookmark, error) {
+	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description FROM bookmarks WHERE inbox = 1 ORDER BY created_at DESC, id DESC LIMIT $1 OFFSET $2`, pageSize, page*pageSize)
 	if err != nil {
 		return nil, err
 	}
 	return b.scanRows(rows)
 }
 
-func (b *Repository) Duplicated() ([]*bookmarks.Bookmark, error) {
-	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description FROM bookmarks WHERE url IN (SELECT url FROM bookmarks GROUP BY url HAVING count(url) > 1) ORDER BY url, created_at DESC`)
+func (b *Repository) Duplicated(page int) ([]*bookmarks.Bookmark, error) {
+	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description FROM bookmarks WHERE url IN (SELECT url FROM bookmarks GROUP BY url HAVING count(url) > 1) ORDER BY url, created_at DESC LIMIT $1 OFFSET $2`, pageSize, page*pageSize)
 	if err != nil {
 		return nil, err
 	}
 	return b.scanRows(rows)
 }
 
-func (b *Repository) Dead() ([]*bookmarks.Bookmark, error) {
-	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description FROM bookmarks WHERE NOT (last_status_code == 200 OR last_status_code == 0) ORDER BY created_at DESC, last_status_code DESC, id DESC`)
+func (b *Repository) Dead(page int) ([]*bookmarks.Bookmark, error) {
+	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description FROM bookmarks WHERE NOT (last_status_code == 200 OR last_status_code == 0) ORDER BY created_at DESC, last_status_code DESC, id DESC LIMIT $1 OFFSET $2`, pageSize, page*pageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +131,6 @@ func (b *Repository) Dead() ([]*bookmarks.Bookmark, error) {
 }
 
 func (b *Repository) All(page int) ([]*bookmarks.Bookmark, error) {
-	const pageSize = 1000
 	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description FROM bookmarks ORDER BY id DESC LIMIT $1 OFFSET $2`, pageSize, page*pageSize)
 	if err != nil {
 		return nil, err

@@ -61,7 +61,7 @@ func TestServer(t *testing.T) {
 		t.Run("emptyTitle", func(t *testing.T) {
 			errDB := errors.New("bad DB")
 			repository := &RepositoryMock{
-				InboxFunc: func() ([]*bookmarks.Bookmark, error) {
+				InboxFunc: func(int) ([]*bookmarks.Bookmark, error) {
 					return nil, errDB
 				},
 			}
@@ -96,7 +96,7 @@ func TestServer(t *testing.T) {
 		t.Run("badDB", func(t *testing.T) {
 			errDB := errors.New("bad DB")
 			repository := &RepositoryMock{
-				InboxFunc: func() ([]*bookmarks.Bookmark, error) {
+				InboxFunc: func(int) ([]*bookmarks.Bookmark, error) {
 					return nil, errDB
 				},
 			}
@@ -115,7 +115,7 @@ func TestServer(t *testing.T) {
 		t.Run("good", func(t *testing.T) {
 			foundBookmark := &bookmarks.Bookmark{ID: 1, Title: "%FIND-TITLE%", URL: "https://%FIND-%URL.com"}
 			repository := &RepositoryMock{
-				InboxFunc: func() ([]*bookmarks.Bookmark, error) {
+				InboxFunc: func(int) ([]*bookmarks.Bookmark, error) {
 					return []*bookmarks.Bookmark{
 						foundBookmark,
 					}, nil
@@ -146,7 +146,7 @@ func TestServer(t *testing.T) {
 		t.Run("badDB", func(t *testing.T) {
 			errDB := errors.New("bad DB")
 			repository := &RepositoryMock{
-				DuplicatedFunc: func() ([]*bookmarks.Bookmark, error) {
+				DuplicatedFunc: func(int) ([]*bookmarks.Bookmark, error) {
 					return nil, errDB
 				},
 			}
@@ -165,7 +165,7 @@ func TestServer(t *testing.T) {
 		t.Run("good", func(t *testing.T) {
 			foundBookmark := &bookmarks.Bookmark{ID: 1, Title: "%FIND-TITLE%", URL: "https://%FIND-%URL.com"}
 			repository := &RepositoryMock{
-				DuplicatedFunc: func() ([]*bookmarks.Bookmark, error) {
+				DuplicatedFunc: func(int) ([]*bookmarks.Bookmark, error) {
 					return []*bookmarks.Bookmark{
 						foundBookmark,
 					}, nil
@@ -196,7 +196,7 @@ func TestServer(t *testing.T) {
 		t.Run("badDB", func(t *testing.T) {
 			errDB := errors.New("bad DB")
 			repository := &RepositoryMock{
-				DeadFunc: func() ([]*bookmarks.Bookmark, error) {
+				DeadFunc: func(int) ([]*bookmarks.Bookmark, error) {
 					return nil, errDB
 				},
 			}
@@ -215,7 +215,7 @@ func TestServer(t *testing.T) {
 		t.Run("good", func(t *testing.T) {
 			foundBookmark := &bookmarks.Bookmark{ID: 1, Title: "%FIND-TITLE%", URL: "https://%FIND-%URL.com"}
 			repository := &RepositoryMock{
-				DeadFunc: func() ([]*bookmarks.Bookmark, error) {
+				DeadFunc: func(int) ([]*bookmarks.Bookmark, error) {
 					return []*bookmarks.Bookmark{
 						foundBookmark,
 					}, nil
@@ -581,7 +581,7 @@ func TestServer(t *testing.T) {
 					InsertFunc: func(*bookmarks.Bookmark) error {
 						return nil
 					},
-					InboxFunc: func() ([]*bookmarks.Bookmark, error) {
+					InboxFunc: func(int) ([]*bookmarks.Bookmark, error) {
 						return []*bookmarks.Bookmark{
 							{ID: 1, Title: "title", URL: "https://example.com"},
 						}, nil

@@ -26,13 +26,13 @@ type Repository interface {
 	Bootstrap() error
 
 	// Dead returns bookmarks that are not OK.
-	Dead() ([]*Bookmark, error)
+	Dead(page int) ([]*Bookmark, error)
 
 	// DeleteByID excludes the bookmark from the repository.
 	DeleteByID(id int64) error
 
 	// Duplicated returns all bookmarks that have been added more than once.
-	Duplicated() ([]*Bookmark, error)
+	Duplicated(page int) ([]*Bookmark, error)
 
 	// Expired return all valid but expired bookmarks.
 	Expired() ([]*Bookmark, error)
@@ -41,7 +41,7 @@ type Repository interface {
 	GetByID(id int64) (*Bookmark, error)
 
 	// Inbox returns all new bookmarks that have not been marked as read.
-	Inbox() ([]*Bookmark, error)
+	Inbox(page int) ([]*Bookmark, error)
 
 	// Insert one bookmark.
 	Insert(*Bookmark) error
