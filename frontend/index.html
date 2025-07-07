@@ -68,6 +68,7 @@
     </header>
     <main>
         <span id="spinner" class="htmx-indicator" aria-busy="true">loading...</span>
+        <div id="no-links">no links</div>
         <div id="container" {{- if not .Container }} data-hx-get="/inbox" data-hx-trigger="load" {{ end -}}>
             {{ .Container }}
         </div>
