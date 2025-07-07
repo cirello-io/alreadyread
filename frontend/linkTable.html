@@ -10,18 +10,23 @@
 </div>
 {{ end }}
 {{ $nextPage := .NextPage }}
+{{ $previousLastDate := .PreviousLastDate }}
 {{ with .Links }}
+	{{ $lastDate := "" }}
 	{{- range $_, $links := . }}
 		<div class="dategroup" id="date-{{ .Date | slugify }}">
+			{{ if ne $previousLastDate .Date }}
 			<hr/>
 			<div>{{ .Date }}</div>
+			{{ end }}
 			{{ range .Links }}
 			{{ template "link" . }}
 			{{ end }}
+			{{ $lastDate = .Date }}
 		</div>
 	{{- end }}
 	{{ if gt $nextPage -1 }}
-	<div hx-get="?page={{ $nextPage }}" hx-trigger="revealed" hx-swap="beforeend" hx-target="#container"></div>
+	<div hx-get="?page={{ $nextPage }}&lastDate={{ $lastDate }}" hx-trigger="revealed" hx-swap="beforeend" hx-target="#container"></div>
 	{{ end }}
 {{ end }}
 <div id="no-links">no links</div>

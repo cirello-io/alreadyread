@@ -100,13 +100,14 @@ func (s *Server) inbox(w http.ResponseWriter, r *http.Request) {
 	if err != nil || page < 1 {
 		page = 0
 	}
+	lastDate := r.URL.Query().Get("lastDate")
 	list, err := s.bookmarks.Inbox(page)
 	if err != nil {
 		log.Println("cannot load bookmarks for inbox:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, "Inbox", list, page)
+	s.renderList(w, r, "Inbox", list, page, lastDate)
 }
 
 func (s *Server) duplicated(w http.ResponseWriter, r *http.Request) {
@@ -114,13 +115,14 @@ func (s *Server) duplicated(w http.ResponseWriter, r *http.Request) {
 	if err != nil || page < 1 {
 		page = 0
 	}
+	lastDate := r.URL.Query().Get("lastDate")
 	list, err := s.bookmarks.Duplicated(page)
 	if err != nil {
 		log.Println("cannot load duplicated bookmarks:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, "Duplicated", list, page)
+	s.renderList(w, r, "Duplicated", list, page, lastDate)
 }
 
 func (s *Server) dead(w http.ResponseWriter, r *http.Request) {
@@ -128,13 +130,14 @@ func (s *Server) dead(w http.ResponseWriter, r *http.Request) {
 	if err != nil || page < 1 {
 		page = 0
 	}
+	lastDate := r.URL.Query().Get("lastDate")
 	list, err := s.bookmarks.Dead(page)
 	if err != nil {
 		log.Println("cannot load dead bookmarks:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, "Dead", list, page)
+	s.renderList(w, r, "Dead", list, page, lastDate)
 }
 
 func (s *Server) all(w http.ResponseWriter, r *http.Request) {
@@ -142,13 +145,14 @@ func (s *Server) all(w http.ResponseWriter, r *http.Request) {
 	if err != nil || page < 1 {
 		page = 0
 	}
+	lastDate := r.URL.Query().Get("lastDate")
 	list, err := s.bookmarks.All(page)
 	if err != nil {
 		log.Println("cannot load all bookmarks:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, "All", list, page)
+	s.renderList(w, r, "All", list, page, lastDate)
 }
 
 func (s *Server) search(w http.ResponseWriter, r *http.Request) {
@@ -158,12 +162,12 @@ func (s *Server) search(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	s.renderList(w, r, "Search", list, -1)
+	s.renderList(w, r, "Search", list, -1, "")
 }
 
-func (s *Server) renderList(w http.ResponseWriter, r *http.Request, title string, list []*bookmarks.Bookmark, page int) {
+func (s *Server) renderList(w http.ResponseWriter, r *http.Request, title string, list []*bookmarks.Bookmark, page int, lastDate string) {
 	buf := &bytes.Buffer{}
-	frontend.RenderLinkTable(buf, list, page)
+	frontend.RenderLinkTable(buf, list, page, lastDate)
 	if r.Header.Get("HX-Request") != "true" {
 		indexBuf := &bytes.Buffer{}
 		frontend.RenderIndex(indexBuf, r.URL.Path, title, template.HTML(buf.String()))

@@ -57,7 +57,7 @@ var (
 	}).Parse(linkTableTPL))
 )
 
-func RenderLinkTable(w io.Writer, list []*bookmarks.Bookmark, page int) {
+func RenderLinkTable(w io.Writer, list []*bookmarks.Bookmark, page int, previousLastDate string) {
 	type dateGroup struct {
 		Date  string
 		Links []*bookmarks.Bookmark
@@ -66,8 +66,9 @@ func RenderLinkTable(w io.Writer, list []*bookmarks.Bookmark, page int) {
 		idx    = make(map[string]*dateGroup)
 		groups = make([]string, 0)
 		p      struct {
-			NextPage int
-			Links    []*dateGroup
+			NextPage         int
+			PreviousLastDate string
+			Links            []*dateGroup
 		}
 	)
 	for _, b := range list {
@@ -84,6 +85,7 @@ func RenderLinkTable(w io.Writer, list []*bookmarks.Bookmark, page int) {
 	for _, g := range groups {
 		p.Links = append(p.Links, idx[g])
 	}
+	p.PreviousLastDate = previousLastDate
 	p.NextPage = page + 1
 	if err := linkTable.Execute(w, p); err != nil {
 		log.Println("cannot render link table:", err)
