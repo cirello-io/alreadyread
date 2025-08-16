@@ -1,18 +1,31 @@
 {{ define "link" }}
 <div id="bookmark-{{.ID}}">
 	<div>
-		<a data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}?action=bump"             >⏫</a>
-		{{ if and (not .URL) (not .Description ) }}
-		{{ .Title }}
-		{{ else if (not .URL) }}
-		<details><summary>{{.Title}}</summary>{{.Description}}</details>
-		{{ else }}
-		<a href="{{.URL}}" title="{{ .Title }}" target="_blank" rel="noopener noreferrer">{{ .Title }} ({{ .URL }})</a>
-		{{ with .Description }}<article>{{ . }}</article>{{end}}
-		{{ if not (or (eq .LastStatusCode 200)) }}<span>⚠️ {{.LastStatusCode}} {{.LastStatusCode | httpStatusCode}} - {{ .LastStatusReason }}</span>{{ end }}
-		{{ end }}
-		<a data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}?action=update&inbox=read">✔</a>
-		<a data-hx-target="#bookmark-{{.ID}}" data-hx-delete="/bookmarks/{{.ID}}"                        hx-confirm="Confirm delete?">🗑️</a>
+		<article role="">
+			<header>
+				<nav>
+					<ul>
+						<li>
+							<a data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}?action=bump">⏫</a>
+						</li>
+					</ul>
+					<ul><li><a href="{{.URL}}" title="{{ .Title }}" target="_blank" rel="noopener noreferrer">{{.Title}}</a></li></ul>
+					<ul>
+						<li>
+							<a data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}?action=update&inbox=read">✔</a>
+							<a data-hx-target="#bookmark-{{.ID}}" data-hx-delete="/bookmarks/{{.ID}}"                        hx-confirm="Confirm delete?">🗑️</a>
+						</li>
+					</ul>
+				</nav>
+			</header>
+			{{ .Description }}
+			{{ if .URL }}
+			<hr>
+			<a href="{{.URL}}" title="{{ .Title }}" target="_blank" rel="noopener noreferrer">{{ .URL }}</a>
+			{{ if not (or (eq .LastStatusCode 200)) }}<span>⚠️ {{.LastStatusCode}} {{.LastStatusCode | httpStatusCode}} - {{ .LastStatusReason }}</span>{{ end }}
+			{{ end }}
+		</article>
+
 	</div>
 </div>
 {{ end }}
