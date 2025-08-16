@@ -2,8 +2,6 @@
 <div id="bookmark-{{.ID}}">
 	<div>
 		<a data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}?action=bump"             >⏫</a>
-		<a data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}?action=update&inbox=read">✔</a>
-		<a data-hx-target="#bookmark-{{.ID}}" data-hx-delete="/bookmarks/{{.ID}}"                        >🗑️</a>
 		{{ if and (not .URL) (not .Description ) }}
 		{{ .Title }}
 		{{ else if (not .URL) }}
@@ -12,6 +10,8 @@
 		<a href="{{.URL}}" title="{{ .Title }}" target="_blank" rel="noopener noreferrer" {{ with .Description }}alt="{{ . }}" data-tooltip="{{ . }}"{{end}}>{{ .Title }} ({{ .URL }})</a>
 		{{ if not (or (eq .LastStatusCode 200)) }}<span>⚠️ {{.LastStatusCode}} {{.LastStatusCode | httpStatusCode}} - {{ .LastStatusReason }}</span>{{ end }}
 		{{ end }}
+		<a data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}?action=update&inbox=read">✔</a>
+		<a data-hx-target="#bookmark-{{.ID}}" data-hx-delete="/bookmarks/{{.ID}}"                        hx-confirm="Confirm delete?">🗑️</a>
 	</div>
 </div>
 {{ end }}
