@@ -522,7 +522,17 @@ func TestServer(t *testing.T) {
 		})
 		t.Run("methodPost", func(t *testing.T) {
 			t.Run("emptyBookmark", func(t *testing.T) {
-				root := bookmarks.New(nil, nil)
+				repository := &RepositoryMock{
+					InsertFunc: func(bookmark *bookmarks.Bookmark) error {
+						return nil
+					},
+				}
+				urlChecker := &URLCheckerMock{
+					CheckFunc: func(url string, originalTitle string) (string, int64, int64, string) {
+						return "", 0, 0, ""
+					},
+				}
+				root := bookmarks.New(repository, urlChecker)
 				ts := httptest.NewServer(New(root, nil, []string{"localhost"}))
 				defer ts.Close()
 				form := url.Values{
@@ -539,8 +549,8 @@ func TestServer(t *testing.T) {
 					t.Fatal(err)
 				}
 				defer resp.Body.Close()
-				if resp.StatusCode != http.StatusBadRequest {
-					t.Fatal("not StatusBadRequest:", resp.StatusCode)
+				if resp.StatusCode != http.StatusOK {
+					t.Fatal("not StatusOK:", resp.StatusCode)
 				}
 			})
 			t.Run("badDB/Insert", func(t *testing.T) {
