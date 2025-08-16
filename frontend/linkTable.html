@@ -7,7 +7,8 @@
 		{{ else if (not .URL) }}
 		<details><summary>{{.Title}}</summary>{{.Description}}</details>
 		{{ else }}
-		<a href="{{.URL}}" title="{{ .Title }}" target="_blank" rel="noopener noreferrer" {{ with .Description }}alt="{{ . }}" data-tooltip="{{ . }}"{{end}}>{{ .Title }} ({{ .URL }})</a>
+		<a href="{{.URL}}" title="{{ .Title }}" target="_blank" rel="noopener noreferrer">{{ .Title }} ({{ .URL }})</a>
+		{{ with .Description }}<article>{{ . }}</article>{{end}}
 		{{ if not (or (eq .LastStatusCode 200)) }}<span>⚠️ {{.LastStatusCode}} {{.LastStatusCode | httpStatusCode}} - {{ .LastStatusReason }}</span>{{ end }}
 		{{ end }}
 		<a data-hx-target="#bookmark-{{.ID}}" data-hx-patch="/bookmarks/{{.ID}}?action=update&inbox=read">✔</a>
