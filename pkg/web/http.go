@@ -196,13 +196,24 @@ func (s *Server) bookmarkOperations(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("HX-Reswap", "delete")
 		return
 	case http.MethodPatch:
-		if inbox := r.URL.Query().Get("inbox"); inbox != "" {
-			if err := s.bookmarks.UpdateInbox(id, inbox); err != nil {
+		action := r.URL.Query().Get("action")
+		switch action {
+		case "bump":
+			if err := s.bookmarks.Bump(id); err != nil {
 				log.Println("cannot update bookmark:", err)
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return
 			}
-			w.Header().Set("HX-Reswap", "delete")
+			w.Header().Set("HX-Redirect", "/inbox")
+		case "update":
+			if inbox := r.URL.Query().Get("inbox"); inbox != "" {
+				if err := s.bookmarks.UpdateInbox(id, inbox); err != nil {
+					log.Println("cannot update bookmark:", err)
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					return
+				}
+				w.Header().Set("HX-Reswap", "delete")
+			}
 		}
 		return
 	case http.MethodPost:

@@ -197,7 +197,7 @@ func TestRepository_Insert(t *testing.T) {
 			t.Fatal("cannot create mock:", err)
 		}
 		errDB := errors.New("bad DB")
-		mock.ExpectExec("INSERT INTO bookmarks").WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).WillReturnError(errDB)
+		mock.ExpectExec("INSERT INTO bookmarks").WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).WillReturnError(errDB)
 		if err := New(db).Insert(&bookmarks.Bookmark{}); !errors.Is(err, errDB) {
 			t.Error("expected error missing: ", err)
 		}
@@ -208,7 +208,7 @@ func TestRepository_Insert(t *testing.T) {
 			t.Fatal("cannot create mock:", err)
 		}
 		errResult := errors.New("bad result")
-		mock.ExpectExec("INSERT INTO bookmarks").WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).WillReturnResult(sqlmock.NewErrorResult(errResult))
+		mock.ExpectExec("INSERT INTO bookmarks").WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).WillReturnResult(sqlmock.NewErrorResult(errResult))
 		if err := New(db).Insert(&bookmarks.Bookmark{}); !errors.Is(err, errResult) {
 			t.Error("expected error missing: ", err)
 		}

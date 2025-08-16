@@ -30,6 +30,7 @@ type Bookmark struct {
 	CreatedAt        time.Time `db:"created_at" json:"created_at"`
 	Inbox            Inbox     `db:"inbox" json:"inbox"`
 	Description      string    `db:"description" json:"description"`
+	BumpDate         time.Time `db:"bump_date" json:"bump_date"`
 
 	Host string `db:"-" json:"host"`
 }

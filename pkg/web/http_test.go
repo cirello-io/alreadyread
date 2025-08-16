@@ -425,7 +425,7 @@ func TestServer(t *testing.T) {
 				root := bookmarks.New(nil, nil)
 				ts := httptest.NewServer(New(root, nil, []string{"localhost"}))
 				defer ts.Close()
-				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/?inbox=banana", nil)
+				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/?action=update&inbox=banana", nil)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -447,7 +447,7 @@ func TestServer(t *testing.T) {
 				root := bookmarks.New(repository, nil)
 				ts := httptest.NewServer(New(root, nil, []string{"localhost"}))
 				defer ts.Close()
-				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/?inbox=read", nil)
+				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/?action=update&inbox=read", nil)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -474,7 +474,7 @@ func TestServer(t *testing.T) {
 				root := bookmarks.New(repository, nil)
 				ts := httptest.NewServer(New(root, nil, []string{"localhost"}))
 				defer ts.Close()
-				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/?inbox=read", nil)
+				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/?action=update&inbox=read", nil)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -502,7 +502,7 @@ func TestServer(t *testing.T) {
 				root := bookmarks.New(repository, nil)
 				ts := httptest.NewServer(New(root, nil, []string{"localhost"}))
 				defer ts.Close()
-				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/?inbox=postponed", nil)
+				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/?action=update&inbox=postponed", nil)
 				if err != nil {
 					t.Fatal(err)
 				}

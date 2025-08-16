@@ -112,6 +112,18 @@ func (b *Bookmarks) UpdateInbox(id int64, inbox string) error {
 	return nil
 }
 
+func (b *Bookmarks) Bump(id int64) error {
+	bookmark, err := b.repository.GetByID(id)
+	if err != nil {
+		return fmt.Errorf("cannot find bookmark: %w", err)
+	}
+	bookmark.BumpDate = time.Now()
+	if err := b.repository.Update(bookmark); err != nil {
+		return fmt.Errorf("cannot store bookmark: %w", err)
+	}
+	return nil
+}
+
 func (b *Bookmarks) Inbox(page int) ([]*Bookmark, error) {
 	list, err := b.repository.Inbox(page)
 	if err != nil {

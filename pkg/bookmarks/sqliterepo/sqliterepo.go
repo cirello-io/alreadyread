@@ -52,6 +52,9 @@ func (b *Repository) Bootstrap() error {
 		`create index if not exists bookmarks_created_at on bookmarks (created_at)`,
 		`create index if not exists bookmarks_inbox on bookmarks (inbox)`,
 		`alter table bookmarks add column description bigtext not null default ''`,
+		`alter table bookmarks add column bump_date datetime not null default current_timestamp`,
+		`create index if not exists bookmarks_bump_date on bookmarks (bump_date)`,
+		`update bookmarks set bump_date = created_at`,
 	}
 	var version int
 	row := b.db.QueryRow("PRAGMA user_version;")
@@ -94,7 +97,7 @@ func (b *Repository) scanRows(rows *sql.Rows) ([]*bookmarks.Bookmark, error) {
 
 func (b *Repository) scanRow(row interface{ Scan(dest ...any) error }) (*bookmarks.Bookmark, error) {
 	bookmark := &bookmarks.Bookmark{}
-	if err := row.Scan(&bookmark.ID, &bookmark.URL, &bookmark.LastStatusCode, &bookmark.LastStatusCheck, &bookmark.LastStatusReason, &bookmark.Title, &bookmark.CreatedAt, &bookmark.Inbox, &bookmark.Description); err != nil {
+	if err := row.Scan(&bookmark.ID, &bookmark.URL, &bookmark.LastStatusCode, &bookmark.LastStatusCheck, &bookmark.LastStatusReason, &bookmark.Title, &bookmark.CreatedAt, &bookmark.Inbox, &bookmark.Description, &bookmark.BumpDate); err != nil {
 		return nil, err
 	}
 	u, err := url.Parse(bookmark.URL)
@@ -107,7 +110,7 @@ func (b *Repository) scanRow(row interface{ Scan(dest ...any) error }) (*bookmar
 const pageSize = 1000
 
 func (b *Repository) Inbox(page int) ([]*bookmarks.Bookmark, error) {
-	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description FROM bookmarks WHERE inbox = 1 ORDER BY created_at DESC, id DESC LIMIT $1 OFFSET $2`, pageSize, page*pageSize)
+	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description, bump_date FROM bookmarks WHERE inbox = 1 ORDER BY bump_date DESC, id DESC LIMIT $1 OFFSET $2`, pageSize, page*pageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +118,7 @@ func (b *Repository) Inbox(page int) ([]*bookmarks.Bookmark, error) {
 }
 
 func (b *Repository) Duplicated(page int) ([]*bookmarks.Bookmark, error) {
-	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description FROM bookmarks WHERE url IN (SELECT url FROM bookmarks GROUP BY url HAVING count(url) > 1) ORDER BY url, created_at DESC LIMIT $1 OFFSET $2`, pageSize, page*pageSize)
+	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description, bump_date FROM bookmarks WHERE url IN (SELECT url FROM bookmarks GROUP BY url HAVING count(url) > 1) ORDER BY url, created_at DESC LIMIT $1 OFFSET $2`, pageSize, page*pageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +126,7 @@ func (b *Repository) Duplicated(page int) ([]*bookmarks.Bookmark, error) {
 }
 
 func (b *Repository) Dead(page int) ([]*bookmarks.Bookmark, error) {
-	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description FROM bookmarks WHERE NOT (last_status_code == 200 OR last_status_code == 0) ORDER BY created_at DESC, last_status_code DESC, id DESC LIMIT $1 OFFSET $2`, pageSize, page*pageSize)
+	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description, bump_date FROM bookmarks WHERE NOT (last_status_code == 200 OR last_status_code == 0) ORDER BY created_at DESC, last_status_code DESC, id DESC LIMIT $1 OFFSET $2`, pageSize, page*pageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +134,7 @@ func (b *Repository) Dead(page int) ([]*bookmarks.Bookmark, error) {
 }
 
 func (b *Repository) All(page int) ([]*bookmarks.Bookmark, error) {
-	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description FROM bookmarks ORDER BY id DESC LIMIT $1 OFFSET $2`, pageSize, page*pageSize)
+	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description, bump_date FROM bookmarks ORDER BY id DESC LIMIT $1 OFFSET $2`, pageSize, page*pageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +144,7 @@ func (b *Repository) All(page int) ([]*bookmarks.Bookmark, error) {
 func (b *Repository) Expired() ([]*bookmarks.Bookmark, error) {
 	const week = 7 * 24 * time.Hour
 	deadline := time.Now().Add(-week).Unix()
-	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description FROM bookmarks WHERE last_status_code IN (200,0) AND last_status_check <= $1`, deadline)
+	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description, bump_date FROM bookmarks WHERE last_status_code IN (200,0) AND last_status_check <= $1`, deadline)
 	if err != nil {
 		return nil, err
 	}
@@ -149,14 +152,16 @@ func (b *Repository) Expired() ([]*bookmarks.Bookmark, error) {
 }
 
 func (b *Repository) Insert(bookmark *bookmarks.Bookmark) error {
-	bookmark.CreatedAt = time.Now()
+	now := time.Now()
+	bookmark.CreatedAt = now
+	bookmark.BumpDate = now
 	bookmark.Inbox = 1
 	result, err := b.db.Exec(`
 		INSERT INTO bookmarks
-		(url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description)
+		(url, last_status_code, last_status_check, last_status_reason, title, created_at, bump_date, inbox, description)
 		VALUES
-		($1, $2, $3, $4, $5, $6, $7, $8)
-	`, bookmark.URL, bookmark.LastStatusCode, bookmark.LastStatusCheck, bookmark.LastStatusReason, bookmark.Title, bookmark.CreatedAt, bookmark.Inbox, bookmark.Description)
+		($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	`, bookmark.URL, bookmark.LastStatusCode, bookmark.LastStatusCheck, bookmark.LastStatusReason, bookmark.Title, bookmark.CreatedAt, bookmark.BumpDate, bookmark.Inbox, bookmark.Description)
 	if err != nil {
 		return fmt.Errorf("cannot insert row: %w", err)
 	}
@@ -171,7 +176,7 @@ func (b *Repository) Insert(bookmark *bookmarks.Bookmark) error {
 func (b *Repository) GetByID(id int64) (*bookmarks.Bookmark, error) {
 	row := b.db.QueryRow(`
 	SELECT
-		id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description
+		id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description, bump_date
 	FROM
 		bookmarks
 	WHERE
@@ -190,10 +195,11 @@ func (b *Repository) Update(bookmark *bookmarks.Bookmark) error {
 			last_status_reason = $4,
 			title = $5,
 			inbox = $6,
-			description = $7
+			description = $7,
+			bump_date = $8
 		WHERE
-			id = $8
-	`, bookmark.URL, bookmark.LastStatusCode, bookmark.LastStatusCheck, bookmark.LastStatusReason, bookmark.Title, bookmark.Inbox, bookmark.Description, bookmark.ID)
+			id = $9
+	`, bookmark.URL, bookmark.LastStatusCode, bookmark.LastStatusCheck, bookmark.LastStatusReason, bookmark.Title, bookmark.Inbox, bookmark.Description, bookmark.BumpDate, bookmark.ID)
 	return err
 }
 
@@ -206,7 +212,7 @@ func (b *Repository) Search(term string) ([]*bookmarks.Bookmark, error) {
 	explodedTerm := "%" + strings.Join(strings.Split(term, ""), "%") + "%"
 	rows, err := b.db.Query(`
 		SELECT
-			id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description
+			id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description, bump_date
 		FROM
 			bookmarks
 		WHERE
