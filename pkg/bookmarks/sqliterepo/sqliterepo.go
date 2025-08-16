@@ -52,7 +52,7 @@ func (b *Repository) Bootstrap() error {
 		`create index if not exists bookmarks_created_at on bookmarks (created_at)`,
 		`create index if not exists bookmarks_inbox on bookmarks (inbox)`,
 		`alter table bookmarks add column description bigtext not null default ''`,
-		`alter table bookmarks add column bump_date datetime not null default current_timestamp`,
+		`alter table bookmarks add column bump_date datetime not null default '0000-00-00 00:00:00'`,
 		`create index if not exists bookmarks_bump_date on bookmarks (bump_date)`,
 		`update bookmarks set bump_date = created_at`,
 		`update bookmarks set inbox = 1 where inbox > 1`,
