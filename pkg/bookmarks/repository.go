@@ -46,9 +46,6 @@ type Repository interface {
 	// Insert one bookmark.
 	Insert(*Bookmark) error
 
-	// Invalid return all invalid bookmarks.
-	Invalid() ([]*Bookmark, error)
-
 	// RestorePostponedLinks is a batched operation that makes stashed links
 	// visible again.
 	RestorePostponedLinks(ctx context.Context) error

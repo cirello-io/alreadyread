@@ -148,14 +148,6 @@ func (b *Repository) Expired() ([]*bookmarks.Bookmark, error) {
 	return b.scanRows(rows)
 }
 
-func (b *Repository) Invalid() ([]*bookmarks.Bookmark, error) {
-	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description FROM bookmarks WHERE last_status_code != 200`)
-	if err != nil {
-		return nil, err
-	}
-	return b.scanRows(rows)
-}
-
 func (b *Repository) Insert(bookmark *bookmarks.Bookmark) error {
 	bookmark.CreatedAt = time.Now()
 	bookmark.Inbox = 1

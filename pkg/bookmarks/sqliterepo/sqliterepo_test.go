@@ -393,37 +393,6 @@ func TestRepository_Expired(t *testing.T) {
 	})
 }
 
-func TestRepository_Invalid(t *testing.T) {
-	t.Run("badDB", func(t *testing.T) {
-		db, mock, err := sqlmock.New()
-		if err != nil {
-			t.Fatal("cannot create mock:", err)
-		}
-		errDB := errors.New("bad DB")
-		mock.ExpectQuery("SELECT").WillReturnError(errDB)
-		if _, err := New(db).Invalid(); !errors.Is(err, errDB) {
-			t.Error("expected error missing: ", err)
-		}
-	})
-	t.Run("good", func(t *testing.T) {
-		repository := setup(t)
-		bookmark := &bookmarks.Bookmark{URL: "http://example.com", LastStatusCode: http.StatusInternalServerError, LastStatusCheck: time.Now().Add(-30 * 24 * time.Hour).Unix()}
-		if err := repository.Insert(bookmark); err != nil {
-			t.Fatal("could not insert bookmark:", err)
-		}
-		found, err := repository.Invalid()
-		if err != nil {
-			t.Fatal("cannot list bookmarks:", err)
-		}
-		if l := len(found); l != 1 {
-			t.Fatal("unexpected bookmark count")
-		}
-		if found[0].URL != bookmark.URL {
-			t.Fatal("did not find expected bookmark")
-		}
-	})
-}
-
 func TestRepository_Search(t *testing.T) {
 	t.Run("badDB", func(t *testing.T) {
 		db, mock, err := sqlmock.New()
