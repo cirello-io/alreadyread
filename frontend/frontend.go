@@ -72,7 +72,7 @@ func RenderLinkTable(w io.Writer, list []*bookmarks.Bookmark, page int, previous
 		}
 	)
 	for _, b := range list {
-		date := b.CreatedAt.Format("Jan _2 2006")
+		date := b.BumpDate.Format("Jan _2 2006")
 		if _, ok := idx[date]; !ok {
 			groups = append(groups, date)
 			idx[date] = &dateGroup{
