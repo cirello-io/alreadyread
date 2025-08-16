@@ -502,7 +502,7 @@ func TestServer(t *testing.T) {
 				root := bookmarks.New(repository, nil)
 				ts := httptest.NewServer(New(root, nil, []string{"localhost"}))
 				defer ts.Close()
-				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/?action=update&inbox=postponed", nil)
+				req, err := http.NewRequest(http.MethodPatch, ts.URL+"/bookmarks/1/?action=bump", nil)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -515,7 +515,7 @@ func TestServer(t *testing.T) {
 				if resp.StatusCode != http.StatusOK {
 					t.Fatal("not StatusOK:", resp.StatusCode)
 				}
-				if foundBookmark.Inbox != bookmarks.Postponed {
+				if foundBookmark.BumpDate.IsZero() {
 					t.Fatal("did not update")
 				}
 			})

@@ -14,8 +14,6 @@
 
 package bookmarks
 
-import "context"
-
 //go:generate go tool moq -out repository_mocks_test.go . Repository
 //go:generate go tool moq -pkg web -out ../web/repository_mocks_test.go . Repository
 type Repository interface {
@@ -45,10 +43,6 @@ type Repository interface {
 
 	// Insert one bookmark.
 	Insert(*Bookmark) error
-
-	// RestorePostponedLinks is a batched operation that makes stashed links
-	// visible again.
-	RestorePostponedLinks(ctx context.Context) error
 
 	// Search returns all bookmarks that match the term.
 	Search(term string) ([]*Bookmark, error)

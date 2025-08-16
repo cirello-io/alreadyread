@@ -447,34 +447,3 @@ func TestRepository_Vacuum(t *testing.T) {
 		}
 	})
 }
-
-func TestRepository_RestorePostponedLinks(t *testing.T) {
-	t.Run("badDB", func(t *testing.T) {
-		db, mock, err := sqlmock.New()
-		if err != nil {
-			t.Fatal("cannot create mock:", err)
-		}
-		errDB := errors.New("bad DB")
-		mock.ExpectExec("UPDATE bookmarks").WillReturnError(errDB)
-		if err := New(db).RestorePostponedLinks(context.TODO()); !errors.Is(err, errDB) {
-			t.Error("expected error missing: ", err)
-		}
-	})
-	t.Run("good", func(t *testing.T) {
-		repository := setup(t)
-		bookmark := &bookmarks.Bookmark{Inbox: bookmarks.Postponed, URL: "http://example.com", LastStatusCode: http.StatusInternalServerError, LastStatusCheck: time.Now().Add(-30 * 24 * time.Hour).Unix()}
-		if err := repository.Insert(bookmark); err != nil {
-			t.Fatal("could not insert bookmark:", err)
-		}
-		if err := repository.RestorePostponedLinks(context.TODO()); err != nil {
-			t.Fatal("cannot restore postponed bookmarks:", err)
-		}
-		found, err := repository.Inbox(0)
-		if err != nil {
-			t.Fatal("cannot list bookmarks:", err)
-		}
-		if len(found) != 1 {
-			t.Fatal("cannot see restored bookmarks")
-		}
-	})
-}

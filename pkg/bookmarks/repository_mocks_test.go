@@ -4,7 +4,6 @@
 package bookmarks
 
 import (
-	"context"
 	"sync"
 )
 
@@ -45,12 +44,6 @@ var _ Repository = &RepositoryMock{}
 //			InsertFunc: func(bookmark *Bookmark) error {
 //				panic("mock out the Insert method")
 //			},
-//			InvalidFunc: func() ([]*Bookmark, error) {
-//				panic("mock out the Invalid method")
-//			},
-//			RestorePostponedLinksFunc: func(ctx context.Context) error {
-//				panic("mock out the RestorePostponedLinks method")
-//			},
 //			SearchFunc: func(term string) ([]*Bookmark, error) {
 //				panic("mock out the Search method")
 //			},
@@ -90,12 +83,6 @@ type RepositoryMock struct {
 
 	// InsertFunc mocks the Insert method.
 	InsertFunc func(bookmark *Bookmark) error
-
-	// InvalidFunc mocks the Invalid method.
-	InvalidFunc func() ([]*Bookmark, error)
-
-	// RestorePostponedLinksFunc mocks the RestorePostponedLinks method.
-	RestorePostponedLinksFunc func(ctx context.Context) error
 
 	// SearchFunc mocks the Search method.
 	SearchFunc func(term string) ([]*Bookmark, error)
@@ -146,14 +133,6 @@ type RepositoryMock struct {
 			// Bookmark is the bookmark argument value.
 			Bookmark *Bookmark
 		}
-		// Invalid holds details about calls to the Invalid method.
-		Invalid []struct {
-		}
-		// RestorePostponedLinks holds details about calls to the RestorePostponedLinks method.
-		RestorePostponedLinks []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-		}
 		// Search holds details about calls to the Search method.
 		Search []struct {
 			// Term is the term argument value.
@@ -165,19 +144,17 @@ type RepositoryMock struct {
 			Bookmark *Bookmark
 		}
 	}
-	lockAll                   sync.RWMutex
-	lockBootstrap             sync.RWMutex
-	lockDead                  sync.RWMutex
-	lockDeleteByID            sync.RWMutex
-	lockDuplicated            sync.RWMutex
-	lockExpired               sync.RWMutex
-	lockGetByID               sync.RWMutex
-	lockInbox                 sync.RWMutex
-	lockInsert                sync.RWMutex
-	lockInvalid               sync.RWMutex
-	lockRestorePostponedLinks sync.RWMutex
-	lockSearch                sync.RWMutex
-	lockUpdate                sync.RWMutex
+	lockAll        sync.RWMutex
+	lockBootstrap  sync.RWMutex
+	lockDead       sync.RWMutex
+	lockDeleteByID sync.RWMutex
+	lockDuplicated sync.RWMutex
+	lockExpired    sync.RWMutex
+	lockGetByID    sync.RWMutex
+	lockInbox      sync.RWMutex
+	lockInsert     sync.RWMutex
+	lockSearch     sync.RWMutex
+	lockUpdate     sync.RWMutex
 }
 
 // All calls AllFunc.
@@ -455,65 +432,6 @@ func (mock *RepositoryMock) InsertCalls() []struct {
 	mock.lockInsert.RLock()
 	calls = mock.calls.Insert
 	mock.lockInsert.RUnlock()
-	return calls
-}
-
-// Invalid calls InvalidFunc.
-func (mock *RepositoryMock) Invalid() ([]*Bookmark, error) {
-	if mock.InvalidFunc == nil {
-		panic("RepositoryMock.InvalidFunc: method is nil but Repository.Invalid was just called")
-	}
-	callInfo := struct {
-	}{}
-	mock.lockInvalid.Lock()
-	mock.calls.Invalid = append(mock.calls.Invalid, callInfo)
-	mock.lockInvalid.Unlock()
-	return mock.InvalidFunc()
-}
-
-// InvalidCalls gets all the calls that were made to Invalid.
-// Check the length with:
-//
-//	len(mockedRepository.InvalidCalls())
-func (mock *RepositoryMock) InvalidCalls() []struct {
-} {
-	var calls []struct {
-	}
-	mock.lockInvalid.RLock()
-	calls = mock.calls.Invalid
-	mock.lockInvalid.RUnlock()
-	return calls
-}
-
-// RestorePostponedLinks calls RestorePostponedLinksFunc.
-func (mock *RepositoryMock) RestorePostponedLinks(ctx context.Context) error {
-	if mock.RestorePostponedLinksFunc == nil {
-		panic("RepositoryMock.RestorePostponedLinksFunc: method is nil but Repository.RestorePostponedLinks was just called")
-	}
-	callInfo := struct {
-		Ctx context.Context
-	}{
-		Ctx: ctx,
-	}
-	mock.lockRestorePostponedLinks.Lock()
-	mock.calls.RestorePostponedLinks = append(mock.calls.RestorePostponedLinks, callInfo)
-	mock.lockRestorePostponedLinks.Unlock()
-	return mock.RestorePostponedLinksFunc(ctx)
-}
-
-// RestorePostponedLinksCalls gets all the calls that were made to RestorePostponedLinks.
-// Check the length with:
-//
-//	len(mockedRepository.RestorePostponedLinksCalls())
-func (mock *RepositoryMock) RestorePostponedLinksCalls() []struct {
-	Ctx context.Context
-} {
-	var calls []struct {
-		Ctx context.Context
-	}
-	mock.lockRestorePostponedLinks.RLock()
-	calls = mock.calls.RestorePostponedLinks
-	mock.lockRestorePostponedLinks.RUnlock()
 	return calls
 }
 

@@ -55,6 +55,7 @@ func (b *Repository) Bootstrap() error {
 		`alter table bookmarks add column bump_date datetime not null default current_timestamp`,
 		`create index if not exists bookmarks_bump_date on bookmarks (bump_date)`,
 		`update bookmarks set bump_date = created_at`,
+		`update bookmarks set inbox = 1 where inbox > 1`,
 	}
 	var version int
 	row := b.db.QueryRow("PRAGMA user_version;")
@@ -241,13 +242,6 @@ func (b *Repository) Search(term string) ([]*bookmarks.Bookmark, error) {
 func (b *Repository) Vacuum(ctx context.Context) error {
 	if _, err := b.db.ExecContext(ctx, "VACUUM"); err != nil {
 		return fmt.Errorf("cannot run vacuum: %w", err)
-	}
-	return nil
-}
-
-func (b *Repository) RestorePostponedLinks(ctx context.Context) error {
-	if _, err := b.db.ExecContext(ctx, "UPDATE bookmarks SET inbox = 1 WHERE inbox = 2"); err != nil {
-		return fmt.Errorf("cannot run restore rescheduled links: %w", err)
 	}
 	return nil
 }

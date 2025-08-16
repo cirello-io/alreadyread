@@ -29,7 +29,6 @@ func TestParseInbox(t *testing.T) {
 		{"invalid", args{"invalid"}, Read, true},
 		{"read", args{"read"}, Read, false},
 		{"new", args{"new"}, NewLink, false},
-		{"postponed", args{"postponed"}, Postponed, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -106,21 +106,6 @@ func main() {
 				Shutdown: oversight.Infinity(),
 			},
 			oversight.ChildProcessSpecification{
-				Name:    "sqliteRestorePostponedLinks",
-				Restart: oversight.Permanent(),
-				Start: func(ctx context.Context) error {
-					err := bookmarks.RestorePostponedLinks(ctx)
-					t, _ := gronx.NextTickAfter("15 */6 * * *", time.Now(), false)
-					select {
-					case <-time.After(time.Until(t)):
-						return err
-					case <-ctx.Done():
-						return ctx.Err()
-					}
-				},
-				Shutdown: oversight.Infinity(),
-			},
-			oversight.ChildProcessSpecification{
 				Name:    "HTTP",
 				Restart: oversight.Permanent(),
 				Start: func(ctx context.Context) error {

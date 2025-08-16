@@ -40,7 +40,6 @@ type Inbox int64
 const (
 	Read Inbox = iota
 	NewLink
-	Postponed
 )
 
 func ParseInbox(v string) (Inbox, error) {
@@ -49,8 +48,6 @@ func ParseInbox(v string) (Inbox, error) {
 		return Read, nil
 	case "new":
 		return NewLink, nil
-	case "postponed":
-		return Postponed, nil
 	default:
 		return 0, fmt.Errorf("invalid inbox status: %s", v)
 	}
