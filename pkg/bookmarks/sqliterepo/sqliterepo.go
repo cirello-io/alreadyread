@@ -135,7 +135,7 @@ func (b *Repository) Dead(page int) ([]*bookmarks.Bookmark, error) {
 }
 
 func (b *Repository) All(page int) ([]*bookmarks.Bookmark, error) {
-	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description, bump_date FROM bookmarks ORDER BY id DESC LIMIT $1 OFFSET $2`, pageSize, page*pageSize)
+	rows, err := b.db.Query(`SELECT id, url, last_status_code, last_status_check, last_status_reason, title, created_at, inbox, description, bump_date FROM bookmarks ORDER BY bump_date DESC LIMIT $1 OFFSET $2`, pageSize, page*pageSize)
 	if err != nil {
 		return nil, err
 	}
