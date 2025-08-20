@@ -7,16 +7,15 @@ on:
 permissions:
   contents: read
   pull-requests: read
-  actions: write    # needed to re-run workflows
+  actions: write
+  reactions: write
 
 jobs:
   rerun:
-    # Only on PRs
     if: github.event.issue.pull_request != null
     runs-on: ubuntu-latest
 
     steps:
-      # Gate: phrase + trusted commenter (case-insensitive)
       - id: gate
         uses: actions/github-script@v7
         with:
@@ -27,7 +26,6 @@ jobs:
               .includes(context.payload.comment.author_association);
             core.setOutput('ok', okPhrase && allowed ? 'true' : 'false');
 
-      # Re-run all completed PR workflow runs for the PR's current head SHA
       - name: Re-run existing PR workflows
         if: steps.gate.outputs.ok == 'true'
         uses: actions/github-script@v7
@@ -69,7 +67,6 @@ jobs:
               core.info(`Re-run requested for run id=${run.id}`);
             }
 
-      # Nice-to-have: thumbs-up reaction so you know it fired
       - name: React to the trigger comment
         if: steps.gate.outputs.ok == 'true'
         uses: actions/github-script@v7
