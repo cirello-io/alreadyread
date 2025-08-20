@@ -1,0 +1,83 @@
+name: TryBot (re-run PR checks)
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: write    # needed to re-run workflows
+
+jobs:
+  rerun:
+    # Only on PRs
+    if: github.event.issue.pull_request != null
+    runs-on: ubuntu-latest
+
+    steps:
+      # Gate: phrase + trusted commenter (case-insensitive)
+      - id: gate
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = (context.payload.comment.body || '');
+            const okPhrase = /trybot\+1/i.test(body);
+            const allowed = ['MEMBER','OWNER','COLLABORATOR']
+              .includes(context.payload.comment.author_association);
+            core.setOutput('ok', okPhrase && allowed ? 'true' : 'false');
+
+      # Re-run all completed PR workflow runs for the PR's current head SHA
+      - name: Re-run existing PR workflows
+        if: steps.gate.outputs.ok == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.issue.number;
+
+            // Get PR head commit
+            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+            const headSha = pr.head.sha;
+
+            // Find workflow runs tied to this head SHA (PR or PR_TARGET)
+            const events = ['pull_request', 'pull_request_target'];
+            let runs = [];
+            for (const event of events) {
+              const page = await github.paginate(
+                github.rest.actions.listWorkflowRunsForRepo,
+                { owner, repo, event, per_page: 100 }
+              );
+              runs.push(...page.filter(r => r.head_sha === headSha));
+            }
+
+            if (runs.length === 0) {
+              core.info(`No existing workflow runs found for head_sha=${headSha}. Nothing to re-run.`);
+              return;
+            }
+
+            // Re-run completed runs (skips any still in_progress/queued)
+            for (const run of runs) {
+              core.info(`Considering run id=${run.id} name="${run.name}" status=${run.status} conclusion=${run.conclusion}`);
+              if (run.status !== 'completed') {
+                core.info(`Skipping run ${run.id} because status=${run.status}`);
+                continue;
+              }
+              await github.request('POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun', {
+                owner, repo, run_id: run.id
+              });
+              core.info(`Re-run requested for run id=${run.id}`);
+            }
+
+      # Nice-to-have: thumbs-up reaction so you know it fired
+      - name: React to the trigger comment
+        if: steps.gate.outputs.ok == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            await github.rest.reactions.createForIssueComment({
+              owner, repo,
+              comment_id: context.payload.comment.id,
+              content: '+1'
+            });
