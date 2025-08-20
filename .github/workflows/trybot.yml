@@ -8,7 +8,6 @@ permissions:
   contents: read
   pull-requests: read
   actions: write
-  reactions: write
 
 jobs:
   rerun:
@@ -66,15 +65,3 @@ jobs:
               });
               core.info(`Re-run requested for run id=${run.id}`);
             }
-
-      - name: React to the trigger comment
-        if: steps.gate.outputs.ok == 'true'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            await github.rest.reactions.createForIssueComment({
-              owner, repo,
-              comment_id: context.payload.comment.id,
-              content: '+1'
-            });
