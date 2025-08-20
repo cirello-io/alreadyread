@@ -16,6 +16,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  comment_listener:
+    if: github.event_name == 'issue_comment' && github.event.issue.pull_request != null
+    runs-on: ubuntu-latest
+    steps:
+      - id: gate
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.comment.body || '';
+            const ok = /trybot\+1/i.test(body) &&
+              ['MEMBER','OWNER','COLLABORATOR'].includes(context.payload.comment.author_association);
+            core.setOutput('ok', ok ? 'true' : 'false');
+
+      - name: Bounce "trybot" label to trigger PR job
+        if: steps.gate.outputs.ok == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.issue.number;
+            const name = 'trybot';
+            try { await github.rest.issues.getLabel({ owner, repo, name }); }
+            catch { await github.rest.issues.createLabel({ owner, repo, name, color: 'BFD4F2' }); }
+            try { await github.rest.issues.removeLabel({ owner, repo, issue_number, name }); } catch {}
+            await github.rest.issues.addLabels({ owner, repo, issue_number, labels: [name] });
+
   run_ci:
     if: github.event_name == 'pull_request_target' &&
         contains(join(github.event.pull_request.labels.*.name), 'trybot')
