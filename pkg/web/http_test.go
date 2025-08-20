@@ -523,12 +523,12 @@ func TestServer(t *testing.T) {
 		t.Run("methodPost", func(t *testing.T) {
 			t.Run("emptyBookmark", func(t *testing.T) {
 				repository := &RepositoryMock{
-					InsertFunc: func(bookmark *bookmarks.Bookmark) error {
+					InsertFunc: func(*bookmarks.Bookmark) error {
 						return nil
 					},
 				}
 				urlChecker := &URLCheckerMock{
-					CheckFunc: func(url string, originalTitle string) (string, int64, int64, string) {
+					CheckFunc: func(string, string) (string, int64, int64, string) {
 						return "", 0, 0, ""
 					},
 				}
