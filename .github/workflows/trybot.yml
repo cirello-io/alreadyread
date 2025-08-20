@@ -48,7 +48,5 @@ jobs:
     if: >
       github.event_name == 'pull_request_target' &&
       github.event.action == 'edited' &&
-      github.event.changes.body != null &&
-      contains(github.event.pull_request.body, '<!-- trybot-ping:') &&
-      !contains(github.event.changes.body.from, '<!-- trybot-ping:')
+      github.event.changes.body != null
     uses: ./.github/workflows/go.yml
