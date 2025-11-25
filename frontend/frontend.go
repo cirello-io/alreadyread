@@ -29,11 +29,7 @@ import (
 var (
 	//go:embed newLink.html
 	newLinkTPL string
-	newLink    = template.Must(template.New("newLink").Funcs(template.FuncMap{
-		"linebreaks": func(s string) string {
-			return strings.ReplaceAll(s, "\n", "<br>")
-		},
-	}).Parse(newLinkTPL))
+	newLink    = template.Must(template.New("newLink").Funcs(template.FuncMap{}).Parse(newLinkTPL))
 )
 
 func RenderNewLink(w io.Writer, bookmark *bookmarks.Bookmark) {
@@ -57,9 +53,6 @@ var (
 			s = strings.ReplaceAll(s, "/", "-")
 			s = strings.ReplaceAll(s, "_", "-")
 			return s
-		},
-		"linebreaks": func(s string) string {
-			return strings.ReplaceAll(s, "\n", "<br>")
 		},
 	}).Parse(linkTableTPL))
 )
