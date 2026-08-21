@@ -63,7 +63,7 @@ func main() {
 	}
 	go func() {
 		<-ctx.Done()
-		lHTTP.Close()
+		_ = lHTTP.Close()
 	}()
 
 	repository := sqliterepo.New(db)
