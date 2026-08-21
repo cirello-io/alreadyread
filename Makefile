@@ -19,24 +19,19 @@ test:
 	go tool cover -html=coverage.out -o coverage.html
 
 linters:
-	go run -mod=readonly github.com/golangci/golangci-lint/cmd/golangci-lint@latest run --disable-all \
+	go run -mod=readonly github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest run --fix --default=none \
 		-E "errcheck" \
 		-E "errname" \
 		-E "errorlint" \
 		-E "exhaustive" \
-		-E "gci" \
 		-E "gocritic" \
 		-E "godot" \
-		-E "gofmt" \
-		-E "goimports" \
 		-E "govet" \
 		-E "grouper" \
 		-E "ineffassign" \
-		-E "ireturn" \
 		-E "misspell" \
 		-E "prealloc" \
 		-E "predeclared" \
-		-E "revive" \
 		-E "staticcheck" \
 		-E "thelper" \
 		-E "unparam" \

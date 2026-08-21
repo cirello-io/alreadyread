@@ -77,7 +77,7 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			if resp.StatusCode != http.StatusOK {
 				t.Fatal("not OK")
 			}
@@ -107,7 +107,7 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			if resp.StatusCode != http.StatusInternalServerError {
 				t.Fatal("not StatusInternalServerError:", resp.StatusCode)
 			}
@@ -128,7 +128,7 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			if resp.StatusCode != http.StatusOK {
 				t.Fatal("not OK:", resp.StatusCode)
 			}
@@ -157,7 +157,7 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			if resp.StatusCode != http.StatusInternalServerError {
 				t.Fatal("not StatusInternalServerError:", resp.StatusCode)
 			}
@@ -178,7 +178,7 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			if resp.StatusCode != http.StatusOK {
 				t.Fatal("not OK:", resp.StatusCode)
 			}
@@ -207,7 +207,7 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			if resp.StatusCode != http.StatusInternalServerError {
 				t.Fatal("not StatusInternalServerError:", resp.StatusCode)
 			}
@@ -228,7 +228,7 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			if resp.StatusCode != http.StatusOK {
 				t.Fatal("not OK:", resp.StatusCode)
 			}
@@ -257,7 +257,7 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			if resp.StatusCode != http.StatusInternalServerError {
 				t.Fatal("not StatusInternalServerError:", resp.StatusCode)
 			}
@@ -278,7 +278,7 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			if resp.StatusCode != http.StatusOK {
 				t.Fatal("not OK:", resp.StatusCode)
 			}
@@ -307,7 +307,7 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			if resp.StatusCode != http.StatusInternalServerError {
 				t.Fatal("not StatusInternalServerError:", resp.StatusCode)
 			}
@@ -332,7 +332,7 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			if resp.StatusCode != http.StatusOK {
 				t.Fatal("not OK:", resp.StatusCode)
 			}
@@ -355,7 +355,7 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			if resp.StatusCode != http.StatusBadRequest {
 				t.Fatal("not StatusBadRequest:", resp.StatusCode)
 			}
@@ -368,7 +368,7 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			if resp.StatusCode != http.StatusMethodNotAllowed {
 				t.Fatal("not StatusMethodNotAllowed:", resp.StatusCode)
 			}
@@ -392,7 +392,7 @@ func TestServer(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				defer resp.Body.Close()
+				defer func() { _ = resp.Body.Close() }()
 				if resp.StatusCode != http.StatusInternalServerError {
 					t.Fatal("not StatusInternalServerError:", resp.StatusCode)
 				}
@@ -414,7 +414,7 @@ func TestServer(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				defer resp.Body.Close()
+				defer func() { _ = resp.Body.Close() }()
 				if resp.StatusCode != http.StatusOK {
 					t.Fatal("not StatusOK:", resp.StatusCode)
 				}
@@ -434,7 +434,7 @@ func TestServer(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				defer resp.Body.Close()
+				defer func() { _ = resp.Body.Close() }()
 				if resp.StatusCode != http.StatusInternalServerError {
 					t.Fatal("not StatusInternalServerError:", resp.StatusCode)
 				}
@@ -456,7 +456,7 @@ func TestServer(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				defer resp.Body.Close()
+				defer func() { _ = resp.Body.Close() }()
 				if resp.StatusCode != http.StatusInternalServerError {
 					t.Fatal("not StatusInternalServerError:", resp.StatusCode)
 				}
@@ -483,7 +483,7 @@ func TestServer(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				defer resp.Body.Close()
+				defer func() { _ = resp.Body.Close() }()
 				if resp.StatusCode != http.StatusInternalServerError {
 					t.Fatal("not StatusInternalServerError:", resp.StatusCode)
 				}
@@ -511,7 +511,7 @@ func TestServer(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				defer resp.Body.Close()
+				defer func() { _ = resp.Body.Close() }()
 				if resp.StatusCode != http.StatusOK {
 					t.Fatal("not StatusOK:", resp.StatusCode)
 				}
@@ -548,7 +548,7 @@ func TestServer(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				defer resp.Body.Close()
+				defer func() { _ = resp.Body.Close() }()
 				if resp.StatusCode != http.StatusOK {
 					t.Fatal("not StatusOK:", resp.StatusCode)
 				}
@@ -581,7 +581,7 @@ func TestServer(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				defer resp.Body.Close()
+				defer func() { _ = resp.Body.Close() }()
 				if resp.StatusCode != http.StatusInternalServerError {
 					t.Fatal("not StatusInternalServerError:", resp.StatusCode)
 				}
@@ -618,7 +618,7 @@ func TestServer(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				defer resp.Body.Close()
+				defer func() { _ = resp.Body.Close() }()
 				if resp.StatusCode != http.StatusOK {
 					t.Fatal("not StatusOK:", resp.StatusCode)
 				}
@@ -633,7 +633,7 @@ func TestServer(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 		if resp.StatusCode != http.StatusOK {
 			t.Fatal("not OK:", resp.StatusCode)
 		}
