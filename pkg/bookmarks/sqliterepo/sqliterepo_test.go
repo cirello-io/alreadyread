@@ -33,7 +33,7 @@ func newConn(t *testing.T) *sql.DB {
 	if err != nil {
 		t.Fatal("cannot create in memory SQLite:", err)
 	}
-	t.Cleanup(func() { conn.Close() })
+	t.Cleanup(func() { _ = conn.Close() })
 	return conn
 }
 
