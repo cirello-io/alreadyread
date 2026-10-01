@@ -19,7 +19,7 @@ test:
 	go tool cover -html=coverage.out -o coverage.html
 
 linters:
-	go run -mod=readonly github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest run --fix --default=none \
+	go run -mod=readonly github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run --fix --default=none \
 		-E "errcheck" \
 		-E "errname" \
 		-E "errorlint" \
