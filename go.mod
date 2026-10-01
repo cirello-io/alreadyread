@@ -6,7 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.13.0
 	github.com/adhocore/gronx v1.20.5
 	github.com/rs/cors v1.11.1
-	modernc.org/sqlite v1.59.0
+	modernc.org/sqlite v1.60.1
 )
 
 require (
@@ -15,7 +15,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/matryer/moq v0.7.1 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
-	github.com/ncruces/go-strftime v1.0.0 // indirect
+	github.com/ncruces/go-strftime v1.1.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/net v0.59.0 // indirect
@@ -27,6 +27,6 @@ require (
 	modernc.org/memory v1.12.1 // indirect
 )
 
-go 1.26.0
+go 1.27.1
 
 tool github.com/matryer/moq
