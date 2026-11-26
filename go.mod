@@ -4,7 +4,7 @@ require (
 	cirello.io/oversight v1.7.1
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/PuerkitoBio/goquery v1.14.0
-	github.com/adhocore/gronx v1.20.9
+	github.com/adhocore/gronx v1.20.10
 	github.com/rs/cors v1.11.1
 	modernc.org/sqlite v1.63.0
 )
@@ -24,7 +24,7 @@ require (
 	golang.org/x/tools v0.53.0 // indirect
 	modernc.org/libc v1.82.13 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
-	modernc.org/memory v1.13.0 // indirect
+	modernc.org/memory v1.13.1 // indirect
 )
 
 go 1.27.4
